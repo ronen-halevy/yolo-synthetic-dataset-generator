@@ -1,0 +1,193 @@
+{
+"shapes": [
+    {
+      "id": 0,
+      "shape_type": "ellipse",
+      "name": "circle",
+      "diameter_ratio": 1,
+      "color": [
+        255,
+        0,
+        255
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 1,
+      "shape_type": "ellipse",
+      "name": "wide_ellipse",
+      "diameter_ratio": 0.5,
+      "color": [
+        120,
+        0,
+        200
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 2,
+      "shape_type": "ellipse",
+      "name": "narrow_ellipse",
+      "diameter_ratio": 2,
+      "color": [
+        190,
+        80,
+        20
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 3,
+      "shape_type": "rectangle",
+      "name": "square",
+      "diameter_ratio": 1,
+      "color": [
+        220,
+        0,
+        90
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 4,
+      "shape_type": "rectangle",
+      "name": "wide_rectangle",
+      "diameter_ratio": 0.5,
+      "color": [
+        12,
+        88,
+        20
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 5,
+      "shape_type": "rectangle",
+      "name": "narrow_rectangle",
+      "diameter_ratio": 2,
+      "color": [
+        120,
+        0,
+        200
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 6,
+      "shape_type": "triangle",
+      "name": "triangle",
+      "diameter_ratio": 1,
+      "color": [
+        120,
+        0,
+        200
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 7,
+      "shape_type": "triangle",
+      "name": "wide_triangle",
+      "diameter_ratio": 0.5,
+      "color": [
+        120,
+        0,
+        200
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 8,
+      "shape_type": "triangle",
+      "name": "narrow_triangle",
+      "diameter_ratio": 2,
+      "color": [
+        120,
+        0,
+        200
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true
+    },
+    {
+      "id": 9,
+      "shape_type": "trapezoid",
+      "name": "trapezoid",
+      "diameter_ratio": 2,
+      "color": [
+        120,
+        0,
+        200
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true,
+      "sides": 5
+    },
+    {
+      "id": 10,
+      "shape_type": "hexagon",
+      "name": "hexagon",
+      "diameter_ratio": 2,
+      "color": [
+        120,
+        0,
+        200
+      ],
+      "x_diameter_choices": [
+        30,
+        60,
+        100
+      ],
+      "fill": true,
+      "sides": 6
+    }
+  ]
+}
