@@ -1,50 +1,64 @@
 import numpy as np
 from PIL import Image, ImageDraw
-import os
 import math
 import json
 
+
 def compute_iou(box1, box2):
-    """xmin, ymin, xmax, ymax"""
+    """x_min, y_min, x_max, y_max"""
     area_box_1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
     area_box_2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
 
-    xmin = max(box1[0], box2[0])
-    ymin = max(box1[1], box2[1])
-    xmax = min(box1[2], box2[2])
-    ymax = min(box1[3], box2[3])
+    x_min = max(box1[0], box2[0])
+    y_min = max(box1[1], box2[1])
+    x_max = min(box1[2], box2[2])
+    y_max = min(box1[3], box2[3])
 
-    if ymin >= ymax or xmin >= xmax:
+    if y_min >= y_max or x_min >= x_max:
         return 0
-    return ((xmax - xmin) * (ymax - ymin)) / (area_box_2 + area_box_1)
+    return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
 
-def set_bbox(x_diameter_choices, axis_ratio, image_size, border_margin):
-    x_diameter = np.random.choice(x_diameter_choices)
-    y_diameter = x_diameter * axis_ratio
-    radius = np.array([x_diameter / 2, y_diameter / 2])
-    center = np.random.randint(
-        radius + border_margin, [np.floor(image_size - radius - border_margin)], 2)
-
-    new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
-                              np.array([np.negative(radius), radius]))
-    return new_bbox
+# def set_bbox(x_diameter_choices, axis_ratio, image_size, border_margin):
+#     x_diameter = np.random.choice(x_diameter_choices)
+#     y_diameter = x_diameter * axis_ratio
+#     radius = np.array([x_diameter / 2, y_diameter / 2])
+#     center = np.random.randint(
+#         radius + border_margin, [np.floor(image_size - radius - border_margin)], 2)
+#
+#     new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
+#                               np.array([np.negative(radius), radius]))
+#     return new_bbox
 
 
 def create_bbox(image_size, bboxes, x_diameter_choices, axis_ratio, iou_thresh, margin_from_edge):
     max_count = 10000
     count = 0
     while True:
-        new_bbox = set_bbox(x_diameter_choices, axis_ratio, image_size, margin_from_edge)
+        # new_bbox = set_bbox(x_diameter_choices, axis_ratio, image_size, margin_from_edge)
+        #
+        # ..
+        x_diameter = np.random.choice(x_diameter_choices)
+        y_diameter = x_diameter * axis_ratio
+        radius = np.array([x_diameter / 2, y_diameter / 2])
+        center = np.random.randint(
+            radius + margin_from_edge, [np.floor(image_size - radius - margin_from_edge)], 2)
+
+        new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
+                                  np.array([np.negative(radius), radius]))
+
+        # ..
 
         iou = [compute_iou(new_bbox, bbox) for bbox in bboxes]
         if len(iou) == 0 or max(iou) == iou_thresh:
             break
         if count > max_count:
             new_bbox = []
+            break
         count += 1
 
     return new_bbox
+
 
 def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, margin_from_edge):
     image = Image.new('RGB', image_size, tuple(bg_color))
@@ -67,28 +81,28 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
         color = tuple(shape_entry['color'])
 
         if shape_entry['shape_type'] == 'ellipse':
-            draw.ellipse(bbox.tolist(), fill=color, outline=color)
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            draw.ellipse([x_min, y_min, x_max, y_max], fill=color, outline=color, width=3)
 
         elif shape_entry['shape_type'] == 'rectangle':
-            draw.rectangle(bbox.tolist(), fill=color, outline=color)
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            draw.rectangle([x_min, y_min, x_max, y_max], fill=color, outline=color, width=3)
 
         elif shape_entry['shape_type'] == 'triangle':
-            xmin, ymin, xmax, ymax = bbox.tolist()
-            vertices = [xmin, ymax, xmax, ymax, (xmin + xmax) / 2, ymin]
-            points = [bbox.tolist()[0], bbox.tolist()[1]]
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
             draw.polygon(vertices, fill=color, outline=color)
 
         elif shape_entry['shape_type'] == 'triangle':
-            xmin, ymin, xmax, ymax = bbox.tolist()
-            vertices = [xmin, ymax, xmax, ymax, (xmin + xmax) / 2, ymin]
-            points = [bbox.tolist()[0], bbox.tolist()[1]]
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
             draw.polygon(vertices, fill=color, outline=color)
 
         elif shape_entry['shape_type'] in ['trapezoid', 'hexagon']:
-            xmin, ymin, xmax, ymax = bbox.tolist()
+            x_min, y_min, x_max, y_max = bbox.tolist()
             sides = shape_entry['sides']
-            center_x, center_y = (xmin + xmax) / 2, (ymin + ymax) / 2
-            rad_x, rad_y = (xmax - xmin) / 2, (ymax - ymin) / 2
+            center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
+            rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
             xy = [
                 (math.cos(th) * rad_x + center_x,
                  math.sin(th) * rad_y + center_y)
@@ -98,20 +112,8 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
     return image, bboxes, added_shapes
 
 
-def create_dir(path):
-    is_exist = os.path.exists(path)
-    if not is_exist:
-        os.makedirs(path)
-        print("The new directory is created!")
-
-
-def main(config_file, shapes_file):
-    with open(config_file) as f:
-        config = json.load(f)
+def main(config, shapes):
     sections = config['sections']
-
-    with open(shapes_file) as f:
-        shapes = json.load(f)['shapes']
 
     for section in sections:
 
@@ -120,7 +122,7 @@ def main(config_file, shapes_file):
         images_dir = sections[section]["images_dir"]
         annotations_path = sections[section]["annotations_path"]
 
-        with open(annotations_path, 'w') as f:
+        with open(annotations_path, 'w') as annotation_file:
             for example in range(int(num_of_examples)):
 
                 image, bboxes, added_shapes = make_image(shapes, config['image_size'],
@@ -135,10 +137,16 @@ def main(config_file, shapes_file):
                 for box, shape in zip(bboxes, added_shapes):
                     box_and_label = np.append(box, shape['id'])
                     annotation += ' ' + ','.join([str(entry) for entry in box_and_label.astype(np.int32)])
-                f.write(annotation + '\n')
+                annotation_file.write(annotation + '\n')
 
-config_file = 'config.json'
-shapes_file = 'shapes.json'
 
-main(config_file, shapes_file)
+if __name__ == '__main__':
+    config_file = 'config.json'
+    shapes_file = 'shapes.json'
+    with open(config_file) as f:
+        config_data = json.load(f)
 
+    with open(shapes_file) as f:
+        shapes_data = json.load(f)['shapes']
+
+    main(config=config_data, shapes=shapes_data)

@@ -65,13 +65,11 @@ def plot_image_with_bbox(shapes_file, config_file, plot_setup):
     start_index = plot_setup['start_index']
     random_select = plot_setup['random_select']
 
-    plt.figure(figsize=figsize)
-
     for idx in range(num_plots):
         image_index = np.random.randint(start_index, len(annotations)) if random_select else start_index + idx
         line = annotations[image_index]
+        plt.figure(figsize=figsize)
 
-        ax = plt.subplot(2, 2, idx + 1)
         columns = [item.strip() for item in line.split(' ')]
         image = Image.open(columns[0])
         bboxes = columns[1:]
@@ -85,20 +83,31 @@ def plot_image_with_bbox(shapes_file, config_file, plot_setup):
             draw_text_on_bounding_box(image, ymin, xmin, text_color, display_str_list=display_text,
                                       font_size=font_size)
 
-        ax.set_title(f'image index {image_index}')
-        ax.imshow(image)
+        plt.title(f'image index {image_index}')
+        plt.imshow(image)
         plt.show()
 
 
 if __name__ == '__main__':
-    shapes_file = 'shapes.json'
-    config_file = 'config.json'
+    import argparse
 
-    plot_setup = {
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("config_file", help="config_file name",
+                        type=str, default='config.json')
+    parser.add_argument("shapes_file", help="config_file name",
+                        type=str, default='shapes.json')
+
+    args = vars(parser.parse_args())
+    config_fname = args['config_file']
+    shapes_fname = args['shapes_file']
+
+    plot_setup_params = {
         'num_plots': 5,
         'start_index': 0,
         'random_select': True,
         'figsize': (15, 15)
     }
 
-plot_image_with_bbox(shapes_file, config_file, plot_setup)
+    plot_image_with_bbox('shapes.json', 'config.json',  plot_setup=plot_setup_params)
+
