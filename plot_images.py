@@ -61,11 +61,11 @@ def plot_image_with_bbox(config_file, shapes_file, plot_setup):
         annotations = f.readlines()
 
     figsize = plot_setup['figsize']
-    num_plots = plot_setup['num_plots']
+    num_of_images = plot_setup['num_of_images']
     start_index = plot_setup['start_index']
     random_select = plot_setup['random_select']
 
-    for idx in range(num_plots):
+    for idx in range(num_of_images):
         image_index = np.random.randint(start_index, len(annotations)) if random_select else start_index + idx
         line = annotations[image_index]
         plt.figure(figsize=figsize)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     shapes_fname = args['shapes_file']
 
     plot_setup_params = {
-        'num_plots': 5,
+        'num_of_images': 5,
         'start_index': 0,
         'random_select': True,
         'figsize': (15, 15)
