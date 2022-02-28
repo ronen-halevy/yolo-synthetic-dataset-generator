@@ -46,14 +46,14 @@ def draw_bounding_box(image, ymin, xmin, ymax, xmax, color, thickness=3):
     return image
 
 
-def plot_image_with_bbox(config_file, shapes_file, plot_setup):
+def plot_image_with_bbox(config_file, shapes_file, section, plot_setup):
     with open(shapes_file) as f:
         shapes = json.load(f)['shapes']
     class_names = [shape['name'] for shape in shapes]
 
     with open(config_file) as f:
         config = json.load(f)
-    annotations_path = config['sections']['valid']["annotations_path"]
+    annotations_path = config['sections'][section]["annotations_path"]
     font_size = config['annotations_font_size']
     text_color = tuple(config['annotatons_text_color'])
 
@@ -98,9 +98,15 @@ if __name__ == '__main__':
     parser.add_argument("shapes_file", help="config_file name",
                         type=str, default='shapes.json')
 
+    parser.add_argument("section", help="train, test or valid",
+                        type=str, default='train')
+
+
     args = vars(parser.parse_args())
     config_fname = args['config_file']
     shapes_fname = args['shapes_file']
+    section = args['section']
+
 
     plot_setup_params = {
         'num_of_images': 5,
@@ -109,5 +115,5 @@ if __name__ == '__main__':
         'figsize': (15, 15)
     }
 
-    plot_image_with_bbox('config.json',  'shapes.json', plot_setup=plot_setup_params)
+    plot_image_with_bbox('config.json',  'shapes.json', section=section, plot_setup=plot_setup_params)
 
