@@ -1,14 +1,16 @@
 # Introduction
-So many datasets are available, but I needed a simple and felxible-modifiable dataset for my image classification and object detection experiments. 
+There are many datasets available arround, but I needed a simple and felxible-modifiable dataset for my image classification and object detection experiments.
+This is not just a dataset of randomly selected shape images, but a flexible tool which permit an easy modification of the produced images,  done by editing two json files, as detailed here below.
 
-The dataset provides images, each consists of a randomly selected set of geometric shapes. Each shape is defined by a json document as detailed next.
+Meanwhile, heres an example image:
 
+![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/009898.jpg)
 
 
 pp
 
-![image](https://user-images.githubusercontent.com/13983042/156055596-289b6692-523e-4496-b807-143db62654a3.png)
-
+<!-- ![image](https://user-images.githubusercontent.com/13983042/156055596-289b6692-523e-4496-b807-143db62654a3.png)
+ -->
 
 
 
