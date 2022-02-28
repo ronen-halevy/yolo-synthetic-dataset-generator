@@ -381,7 +381,7 @@ Where section is the set to pick images from, which can be `train' (default), 't
 
 An example plot follows:
 
-![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-with-annotations.png)
+![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-boxes.png)
 
 
 
