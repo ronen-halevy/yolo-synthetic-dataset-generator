@@ -380,9 +380,7 @@ Generation Execution:
 Where section is the set to pick images from, which can be `train' (default), 'test', or valid'.
 
 An example plot follows:
-![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shape_boxes1.png)
-
-
+![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-boxes1.png
 
 ![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shape_boxes-2.png)
 
