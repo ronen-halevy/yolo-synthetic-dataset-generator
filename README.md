@@ -13,11 +13,26 @@ This repo contains both the dataset generation code and a generated dataset whic
 #Configuration Files
 The dataset contents is configured using 2 json files:
 
-- shapes.json: Defines the set of supported shapes
 - config.json: Defines the arrangement of the dataset images and of the shapes within the images.
+- shapes.json: Defines the set of supported shapes
 
+Here's the config.hson:
 
-**shapes.json:**
+**config.json:**
+
+Some orientation about the file's attributes:
+
+-`image_size`: Image size is set uniformly for all images. 
+-`shape_width_choices`: Shapes' width is randomly selected from this list.
+- `bg_color`: Images background color. The shapes are laid on top of this background.
+- `annotations_font_size`: Font size of image annotation text.
+- `annotatons_text_color`: Color of annotation text.
+- `margin_from_edge`: Minimal distance in pixels of from a shape's edge to the image's edge.
+- `iou_thresh`: Maximal iou permitted between any shape. Settin iou to 0 would mean no overlap between shapes.
+- `sections`: Sections of dataset, each assigned with related attributes as detailed next. Current implementation defines 3 sections:`train`, `test` and `valid`, (i.e. validation).
+- `num_of_examples`: Size of section's dataset
+- `images_dir`: Directory for placing images.
+- `annotations_path`: Path to annotation file. This is a per section file which lists dataset's images with their corresponding shapes' classes and binding boxes. 
 
 ```json
 {
@@ -26,7 +41,7 @@ The dataset contents is configured using 2 json files:
     413
   ],
   "max_objects_in_image": 11,
-  "x_diameter_choices": [
+  "shape_width_choices": [
     30,
     60,
     100
@@ -64,23 +79,313 @@ The dataset contents is configured using 2 json files:
 }
 ```
 
+**shapes.json**
+
+This file is a list of shapes, each defined by a set of attributes:
+`id`: This is the class id used by the classification network. Different shapes can be bound together, e.g. setting same id to all shapes would result in a single common class.
+`shape_type`: A generalized definition of the shape, needed by the draw pocedure.
+`name`: This is the class name used by the display annotations.
+`shape_aspect_ratio`: Shape's height to width ratio.
+`fill_color`: Shape's fill color. Leave empty to produce a frame without a fill.
+`outline_color`: Shape's frame color.
+
+This list can be expended or decreased, by just adding or removing a shape record.
+As noted before, shapes can be grouped together to a common id, No need for any more configuration.
+
+```json
+{
+  "shapes": [
+    {
+      "id": 0,
+      "shape_type": "ellipse",
+      "name": "circle",
+      "shape_aspect_ratio": 1,
+      "fill_color": [
+        255,
+        0,
+        255
+      ],
+      "outline_color": [
+        255,
+        0,
+        255
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 1,
+      "shape_type": "ellipse",
+      "name": "wide_ellipse",
+      "shape_aspect_ratio": 0.5,
+      "fill_color": [
+        120,
+        0,
+        200
+      ],
+      "outline_color": [
+        120,
+        0,
+        200
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 2,
+      "shape_type": "ellipse",
+      "name": "narrow_ellipse",
+      "shape_aspect_ratio": 2,
+      "fill_color": [
+        190,
+        80,
+        20
+      ],
+      "outline_color": [
+        190,
+        80,
+        20
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 3,
+      "shape_type": "rectangle",
+      "name": "square",
+      "shape_aspect_ratio": 1,
+      "fill_color": [
+        220,
+        0,
+        90
+      ],
+      "outline_color": [
+        220,
+        0,
+        90
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 4,
+      "shape_type": "rectangle",
+      "name": "wide_rectangle",
+      "shape_aspect_ratio": 0.5,
+      "fill_color": [
+        12,
+        88,
+        20
+      ],
+      "outline_color": [
+        12,
+        88,
+        20
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 5,
+      "shape_type": "rectangle",
+      "name": "narrow_rectangle",
+      "shape_aspect_ratio": 2,
+      "fill_color": [
+        120,
+        0,
+        200
+      ],
+      "outline_color": [
+        120,
+        0,
+        200
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 6,
+      "shape_type": "triangle",
+      "name": "triangle",
+      "shape_aspect_ratio": 1,
+      "fill_color": [
+        120,
+        0,
+        200
+      ],
+      "outline_color": [
+        120,
+        0,
+        200
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 7,
+      "shape_type": "triangle",
+      "name": "wide_triangle",
+      "shape_aspect_ratio": 0.5,
+      "fill_color": [
+        120,
+        0,
+        200
+      ],
+      "outline_color": [
+        120,
+        0,
+        200
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 8,
+      "shape_type": "triangle",
+      "name": "narrow_triangle",
+      "shape_aspect_ratio": 2,
+      "fill_color": [
+        120,
+        0,
+        200
+      ],
+      "outline_color": [
+        120,
+        0,
+        200
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    },
+    {
+      "id": 9,
+      "shape_type": "trapezoid",
+      "name": "trapezoid",
+      "shape_aspect_ratio": 2,
+      "fill_color": [
+        120,
+        0,
+        200
+      ],
+      "outline_color": [
+        120,
+        0,
+        200
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ],
+      "sides": 5
+    },
+    {
+      "id": 10,
+      "shape_type": "hexagon",
+      "name": "hexagon",
+      "shape_aspect_ratio": 2,
+      "fill_color": [
+        120,
+        0,
+        200
+      ],
+      "outline_color": [
+        120,
+        0,
+        200
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ],
+      "sides": 6
+    },
+    {
+      "id": 11,
+      "shape_type": "rectangle",
+      "name": "narrow_rectangle_frame",
+      "shape_aspect_ratio": 2,
+      "fill_color": [],
+      "outline_color": [
+        120,
+        0,
+        200
+      ],
+      "shape_width_choices": [
+        30,
+        60,
+        100
+      ]
+    }
+  ]
+}
+```
+
+**Anottations File**
+
+The annotation files are also generated by the create shape procedure, a fle per each created section, i.e. train, test, validation.
+Each file's row hold an image file path with its corresponding shapes classes and bounding boxes.
+
+**Installation**
+
+Clone the repo:
+
+`git clone https://github.com/ronen-halevy/shapes-dataset.git`
+
+Install Required Packages:
+
+`pip install -r requirements.txt`
+
+**Generate A Dataset**
+
+(The repo's current produced dataset is based on the commited json files).
+
+Generation Execution:
+
+`python create_shapes_dataset.py config.json shapes.json`
+
+
+**Display Example Images Plots With Annotations**
+
+`python plot_images.py config.json shapes.json [section]`
+
+Where section is the set to pick images from, which can be `train' (default), 'test', or valid'.
+
+An example plot follows:
 
 
 
 
 
 
-<!-- ![image](https://user-images.githubusercontent.com/13983042/156055596-289b6692-523e-4496-b807-143db62654a3.png)
- -->
 
 
 
-
-
-, each in a randomly selected size.
-
-So here is the shapes dataset
-
-
-
-A lot of wonderful datasets are now available online, such as COCO or Imagenet. which is challenging the limits of computer vision. But it's not easy for us to do some small experiments with such a large number of images to quickly test the validity of algorithmn. For this reason, I created a small dataset named "yymnist" to do both classification and object detection.
