@@ -19,25 +19,10 @@ def compute_iou(box1, box2):
     return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
 
-# def set_bbox(x_diameter_choices, axis_ratio, image_size, border_margin):
-#     x_diameter = np.random.choice(x_diameter_choices)
-#     y_diameter = x_diameter * axis_ratio
-#     radius = np.array([x_diameter / 2, y_diameter / 2])
-#     center = np.random.randint(
-#         radius + border_margin, [np.floor(image_size - radius - border_margin)], 2)
-#
-#     new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
-#                               np.array([np.negative(radius), radius]))
-#     return new_bbox
-
-
 def create_bbox(image_size, bboxes, x_diameter_choices, axis_ratio, iou_thresh, margin_from_edge):
     max_count = 10000
     count = 0
     while True:
-        # new_bbox = set_bbox(x_diameter_choices, axis_ratio, image_size, margin_from_edge)
-        #
-        # ..
         x_diameter = np.random.choice(x_diameter_choices)
         y_diameter = x_diameter * axis_ratio
         radius = np.array([x_diameter / 2, y_diameter / 2])
@@ -46,8 +31,6 @@ def create_bbox(image_size, bboxes, x_diameter_choices, axis_ratio, iou_thresh, 
 
         new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
                                   np.array([np.negative(radius), radius]))
-
-        # ..
 
         iou = [compute_iou(new_bbox, bbox) for bbox in bboxes]
         if len(iou) == 0 or max(iou) == iou_thresh:
