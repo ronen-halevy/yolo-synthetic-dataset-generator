@@ -46,7 +46,7 @@ def draw_bounding_box(image, ymin, xmin, ymax, xmax, color, thickness=3):
     return image
 
 
-def plot_image_with_bbox(shapes_file, config_file, plot_setup):
+def plot_image_with_bbox(config_file, shapes_file, plot_setup):
     with open(shapes_file) as f:
         shapes = json.load(f)['shapes']
     class_names = [shape['name'] for shape in shapes]
@@ -109,5 +109,5 @@ if __name__ == '__main__':
         'figsize': (15, 15)
     }
 
-    plot_image_with_bbox('shapes.json', 'config.json',  plot_setup=plot_setup_params)
+    plot_image_with_bbox('config.json',  'shapes.json', plot_setup=plot_setup_params)
 
