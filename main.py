@@ -61,25 +61,26 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
             bboxes.append(bbox)
         else:
             break
-        color = tuple(shape_entry['color'])
+        fill_color = tuple(shape_entry['fill_color']) if len(shape_entry['fill_color']) else None
+        outline_color = tuple(shape_entry['outline_color']) if len(shape_entry['outline_color']) else None
 
         if shape_entry['shape_type'] == 'ellipse':
             x_min, y_min, x_max, y_max = bbox.tolist()
-            draw.ellipse([x_min, y_min, x_max, y_max], fill=color, outline=color, width=3)
+            draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
 
         elif shape_entry['shape_type'] == 'rectangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
-            draw.rectangle([x_min, y_min, x_max, y_max], fill=color, outline=color, width=3)
+            draw.rectangle([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
 
         elif shape_entry['shape_type'] == 'triangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
             vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
-            draw.polygon(vertices, fill=color, outline=color)
+            draw.polygon(vertices, fill=fill_color, outline=outline_color)
 
         elif shape_entry['shape_type'] == 'triangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
             vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
-            draw.polygon(vertices, fill=color, outline=color)
+            draw.polygon(vertices, fill=fill_color, outline=outline_color)
 
         elif shape_entry['shape_type'] in ['trapezoid', 'hexagon']:
             x_min, y_min, x_max, y_max = bbox.tolist()
@@ -91,7 +92,7 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
                  math.sin(th) * rad_y + center_y)
                 for th in [i * (2 * math.pi) / sides for i in range(sides)]
             ]
-            draw.polygon(xy, fill=color, outline=color)
+            draw.polygon(xy, fill=fill_color, outline=outline_color)
     return image, bboxes, added_shapes
 
 
@@ -110,7 +111,8 @@ def main(config, shapes):
 
                 image, bboxes, added_shapes = make_image(shapes, config['image_size'],
                                                          config['max_objects_in_image'],
-                                                         config['bg_color'], config['iou_thresh'],
+                                                         config['bg_color'],
+                                                         config['iou_thresh'],
                                                          config['margin_from_edge'])
                 if len(bboxes) == 0:
                     continue
