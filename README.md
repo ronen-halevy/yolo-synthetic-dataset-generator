@@ -4,6 +4,11 @@ This is not just a dataset of randomly selected shape images, but a flexible too
 
 ##Dataset's images with bounding boxes
 
+
+![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-a.png)
+
+![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-b.png)
+
 ![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-1.png)
 
 ![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-1.png)
