@@ -62,7 +62,7 @@ def plot_image_with_bbox(config, shapes, split, plot_setup):
     random_select = plot_setup['random_select']
 
     for idx in range(num_of_images):
-        image_index = np.random.randint(start_index, len(annotations)) if random_select else start_index + idx
+        image_index = np.random.randint(start_index, len(annotations) - start_index) if random_select else start_index + idx
         line = annotations[image_index]
         plt.figure(figsize=figsize)
 
@@ -100,13 +100,13 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--num_of_images", help="num_of_images to plot",
                         type=int, default=4)
 
-    parser.add_argument("-r", "--random", help="if random index",
+    parser.add_argument("-random", "--random", help="if random index",
                          action='store_true')
 
     parser.add_argument("-fsize", "--figsize", help="train, test or validation",
                         type=int, default=10)
 
-    parser.add_argument("-s", "--start_index", help="start_index, test or validation",
+    parser.add_argument("-start", "--start_index", help="start_index, test or validation",
                         type=int, default='train')
 
     args = vars(parser.parse_args())
