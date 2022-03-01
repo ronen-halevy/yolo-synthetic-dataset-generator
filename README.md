@@ -414,12 +414,11 @@ optional arguments:
 
 # Running From Colab
 
-Find 'create-shapes.ipynb` demonstrates the creation of dataset in colab. Click the `
+Repo iincludes a Jupyternotebook named 'create-shapes.ipynb` which demonstrates the dataset creation and display.
+
+Click the `Colab` button in the file:
 
 ![alt text](https://colab.research.google.com/assets/colab-badge.svg)
-
-
-<img src=\"https://colab.research.google.com/assets/colab-badge.svg\">
 
 
 
