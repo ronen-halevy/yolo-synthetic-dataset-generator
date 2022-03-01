@@ -2,9 +2,11 @@
 There are many datasets available arround, but I needed a simple and felxible-modifiable dataset for my image classification and object detection experiments.
 This is not just a dataset of randomly selected shape images, but a flexible tool which permit an easy modification of the produced images,  done by editing two json files, as detailed here below.
 
-Meanwhile, heres an example image:
+##Dataset's images with bounding boxes
 
-![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/009898.jpg)
+![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-1.png)
+
+![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-1.png)
 
 
 #Dataset Structure
@@ -401,12 +403,6 @@ optional arguments:
                         start_index, test or valid
 
 
-
-An example plot follows:
-
-![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-boxes1.png)
-
-![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shape_boxes-2.png)
 
 
 
