@@ -377,7 +377,30 @@ Generation Execution:
 
 `python plot_images.py config.json shapes.json [section]`
 
-Where section is the set to pick images from, which can be `train' (default), 'test', or valid'.
+Where `section is the set to pick images from, which can be `train' (default), 'test', or valid'.
+
+
+`python plot_images.py -conf="config.json"  -sec="train" -n=4 -r -fsize=10 -s=0
+
+usage: plot_images.py [-h] [-conf CONFIG_FILE] [-shapes SHAPES_FILE] [-sec SECTION] [-n NUM_OF_IMAGES] [-r] [-fsize FIGSIZE] [-s START_INDEX]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -conf CONFIG_FILE, --config_file CONFIG_FILE
+                        config_file name
+  -shapes SHAPES_FILE, --shapes_file SHAPES_FILE
+                        config_file name
+  -sec SECTION, --section SECTION
+                        train, test or valid
+  -n NUM_OF_IMAGES, --num_of_images NUM_OF_IMAGES
+                        num_of_images to plot
+  -r, --random          if random index
+  -fsize FIGSIZE, --figsize FIGSIZE
+                        train, test or valid
+  -s START_INDEX, --start_index START_INDEX
+                        start_index, test or valid
+
+
 
 An example plot follows:
 
