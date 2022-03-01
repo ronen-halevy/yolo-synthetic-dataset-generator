@@ -415,9 +415,11 @@ optional arguments:
 # Running From Colab
 
 Find 'create-shapes.ipynb` demonstrates the creation of dataset in colab. Click the `
-<img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/>
+
+![alt text](https://colab.research.google.com/assets/colab-badge.svg)
 
 
+<img src=\"https://colab.research.google.com/assets/colab-badge.svg\">
 
 
 
