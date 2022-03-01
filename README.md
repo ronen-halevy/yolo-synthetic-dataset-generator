@@ -2,16 +2,11 @@
 There are many datasets available arround, but I needed a simple and felxible-modifiable dataset for my image classification and object detection experiments.
 This is not just a dataset of randomly selected shape images, but a flexible tool which permit an easy modification of the produced images,  done by editing two json files, as detailed here below.
 
-##Dataset's images with bounding boxes
-
+## Dataset's images with bounding boxes
 
 ![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-a.png)
 
 ![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-b.png)
-
-![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-1.png)
-
-![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-1.png)
 
 
 #Dataset Structure
@@ -66,7 +61,7 @@ Some orientation about the file's attributes:
   ],
   "margin_from_edge": 5,
   "iou_thresh": 0,
-  "sections": {
+  "splits": {
     "train": {
       "num_of_examples": 10000,
       "images_dir": "./shapes-dataset/train/images",
@@ -77,7 +72,7 @@ Some orientation about the file's attributes:
       "images_dir": "./shapes-dataset/test/images",
       "annotations_path": "./shapes-dataset/train/annotations/annotations.txt"
     },
-    "valid": {
+    "validation": {
       "num_of_examples": 2000,
       "images_dir": "./shapes-dataset/valid/images",
       "annotations_path": "./shapes-dataset/valid/annotations/annotations.txt"
@@ -382,12 +377,19 @@ Generation Execution:
 
 **Display Example Images Plots With Annotations**
 
-`python plot_images.py config.json shapes.json [section]`
+Example:
 
-Where `section is the set to pick images from, which can be `train' (default), 'test', or valid'.
+`python plot_images.py -conf="config.json" -shape="shape.json" -n=4 -random -split="train" -fsize=10 -start=0`
 
+**Interpretation:**
 
-`python plot_images.py -conf="config.json"  -sec="train" -n=4 -r -fsize=10 -s=0
+- plot 4 images  
+- randomly selected 
+- from train split, 
+- fig size 10x10 
+- first index (or lower limit of index if random): 0
+
+**Help**
 
 usage: plot_images.py [-h] [-conf CONFIG_FILE] [-shapes SHAPES_FILE] [-sec SECTION] [-n NUM_OF_IMAGES] [-r] [-fsize FIGSIZE] [-s START_INDEX]
 
@@ -406,8 +408,9 @@ optional arguments:
                         train, test or valid
   -s START_INDEX, --start_index START_INDEX
                         start_index, test or valid
+                      
 
-
+```
 
 
 
