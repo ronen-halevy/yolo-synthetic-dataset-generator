@@ -2,6 +2,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 import math
 import json
+import os
+from pathlib import Path
 
 
 def compute_iou(box1, box2):
@@ -19,13 +21,13 @@ def compute_iou(box1, box2):
     return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
 
-def create_bbox(image_size, bboxes, x_diameter_choices, axis_ratio, iou_thresh, margin_from_edge):
+def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge):
     max_count = 10000
     count = 0
     while True:
-        x_diameter = np.random.choice(x_diameter_choices)
-        y_diameter = x_diameter * axis_ratio
-        radius = np.array([x_diameter / 2, y_diameter / 2])
+        shape_width = np.random.choice(shape_width_choices)
+        shape_height = shape_width * axis_ratio
+        radius = np.array([shape_width / 2, shape_height / 2])
         center = np.random.randint(
             radius + margin_from_edge, [np.floor(image_size - radius - margin_from_edge)], 2)
 
@@ -54,9 +56,9 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
         added_shapes.append(shape_entry)
 
     for shape_entry in added_shapes:
-        axis_ratio = shape_entry['diameter_ratio']
-        x_diameter_choices = shape_entry['x_diameter_choices']
-        bbox = create_bbox(image_size, bboxes, x_diameter_choices, axis_ratio, iou_thresh, margin_from_edge)
+        axis_ratio = shape_entry['shape_aspect_ratio']
+        shape_width_choices = shape_entry['shape_width_choices']
+        bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge)
         if len(bbox):
             bboxes.append(bbox)
         else:
@@ -97,14 +99,15 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
 
 
 def main(config, shapes):
-    sections = config['sections']
+    splits = config['splits']
 
-    for section in sections:
+    for split in splits:
 
-        num_of_examples = sections[section]["num_of_examples"]
+        num_of_examples = splits[split]["num_of_examples"]
 
-        images_dir = sections[section]["images_dir"]
-        annotations_path = sections[section]["annotations_path"]
+        images_dir = splits[split]["images_dir"]
+
+        annotations_path = splits[split]["annotations_path"]
 
         with open(annotations_path, 'w') as annotation_file:
             for example in range(int(num_of_examples)):
@@ -135,3 +138,6 @@ if __name__ == '__main__':
         shapes_data = json.load(f)['shapes']
 
     main(config=config_data, shapes=shapes_data)
+
+
+

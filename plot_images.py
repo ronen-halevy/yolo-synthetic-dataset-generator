@@ -46,14 +46,10 @@ def draw_bounding_box(image, ymin, xmin, ymax, xmax, color, thickness=3):
     return image
 
 
-def plot_image_with_bbox(config_file, shapes_file, section, plot_setup):
-    with open(shapes_file) as f:
-        shapes = json.load(f)['shapes']
+def plot_image_with_bbox(config, shapes, split, plot_setup):
     class_names = [shape['name'] for shape in shapes]
 
-    with open(config_file) as f:
-        config = json.load(f)
-    annotations_path = config['sections'][section]["annotations_path"]
+    annotations_path = config['splits'][split]["annotations_path"]
     font_size = config['annotations_font_size']
     text_color = tuple(config['annotatons_text_color'])
 
@@ -93,27 +89,42 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("config_file", help="config_file name",
-                        type=str, default='config.json')
-    parser.add_argument("shapes_file", help="config_file name",
-                        type=str, default='shapes.json')
+    parser.add_argument("-conf", "--config_file", help="config_file name",
+                        type=argparse.FileType('r'), default='config.json')
+    parser.add_argument("-shapes", "--shapes_file", help="config_file name",
+                        type=argparse.FileType('r'), default='shapes.json')
 
-    parser.add_argument("section", help="train, test or valid",
+    parser.add_argument("-split", "--split", choices=['train', 'test', 'validation'], help="dataset split",
                         type=str, default='train')
 
+    parser.add_argument("-n", "--num_of_images", help="num_of_images to plot",
+                        type=int, default=4)
+
+    parser.add_argument("-r", "--random", help="if random index",
+                         action='store_true')
+
+    parser.add_argument("-fsize", "--figsize", help="train, test or validation",
+                        type=int, default=10)
+
+    parser.add_argument("-s", "--start_index", help="start_index, test or validation",
+                        type=int, default='train')
 
     args = vars(parser.parse_args())
-    config_fname = args['config_file']
-    shapes_fname = args['shapes_file']
-    section = args['section']
+    split = args['split']
 
+    num_of_images = args['num_of_images']
+    random = args['random']
+    figsize = (args['figsize'], args['figsize'])
+    start_index = args['start_index']
 
     plot_setup_params = {
-        'num_of_images': 5,
-        'start_index': 0,
-        'random_select': True,
-        'figsize': (15, 15)
+        'num_of_images': num_of_images,
+        'start_index': start_index,
+        'random_select': random,
+        'figsize': figsize
     }
+    shapes = json.load(args['shapes_file'])['shapes']
+    config = json.load(args['config_file'])
 
-    plot_image_with_bbox('config.json',  'shapes.json', section=section, plot_setup=plot_setup_params)
+    plot_image_with_bbox(config,  shapes, split=split, plot_setup=plot_setup_params)
 

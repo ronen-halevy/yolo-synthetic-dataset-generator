@@ -22,21 +22,21 @@
   ],
   "margin_from_edge": 5,
   "iou_thresh": 0,
-  "sections": {
+  "splits": {
     "train": {
       "num_of_examples": 10000,
-      "images_dir": "./shapes-dataset/train/images",
-      "annotations_path": "./shapes-dataset/train/annotations/annotations.txt"
+      "images_dir": "./dataset/train/images",
+      "annotations_path": "./dataset/train/annotations/annotations.txt"
     },
     "test": {
       "num_of_examples": 2000,
-      "images_dir": "./shapes-dataset/test/images",
-      "annotations_path": "./shapes-dataset/train/annotations/annotations.txt"
+      "images_dir": "./dataset/test/images",
+      "annotations_path": "./dataset/train/annotations/annotations.txt"
     },
-    "valid": {
+    "validation": {
       "num_of_examples": 2000,
-      "images_dir": "./shapes-dataset/valid/images",
-      "annotations_path": "./shapes-dataset/valid/annotations/annotations.txt"
+      "images_dir": "./dataset/validation/images",
+      "annotations_path": "./dataset/validation/annotations/annotations.txt"
     }
   }
 }

@@ -4,7 +4,7 @@
       "id": 0,
       "shape_type": "ellipse",
       "name": "circle",
-      "diameter_ratio": 1,
+      "shape_aspect_ratio": 1,
       "fill_color": [
         255,
         0,
@@ -15,7 +15,7 @@
         0,
         255
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -25,7 +25,7 @@
       "id": 1,
       "shape_type": "ellipse",
       "name": "wide_ellipse",
-      "diameter_ratio": 0.5,
+      "shape_aspect_ratio": 0.5,
       "fill_color": [
         120,
         0,
@@ -36,7 +36,7 @@
         0,
         200
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -46,7 +46,7 @@
       "id": 2,
       "shape_type": "ellipse",
       "name": "narrow_ellipse",
-      "diameter_ratio": 2,
+      "shape_aspect_ratio": 2,
       "fill_color": [
         190,
         80,
@@ -57,7 +57,7 @@
         80,
         20
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -67,7 +67,7 @@
       "id": 3,
       "shape_type": "rectangle",
       "name": "square",
-      "diameter_ratio": 1,
+      "shape_aspect_ratio": 1,
       "fill_color": [
         220,
         0,
@@ -78,7 +78,7 @@
         0,
         90
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -88,7 +88,7 @@
       "id": 4,
       "shape_type": "rectangle",
       "name": "wide_rectangle",
-      "diameter_ratio": 0.5,
+      "shape_aspect_ratio": 0.5,
       "fill_color": [
         12,
         88,
@@ -99,7 +99,7 @@
         88,
         20
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -109,7 +109,7 @@
       "id": 5,
       "shape_type": "rectangle",
       "name": "narrow_rectangle",
-      "diameter_ratio": 2,
+      "shape_aspect_ratio": 2,
       "fill_color": [
         120,
         0,
@@ -120,7 +120,7 @@
         0,
         200
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -130,7 +130,7 @@
       "id": 6,
       "shape_type": "triangle",
       "name": "triangle",
-      "diameter_ratio": 1,
+      "shape_aspect_ratio": 1,
       "fill_color": [
         120,
         0,
@@ -141,7 +141,7 @@
         0,
         200
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -151,7 +151,7 @@
       "id": 7,
       "shape_type": "triangle",
       "name": "wide_triangle",
-      "diameter_ratio": 0.5,
+      "shape_aspect_ratio": 0.5,
       "fill_color": [
         120,
         0,
@@ -162,7 +162,7 @@
         0,
         200
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -172,7 +172,7 @@
       "id": 8,
       "shape_type": "triangle",
       "name": "narrow_triangle",
-      "diameter_ratio": 2,
+      "shape_aspect_ratio": 2,
       "fill_color": [
         120,
         0,
@@ -183,7 +183,7 @@
         0,
         200
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -193,7 +193,7 @@
       "id": 9,
       "shape_type": "trapezoid",
       "name": "trapezoid",
-      "diameter_ratio": 2,
+      "shape_aspect_ratio": 2,
       "fill_color": [
         120,
         0,
@@ -204,7 +204,7 @@
         0,
         200
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -215,7 +215,7 @@
       "id": 10,
       "shape_type": "hexagon",
       "name": "hexagon",
-      "diameter_ratio": 2,
+      "shape_aspect_ratio": 2,
       "fill_color": [
         120,
         0,
@@ -226,7 +226,7 @@
         0,
         200
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
@@ -237,14 +237,14 @@
       "id": 11,
       "shape_type": "rectangle",
       "name": "narrow_rectangle_frame",
-      "diameter_ratio": 2,
+      "shape_aspect_ratio": 2,
       "fill_color": [],
       "outline_color": [
         120,
         0,
         200
       ],
-      "x_diameter_choices": [
+      "shape_width_choices": [
         30,
         60,
         100
