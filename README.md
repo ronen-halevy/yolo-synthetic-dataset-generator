@@ -416,9 +416,9 @@ optional arguments:
 
 Repo iincludes a Jupyternotebook named 'create-shapes.ipynb` which demonstrates the dataset creation and display.
 
-Click the `Colab` button in the file:
+Find the ![alt text](https://colab.research.google.com/assets/colab-badge.svg) button at the file's top:
 
-![alt text](https://colab.research.google.com/assets/colab-badge.svg)
+
 
 
 
