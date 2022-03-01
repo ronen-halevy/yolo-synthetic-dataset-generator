@@ -9,10 +9,10 @@ This is not just a dataset of randomly selected shape images, but a flexible too
 ![alt text](https://github.com/ronen-halevy/shapes-dataset/blob/main/docs/shapes-box-b.png)
 
 
-#Dataset Structure
+# Dataset Structure
 This repo contains both the dataset generation code and a generated dataset which consists of Train, Test, and Validation sections, each holds images jpegs and bounding box data.
 
-#Configuration Files
+# Configuration Files
 The dataset contents is configured using 2 json files:
 
 - config.json: Defines the arrangement of the dataset images and of the shapes within the images.
@@ -391,6 +391,7 @@ Example:
 
 **Help**
 
+```python
 usage: plot_images.py [-h] [-conf CONFIG_FILE] [-shapes SHAPES_FILE] [-sec SECTION] [-n NUM_OF_IMAGES] [-r] [-fsize FIGSIZE] [-s START_INDEX]
 
 optional arguments:
