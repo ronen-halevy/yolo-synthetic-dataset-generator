@@ -22,21 +22,7 @@
   ],
   "margin_from_edge": 5,
   "iou_thresh": 0,
-  "splits": {
-    "train": {
-      "num_of_examples": 10000,
-      "images_dir": "./dataset/train/images",
-      "annotations_path": "./dataset/train/annotations/annotations.txt"
-    },
-    "test": {
-      "num_of_examples": 2000,
-      "images_dir": "./dataset/test/images",
-      "annotations_path": "./dataset/train/annotations/annotations.txt"
-    },
-    "validation": {
-      "num_of_examples": 2000,
-      "images_dir": "./dataset/validation/images",
-      "annotations_path": "./dataset/validation/annotations/annotations.txt"
-    }
-  }
+  "num_of_examples": 100,
+  "images_dir": "./dataset/images",
+  "annotations_path": "./dataset/annotations/annotations.json"
 }

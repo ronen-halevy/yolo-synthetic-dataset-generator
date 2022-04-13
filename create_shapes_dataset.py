@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 
 
+def create_tfrecord(image, boxes,added_shapes):
+    pass
+
+
 def compute_iou(box1, box2):
     """x_min, y_min, x_max, y_max"""
     area_box_1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
@@ -60,7 +64,7 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
         shape_width_choices = shape_entry['shape_width_choices']
         bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge)
         if len(bbox):
-            bboxes.append(bbox)
+            bboxes.append(bbox.tolist())
         else:
             break
         fill_color = tuple(shape_entry['fill_color']) if len(shape_entry['fill_color']) else None
@@ -99,33 +103,40 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
 
 
 def main(config, shapes):
-    splits = config['splits']
+    
+    num_of_examples =config["num_of_examples"]
+    
+    images_dir = config["images_dir"]
+    
+    annotations_path = config["annotations_path"]
+    
+    import json
+    annotatons = []
+    #
+    # with open(annotations_path, 'w') as annotation_file:
+    
+    for example in range(int(num_of_examples)):
+    
+        image, bboxes, added_shapes = make_image(shapes, config['image_size'],
+                                                 config['max_objects_in_image'],
+                                                 config['bg_color'],
+                                                 config['iou_thresh'],
+                                                 config['margin_from_edge'])
+        if len(bboxes) == 0:
+            continue
+    
+    
+        file_path = f'{images_dir}/{example + 1:06d}.jpg'
+        image.save(file_path)
+    
+        annotatons.append({'bboxes': bboxes, 'shapes': added_shapes, 'image_path': file_path})
+    
+    data = {
+        "annotations": annotatons
+    }
 
-    for split in splits:
-
-        num_of_examples = splits[split]["num_of_examples"]
-
-        images_dir = splits[split]["images_dir"]
-
-        annotations_path = splits[split]["annotations_path"]
-
-        with open(annotations_path, 'w') as annotation_file:
-            for example in range(int(num_of_examples)):
-
-                image, bboxes, added_shapes = make_image(shapes, config['image_size'],
-                                                         config['max_objects_in_image'],
-                                                         config['bg_color'],
-                                                         config['iou_thresh'],
-                                                         config['margin_from_edge'])
-                if len(bboxes) == 0:
-                    continue
-                file_path = f'{images_dir}/{example + 1:06d}.jpg'
-                image.save(file_path)
-                annotation = file_path
-                for box, shape in zip(bboxes, added_shapes):
-                    box_and_label = np.append(box, shape['id'])
-                    annotation += ' ' + ','.join([str(entry) for entry in box_and_label.astype(np.int32)])
-                annotation_file.write(annotation + '\n')
+    with open(annotations_path, 'w') as annotation_file:
+        json.dump(data, annotation_file, ensure_ascii=False, indent=4)
 
 
 if __name__ == '__main__':
