@@ -110,7 +110,7 @@ class CreateTfrecords:
 
 def main():
     # root_dir = "/home/ronen/PycharmProjects/shapes-dataset/"
-    tfrecords_out_dir = "dataset/tfrecords_dir"
+    tfrecords_out_dir = "dataset/tfrecords"
     # input_images_dir = os.path.join(root_dir, "dataset/annotations/annotations.json")
     input_annotation_file = "dataset/annotations/annotations.json"
     create = CreateTfrecords()

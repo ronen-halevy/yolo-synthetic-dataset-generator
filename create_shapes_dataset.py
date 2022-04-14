@@ -3,11 +3,7 @@ from PIL import Image, ImageDraw
 import math
 import json
 import os
-from pathlib import Path
-
-
-def create_tfrecord(image, boxes,added_shapes):
-    pass
+import create_tfrecord
 
 
 def compute_iou(box1, box2):
@@ -103,20 +99,22 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
 
 
 def main(config, shapes):
-    
-    num_of_examples =config["num_of_examples"]
-    
+    num_of_examples = config["num_of_examples"]
+
     images_dir = config["images_dir"]
-    
+
     annotations_path = config["annotations_path"]
-    
+
     import json
     annotatons = []
     #
     # with open(annotations_path, 'w') as annotation_file:
-    
+    if not os.path.exists(images_dir):
+        os.makedirs(images_dir)  # c
+
+
     for example in range(int(num_of_examples)):
-    
+
         image, bboxes, added_shapes = make_image(shapes, config['image_size'],
                                                  config['max_objects_in_image'],
                                                  config['bg_color'],
@@ -124,13 +122,12 @@ def main(config, shapes):
                                                  config['margin_from_edge'])
         if len(bboxes) == 0:
             continue
-    
-    
+
         file_path = f'{images_dir}/{example + 1:06d}.jpg'
         image.save(file_path)
-    
+
         annotatons.append({'bboxes': bboxes, 'shapes': added_shapes, 'image_path': file_path})
-    
+
     data = {
         "annotations": annotatons
     }
@@ -149,6 +146,4 @@ if __name__ == '__main__':
         shapes_data = json.load(f)['shapes']
 
     main(config=config_data, shapes=shapes_data)
-
-
-
+    create_tfrecord.main()
