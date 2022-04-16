@@ -22,7 +22,7 @@
   ],
   "margin_from_edge": 5,
   "iou_thresh": 0,
-  "num_of_examples": 15000,
+  "num_of_examples": 50,
   "images_dir": "./dataset/images",
   "annotations_path": "./dataset/annotations/annotations.json"
 }

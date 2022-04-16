@@ -4,6 +4,7 @@ import math
 import json
 import os
 import create_tfrecord
+# import read_tfrecords
 
 
 def compute_iou(box1, box2):
@@ -98,7 +99,7 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
     return image, bboxes, added_shapes
 
 
-def main(config, shapes):
+def create_dataset(config, shapes):
     num_of_examples = config["num_of_examples"]
 
     images_dir = config["images_dir"]
@@ -145,5 +146,15 @@ if __name__ == '__main__':
     with open(shapes_file) as f:
         shapes_data = json.load(f)['shapes']
 
-    main(config=config_data, shapes=shapes_data)
+    create_dataset(config=config_data, shapes=shapes_data)
     create_tfrecord.main()
+
+    import tensorflow as tf
+    tfrecords_out_dir = "dataset/tfrecords"
+    train_filenames = tf.io.gfile.glob(f"{tfrecords_out_dir}/*.tfrec")
+    batch_size = 10  # 32
+
+
+    read = create_tfrecord.ReadTfrecordsShapes()
+    ds = read.get_dataset(train_filenames, batch_size)
+
