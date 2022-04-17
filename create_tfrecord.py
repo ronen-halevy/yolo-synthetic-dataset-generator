@@ -60,8 +60,11 @@ class CreateTfrecords:
     @staticmethod
     def create_example(image, path, example):
         boxes = np.reshape(example['bboxes'], -1)
-        id = [object['id'] for object in example['shapes']]
-        text = [object['name'] for object in example['shapes']]
+        id = [object['id'] for object in example['objects']]
+        try:
+            text = [object['text'] for object in example['objects']]
+        except Exception as e:
+            pass
 
         feature = {
             "image": dataset_util.image_feature(image),
@@ -100,11 +103,6 @@ class CreateTfrecords:
                     image = tf.io.decode_jpeg(tf.io.read_file(image_path))
                     example = CreateTfrecords.create_example(image, image_path, sample)
                     writer.write(example.SerializeToString())
-
-    def read_example(self, tfrecords_file_path):
-        raw_dataset = tf.data.TFRecordDataset(tfrecords_file_path)
-        dataset_example = raw_dataset.map(self.parse_tfrecord_fn)
-        return dataset_example
 
 
 if __name__ == '__main__':

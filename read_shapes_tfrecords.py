@@ -34,6 +34,7 @@ class ReadTfrecords:
             "ymin": tf.io.VarLenFeature(tf.float32),
             "xmax": tf.io.VarLenFeature(tf.float32),
             "ymax": tf.io.VarLenFeature(tf.float32),
+            "text": tf.io.VarLenFeature(tf.string),
             "category_id": tf.io.VarLenFeature(tf.int64),
         }
         example = tf.io.parse_single_example(example, feature_description)
@@ -43,6 +44,8 @@ class ReadTfrecords:
         example['xmax'] = tf.sparse.to_dense(example['xmax'])
         example['ymax'] = tf.sparse.to_dense(example['ymax'])
         example['category_id'] = tf.sparse.to_dense(example['category_id'])
+        example['text'] = tf.sparse.to_dense(example['text'])
+
         return example
 
     @staticmethod

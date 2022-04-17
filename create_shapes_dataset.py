@@ -136,7 +136,7 @@ def create_dataset(config, shapes):
         file_path = f'{images_dir}/{example + 1:06d}.jpg'
         image.save(file_path)
 
-        annotatons.append({'bboxes': bboxes, 'shapes': added_shapes, 'image_path': file_path})
+        annotatons.append({'bboxes': bboxes, 'objects': added_shapes, 'image_path': file_path})
 
     data = {
         "annotations": annotatons
