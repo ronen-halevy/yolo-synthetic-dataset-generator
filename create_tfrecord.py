@@ -1,8 +1,19 @@
+#! /usr/bin/env python
+# coding=utf-8
+# ================================================================
+#   Copyright (C) 2022 . All rights reserved.
+#
+#   File name   : create_tfrecord.py
+#   Author      : ronen halevy
+#   Created date:  4/16/22
+#   Description :
+#
+# ================================================================
+
 import os
 import json
 import tensorflow as tf
 import numpy as np
-from matplotlib import pyplot as plt
 
 
 class dataset_util:
@@ -21,6 +32,7 @@ class dataset_util:
     @staticmethod
     def bytes_feature_list(value):
         """Returns a bytes_list from a string / byte."""
+        value = [x.encode('utf8') for x in value]
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=value))
 
     @staticmethod
@@ -44,11 +56,12 @@ class dataset_util:
         return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 
-class CreateTfrecordsShapes:
+class CreateTfrecords:
     @staticmethod
     def create_example(image, path, example):
         boxes = np.reshape(example['bboxes'], -1)
-        shapes_id = [shape['id'] for shape in example['shapes']]
+        id = [object['id'] for object in example['shapes']]
+        text = [object['name'] for object in example['shapes']]
 
         feature = {
             "image": dataset_util.image_feature(image),
@@ -57,7 +70,8 @@ class CreateTfrecordsShapes:
             "ymin": dataset_util.float_feature_list(boxes[1::4].tolist()),
             "xmax": dataset_util.float_feature_list(boxes[2::4].tolist()),
             "ymax": dataset_util.float_feature_list(boxes[3::4].tolist()),
-            "category_id": dataset_util.int64_feature_list(shapes_id),
+            "id": dataset_util.int64_feature_list(id),
+            'text': dataset_util.bytes_feature_list(text),
         }
         return tf.train.Example(features=tf.train.Features(feature=feature))
 
@@ -84,7 +98,7 @@ class CreateTfrecordsShapes:
                 for sample in samples:
                     image_path = sample['image_path']  # f"{images_dir}/{sample['image_id']:012d}.jpg"
                     image = tf.io.decode_jpeg(tf.io.read_file(image_path))
-                    example = CreateTfrecordsShapes.create_example(image, image_path, sample)
+                    example = CreateTfrecords.create_example(image, image_path, sample)
                     writer.write(example.SerializeToString())
 
     def read_example(self, tfrecords_file_path):
@@ -93,11 +107,8 @@ class CreateTfrecordsShapes:
         return dataset_example
 
 
-
-
 if __name__ == '__main__':
     tfrecords_out_dir = "dataset/tfrecords"
-    # input_images_dir = os.path.join(root_dir, "dataset/annotations/annotations.json")
     input_annotation_file = "dataset/annotations/annotations.json"
-    create = CreateTfrecordsShapes()
+    create = CreateTfrecords()
     create.create_tfrecords(input_annotation_file, tfrecords_out_dir)

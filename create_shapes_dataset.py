@@ -1,10 +1,20 @@
+#! /usr/bin/env python
+# coding=utf-8
+# ================================================================
+#   Copyright (C) 2022 . All rights reserved.
+#
+#   File name   : create_shapes_dataset.py
+#   Author      : ronen halevy
+#   Created date:  4/16/22
+#   Description :
+#
+# ================================================================
+
 import numpy as np
 from PIL import Image, ImageDraw
 import math
 import json
 import os
-import create_tfrecord
-# import read_tfrecords
 
 
 def compute_iou(box1, box2):
@@ -113,7 +123,6 @@ def create_dataset(config, shapes):
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)  # c
 
-
     for example in range(int(num_of_examples)):
 
         image, bboxes, added_shapes = make_image(shapes, config['image_size'],
@@ -147,14 +156,3 @@ if __name__ == '__main__':
         shapes_data = json.load(f)['shapes']
 
     create_dataset(config=config_data, shapes=shapes_data)
-    create_tfrecord.main()
-
-    import tensorflow as tf
-    tfrecords_out_dir = "dataset/tfrecords"
-    train_filenames = tf.io.gfile.glob(f"{tfrecords_out_dir}/*.tfrec")
-    batch_size = 10  # 32
-
-
-    read = create_tfrecord.ReadTfrecordsShapes()
-    ds = read.get_dataset(train_filenames, batch_size)
-
