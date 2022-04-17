@@ -67,14 +67,14 @@ class CreateTfrecords:
             pass
 
         feature = {
-            "image": dataset_util.image_feature(image),
-            "path": dataset_util.bytes_feature(path),
-            "xmin": dataset_util.float_feature_list(boxes[0::4].tolist()),
-            "ymin": dataset_util.float_feature_list(boxes[1::4].tolist()),
-            "xmax": dataset_util.float_feature_list(boxes[2::4].tolist()),
-            "ymax": dataset_util.float_feature_list(boxes[3::4].tolist()),
-            "id": dataset_util.int64_feature_list(id),
-            'text': dataset_util.bytes_feature_list(text),
+            "image/encoded": dataset_util.image_feature(image),
+            "image/filename": dataset_util.bytes_feature(path),
+            "image/object/bbox/xmin": dataset_util.float_feature_list(boxes[0::4].tolist()),
+            "image/object/bbox/ymin": dataset_util.float_feature_list(boxes[1::4].tolist()),
+            "image/object/bbox/xmax": dataset_util.float_feature_list(boxes[2::4].tolist()),
+            "image/object/bbox/ymax": dataset_util.float_feature_list(boxes[3::4].tolist()),
+            "image/object/class/label": dataset_util.int64_feature_list(id),
+            'image/object/class/text': dataset_util.bytes_feature_list(text),
         }
         return tf.train.Example(features=tf.train.Features(feature=feature))
 
