@@ -2,8 +2,8 @@
   "shapes": [
     {
       "id": 0,
-      "shape_type": "ellipse",
-      "text": "ellipse",
+      "label": "circle",
+      "text": "circle",
       "shape_aspect_ratio": 1,
       "fill_color": [
         255,
@@ -23,7 +23,7 @@
     },
     {
       "id": 1,
-      "shape_type": "ellipse",
+      "label": "ellipse",
       "text": "wide_ellipse",
       "shape_aspect_ratio": 0.5,
       "fill_color": [
@@ -44,7 +44,7 @@
     },
     {
       "id": 2,
-      "shape_type": "ellipse",
+      "label": "ellipse",
       "text": "narrow_ellipse",
       "shape_aspect_ratio": 2,
       "fill_color": [
@@ -65,7 +65,7 @@
     },
     {
       "id": 3,
-      "shape_type": "rectangle",
+      "label": "rectangle",
       "text": "square",
       "shape_aspect_ratio": 1,
       "fill_color": [
@@ -86,7 +86,7 @@
     },
     {
       "id": 4,
-      "shape_type": "rectangle",
+      "label": "rectangle",
       "text": "wide_rectangle",
       "shape_aspect_ratio": 0.5,
       "fill_color": [
@@ -107,7 +107,7 @@
     },
     {
       "id": 5,
-      "shape_type": "rectangle",
+      "label": "rectangle",
       "text": "narrow_rectangle",
       "shape_aspect_ratio": 2,
       "fill_color": [
@@ -128,7 +128,7 @@
     },
     {
       "id": 6,
-      "shape_type": "triangle",
+      "label": "triangle",
       "text": "triangle",
       "shape_aspect_ratio": 1,
       "fill_color": [
@@ -149,7 +149,7 @@
     },
     {
       "id": 7,
-      "shape_type": "triangle",
+      "label": "triangle",
       "text": "wide_triangle",
       "shape_aspect_ratio": 0.5,
       "fill_color": [
@@ -170,7 +170,7 @@
     },
     {
       "id": 8,
-      "shape_type": "triangle",
+      "label": "triangle",
       "text": "narrow_triangle",
       "shape_aspect_ratio": 2,
       "fill_color": [
@@ -191,7 +191,7 @@
     },
     {
       "id": 9,
-      "shape_type": "trapezoid",
+      "label": "trapezoid",
       "text": "trapezoid",
       "shape_aspect_ratio": 2,
       "fill_color": [
@@ -213,7 +213,7 @@
     },
     {
       "id": 10,
-      "shape_type": "hexagon",
+      "label": "hexagon",
       "text": "hexagon",
       "shape_aspect_ratio": 2,
       "fill_color": [
@@ -232,23 +232,7 @@
         100
       ],
       "sides": 6
-    },
-    {
-      "id": 11,
-      "shape_type": "rectangle",
-      "text": "narrow_rectangle_frame",
-      "shape_aspect_ratio": 2,
-      "fill_color": [],
-      "outline_color": [
-        120,
-        0,
-        200
-      ],
-      "shape_width_choices": [
-        30,
-        60,
-        100
-      ]
     }
+
   ]
 }

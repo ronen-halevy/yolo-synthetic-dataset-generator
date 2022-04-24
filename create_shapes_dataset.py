@@ -77,25 +77,25 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
         fill_color = tuple(shape_entry['fill_color']) if len(shape_entry['fill_color']) else None
         outline_color = tuple(shape_entry['outline_color']) if len(shape_entry['outline_color']) else None
 
-        if shape_entry['shape_type'] == 'ellipse':
+        if shape_entry['label'] in ['ellipse', 'circle']:
             x_min, y_min, x_max, y_max = bbox.tolist()
             draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
 
-        elif shape_entry['shape_type'] == 'rectangle':
+        elif shape_entry['label'] == 'rectangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
             draw.rectangle([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
 
-        elif shape_entry['shape_type'] == 'triangle':
+        elif shape_entry['label'] == 'triangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
             vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
             draw.polygon(vertices, fill=fill_color, outline=outline_color)
 
-        elif shape_entry['shape_type'] == 'triangle':
+        elif shape_entry['label'] == 'triangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
             vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
             draw.polygon(vertices, fill=fill_color, outline=outline_color)
 
-        elif shape_entry['shape_type'] in ['trapezoid', 'hexagon']:
+        elif shape_entry['label'] in ['trapezoid', 'hexagon']:
             x_min, y_min, x_max, y_max = bbox.tolist()
             sides = shape_entry['sides']
             center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
@@ -110,6 +110,7 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
 
 
 def create_dataset(config, shapes):
+    num_of_examples = config["num_of_examples"]
     num_of_examples = config["num_of_examples"]
 
     images_dir = config["images_dir"]
