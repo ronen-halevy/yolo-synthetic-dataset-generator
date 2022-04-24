@@ -11,8 +11,8 @@
 # ================================================================
 import json
 
-shapes_in_file = 'shapes.json'
-class_out_files = 'class.names'
+shapes_in_file = 'config/shapes.json'
+class_out_files = 'dataset/class.names'
 
 with open(shapes_in_file) as f:
     shapes = json.load(f)['shapes']

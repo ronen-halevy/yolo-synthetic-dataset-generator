@@ -148,8 +148,8 @@ def create_dataset(config, shapes):
 
 
 if __name__ == '__main__':
-    config_file = 'config.json'
-    shapes_file = 'shapes.json'
+    config_file = 'config/config.json'
+    shapes_file = 'config/shapes.json'
     with open(config_file) as f:
         config_data = json.load(f)
 
