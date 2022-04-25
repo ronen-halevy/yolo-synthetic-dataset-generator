@@ -49,7 +49,7 @@ def draw_bounding_box(image, ymin, xmin, ymax, xmax, color, thickness=3):
 def plot_image_with_bbox(config, shapes, split, plot_setup):
     class_names = [shape['name'] for shape in shapes]
 
-    annotations_path = config['splits'][split]["annotations_path"]
+    annotations_path = config["annotations_path"]
     font_size = config['annotations_font_size']
     text_color = tuple(config['annotatons_text_color'])
 

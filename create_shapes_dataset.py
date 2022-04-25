@@ -133,7 +133,7 @@ def create_dataset(config, shapes):
             continue
 
         image_filename = f'{example + 1:06d}.jpg'
-        file_path = f'{images_dir}{image_filename}.jpg'
+        file_path = f'{images_dir}{image_filename}'
 
         image.save(file_path)
 
