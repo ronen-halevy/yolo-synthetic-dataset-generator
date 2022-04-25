@@ -14,12 +14,7 @@
     0,
     0
   ],
-  "annotations_font_size": 10,
-  "annotatons_text_color": [
-    255,
-    255,
-    255
-  ],
+
   "margin_from_edge": 5,
   "iou_thresh": 0,
   "num_of_examples": 15000,
