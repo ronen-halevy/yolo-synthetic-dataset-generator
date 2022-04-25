@@ -83,7 +83,7 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
 
         elif shape_entry['label'] == 'rectangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
-            draw.rectangle([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
+            draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
 
         elif shape_entry['label'] == 'triangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
@@ -111,7 +111,6 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
 
 def create_dataset(config, shapes):
     num_of_examples = config["num_of_examples"]
-    num_of_examples = config["num_of_examples"]
 
     images_dir = config["images_dir"]
 
@@ -119,8 +118,7 @@ def create_dataset(config, shapes):
 
     import json
     annotatons = []
-    #
-    # with open(annotations_path, 'w') as annotation_file:
+
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)  # c
 
@@ -135,7 +133,7 @@ def create_dataset(config, shapes):
             continue
 
         image_filename = f'{example + 1:06d}.jpg'
-        file_path = f'{images_dir}/{image_filename}.jpg'
+        file_path = f'{images_dir}{image_filename}.jpg'
 
         image.save(file_path)
 
