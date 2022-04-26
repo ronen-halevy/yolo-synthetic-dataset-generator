@@ -32,12 +32,16 @@ def compute_iou(box1, box2):
     return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
 
-def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge):
+def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge, size_fluctuation=0.01):
     max_count = 10000
     count = 0
     while True:
+
+        import random
+
         shape_width = np.random.choice(shape_width_choices)
-        shape_height = shape_width * axis_ratio
+        shape_height = shape_width * axis_ratio * random.uniform(1-size_fluctuation, 1)
+        shape_width = shape_width *random.uniform(1-size_fluctuation, 1)
         radius = np.array([shape_width / 2, shape_height / 2])
         center = np.random.randint(
             radius + margin_from_edge, [np.floor(image_size - radius - margin_from_edge)], 2)
@@ -56,7 +60,7 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
     return new_bbox
 
 
-def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, margin_from_edge):
+def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, margin_from_edge, size_fluctuation):
     image = Image.new('RGB', image_size, tuple(bg_color))
     draw = ImageDraw.Draw(image)
     num_of_objects = np.random.randint(6, max_objects_in_image)
@@ -69,7 +73,7 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
     for shape_entry in added_shapes:
         axis_ratio = shape_entry['shape_aspect_ratio']
         shape_width_choices = shape_entry['shape_width_choices']
-        bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge)
+        bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge, size_fluctuation)
         if len(bbox):
             bboxes.append(bbox.tolist())
         else:
@@ -128,7 +132,8 @@ def create_dataset(config, shapes):
                                                  config['max_objects_in_image'],
                                                  config['bg_color'],
                                                  config['iou_thresh'],
-                                                 config['margin_from_edge'])
+                                                 config['margin_from_edge'],
+                                                 config['size_fluctuation'])
         if len(bboxes) == 0:
             continue
 
