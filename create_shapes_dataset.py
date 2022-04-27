@@ -46,6 +46,7 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
         center = np.random.randint(
             radius + margin_from_edge, [np.floor(image_size - radius - margin_from_edge)], 2)
 
+        xx = np.tile(center, 2).reshape(2, 2)
         new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
                                   np.array([np.negative(radius), radius]))
 
