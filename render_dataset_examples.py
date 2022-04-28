@@ -53,7 +53,7 @@ def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), fon
     return image
 
 
-def draw_bounding_box(image, boxes, color, thickness=3):
+def draw_bounding_box(image, boxes, color, thickness=1):
     draw = ImageDraw.Draw(image)
     for box in boxes:
         xmin, ymin, xmax, ymax = box
@@ -96,7 +96,7 @@ def main():
         colors = list(ImageColor.colormap.values())
         color = colors[0]
 
-        annotated_bbox_image = draw_bounding_box(image, boxes, color, thickness=3)
+        annotated_bbox_image = draw_bounding_box(image, boxes, color, thickness=1)
 
         classes = [anno_object['label'] for anno_object in line['objects']]
 

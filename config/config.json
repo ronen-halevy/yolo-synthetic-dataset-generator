@@ -1,8 +1,9 @@
 {
   "image_size": [
-    413,
-    413
+    416,
+    416
   ],
+  "min_objects_in_image": 6,
   "max_objects_in_image": 11,
   "x_diameter_choices": [
     30,
@@ -15,7 +16,8 @@
     0
   ],
 
-  "margin_from_edge": 5,
+  "margin_from_edge": 8,
+  "bbox_margin": 2,
   "size_fluctuation": 0.00,
   "iou_thresh": 0,
   "num_of_examples": 10000,

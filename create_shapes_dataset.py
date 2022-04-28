@@ -32,7 +32,8 @@ def compute_iou(box1, box2):
     return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
 
-def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge, size_fluctuation=0.01):
+def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
+                size_fluctuation=0.01):
     max_count = 10000
     count = 0
     while True:
@@ -40,13 +41,13 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
         import random
 
         shape_width = np.random.choice(shape_width_choices)
-        shape_height = shape_width * axis_ratio * random.uniform(1-size_fluctuation, 1)
-        shape_width = shape_width *random.uniform(1-size_fluctuation, 1)
+        shape_height = shape_width * axis_ratio * random.uniform(1 - size_fluctuation, 1)
+        shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
         radius = np.array([shape_width / 2, shape_height / 2])
         center = np.random.randint(
             radius + margin_from_edge, [np.floor(image_size - radius - margin_from_edge)], 2)
 
-        xx = np.tile(center, 2).reshape(2, 2)
+        bbox_sides = radius
         new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
                                   np.array([np.negative(radius), radius]))
 
@@ -54,27 +55,43 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
         if len(iou) == 0 or max(iou) == iou_thresh:
             break
         if count > max_count:
-            new_bbox = []
-            break
+            max_iou = max(iou)
+            raise Exception(
+                f'Shape Objects Placement Failed after {count} placement itterations: max(iou)={max_iou}, '
+                f'but required iou_thresh is {iou_thresh} shape_width: {shape_width},'
+                f' shape_height: {shape_height}. . \nHint: reduce objects size or quantity of objects in an image')
         count += 1
 
     return new_bbox
 
 
-def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, margin_from_edge, size_fluctuation):
+def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, bg_color, iou_thresh, margin_from_edge,
+               bbox_margin,
+               size_fluctuation
+
+               ):
+
+
     image = Image.new('RGB', image_size, tuple(bg_color))
     draw = ImageDraw.Draw(image)
-    num_of_objects = np.random.randint(6, max_objects_in_image)
+    num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
     bboxes = []
     added_shapes = []
     for idx in range(num_of_objects):
         shape_entry = np.random.choice(shapes)
         added_shapes.append(shape_entry)
 
-    for shape_entry in added_shapes:
+    for index, shape_entry in enumerate(added_shapes):
         axis_ratio = shape_entry['shape_aspect_ratio']
         shape_width_choices = shape_entry['shape_width_choices']
-        bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge, size_fluctuation)
+        try:
+            bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
+                               size_fluctuation)
+        except Exception as e:
+            msg = str(e)
+            raise Exception(
+                f'Failed in placing the {index} object into image:\n{msg}.\nHere is the failed-to-be-placed shape entry: {shape_entry}')
+
         if len(bbox):
             bboxes.append(bbox.tolist())
         else:
@@ -111,6 +128,8 @@ def make_image(shapes, image_size, max_objects_in_image, bg_color, iou_thresh, m
                 for th in [i * (2 * math.pi) / sides for i in range(sides)]
             ]
             draw.polygon(xy, fill=fill_color, outline=outline_color)
+
+    bboxes = [[box[0] - bbox_margin, box[1] - bbox_margin, box[2] + bbox_margin, box[3] + bbox_margin] for box in bboxes]
     return image, bboxes, added_shapes
 
 
@@ -128,13 +147,19 @@ def create_dataset(config, shapes):
         os.makedirs(images_dir)  # c
 
     for example in range(int(num_of_examples)):
+        try:
+            image, bboxes, added_shapes = make_image(shapes, config['image_size'],
+                                                     config['min_objects_in_image'],
+                                                     config['max_objects_in_image'],
+                                                     config['bg_color'],
+                                                     config['iou_thresh'],
+                                                     config['margin_from_edge'],
+                                                     config['bbox_margin'],
+                                                     config['size_fluctuation'])
+        except Exception as e:
+            msg = str(e)
+            raise Exception(f'Error: While creating the {example}th image: {msg}')
 
-        image, bboxes, added_shapes = make_image(shapes, config['image_size'],
-                                                 config['max_objects_in_image'],
-                                                 config['bg_color'],
-                                                 config['iou_thresh'],
-                                                 config['margin_from_edge'],
-                                                 config['size_fluctuation'])
         if len(bboxes) == 0:
             continue
 
@@ -161,5 +186,8 @@ if __name__ == '__main__':
 
     with open(shapes_file) as f:
         shapes_data = json.load(f)['shapes']
-
-    create_dataset(config=config_data, shapes=shapes_data)
+    try:
+        create_dataset(config=config_data, shapes=shapes_data)
+    except Exception as e:
+        print(e)
+        exit(1)
