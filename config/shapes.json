@@ -3,7 +3,7 @@
     {
       "id": 0,
       "label": "circle",
-      "text": "circle",
+      "descrition": "circle",
       "shape_aspect_ratio": 1,
       "fill_color": [
         255,
@@ -24,7 +24,7 @@
     {
       "id": 1,
       "label": "ellipse",
-      "text": "wide_ellipse",
+      "descrition": "wide_ellipse",
       "shape_aspect_ratio": 0.5,
       "fill_color": [
         120,
@@ -45,7 +45,7 @@
     {
       "id": 2,
       "label": "ellipse",
-      "text": "narrow_ellipse",
+      "descrition": "narrow_ellipse",
       "shape_aspect_ratio": 2,
       "fill_color": [
         190,
@@ -66,7 +66,7 @@
     {
       "id": 3,
       "label": "rectangle",
-      "text": "square",
+      "descrition": "square",
       "shape_aspect_ratio": 1,
       "fill_color": [
         220,
@@ -87,7 +87,7 @@
     {
       "id": 4,
       "label": "rectangle",
-      "text": "wide_rectangle",
+      "descrition": "wide_rectangle",
       "shape_aspect_ratio": 0.5,
       "fill_color": [
         12,
@@ -108,7 +108,7 @@
     {
       "id": 5,
       "label": "rectangle",
-      "text": "narrow_rectangle",
+      "descrition": "narrow_rectangle",
       "shape_aspect_ratio": 2,
       "fill_color": [
         120,
@@ -129,7 +129,7 @@
     {
       "id": 6,
       "label": "triangle",
-      "text": "triangle",
+      "descrition": "triangle",
       "shape_aspect_ratio": 1,
       "fill_color": [
         120,
@@ -150,7 +150,7 @@
     {
       "id": 7,
       "label": "triangle",
-      "text": "wide_triangle",
+      "descrition": "wide_triangle",
       "shape_aspect_ratio": 0.5,
       "fill_color": [
         120,
@@ -171,7 +171,7 @@
     {
       "id": 8,
       "label": "triangle",
-      "text": "narrow_triangle",
+      "descrition": "narrow_triangle",
       "shape_aspect_ratio": 2,
       "fill_color": [
         120,
@@ -192,7 +192,7 @@
     {
       "id": 9,
       "label": "trapezoid",
-      "text": "trapezoid",
+      "descrition": "trapezoid",
       "shape_aspect_ratio": 2,
       "fill_color": [
         120,
@@ -214,7 +214,7 @@
     {
       "id": 10,
       "label": "hexagon",
-      "text": "hexagon",
+      "descrition": "hexagon",
       "shape_aspect_ratio": 2,
       "fill_color": [
         120,

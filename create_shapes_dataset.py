@@ -15,6 +15,7 @@ from PIL import Image, ImageDraw
 import math
 import json
 import os
+import copy
 
 
 def compute_iou(box1, box2):
@@ -76,17 +77,16 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
     draw = ImageDraw.Draw(image)
     num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
     bboxes = []
-    added_shapes = []
-    for idx in range(num_of_objects):
-        shape_entry = np.random.choice(shapes)
-        added_shapes.append(shape_entry)
+    added_shapes_metadata = []
+    for index in range(num_of_objects):
 
-    for index, shape_entry in enumerate(added_shapes):
+        shape_entry = np.random.choice(shapes)
         axis_ratio = shape_entry['shape_aspect_ratio']
-        shape_width_choices = shape_entry['shape_width_choices']
+        shape_width_choices = shape_entry['shape_width_choices'] if 'shape_width_choices' in shape_entry else 1
         try:
             bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
                                size_fluctuation)
+
         except Exception as e:
             msg = str(e)
             raise Exception(
@@ -129,8 +129,12 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
             ]
             draw.polygon(xy, fill=fill_color, outline=outline_color)
 
+        metadata_entry = copy.deepcopy(shape_entry)
+        metadata_entry.pop('shape_width_choices')
+        added_shapes_metadata.append(metadata_entry)
+
     bboxes = [[box[0] - bbox_margin, box[1] - bbox_margin, box[2] + bbox_margin, box[3] + bbox_margin] for box in bboxes]
-    return image, bboxes, added_shapes
+    return image, bboxes, added_shapes_metadata
 
 
 def create_dataset(config, shapes):
