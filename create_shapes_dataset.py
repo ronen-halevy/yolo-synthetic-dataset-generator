@@ -71,8 +71,6 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
                size_fluctuation
 
                ):
-
-
     image = Image.new('RGB', image_size, tuple(bg_color))
     draw = ImageDraw.Draw(image)
     num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
@@ -133,7 +131,8 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
         metadata_entry.pop('shape_width_choices')
         added_shapes_metadata.append(metadata_entry)
 
-    bboxes = [[box[0] - bbox_margin, box[1] - bbox_margin, box[2] + bbox_margin, box[3] + bbox_margin] for box in bboxes]
+    bboxes = [[(box[0] - bbox_margin) / image_size[0], (box[1] - bbox_margin) / image_size[1],
+               (box[2] + bbox_margin) / image_size[0], (box[3] + bbox_margin) / image_size[1]] for box in bboxes]
     return image, bboxes, added_shapes_metadata
 
 

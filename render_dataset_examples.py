@@ -96,16 +96,18 @@ def main():
         colors = list(ImageColor.colormap.values())
         color = colors[0]
 
+        boxes = np.array(boxes)
+        width, height = image.size
+        boxes[..., 0:3:2] = boxes[..., 0:3:2] * width
+        boxes[..., 1:4:2] = boxes[..., 1:4:2] * height
         annotated_bbox_image = draw_bounding_box(image, boxes, color, thickness=1)
 
         classes = [anno_object['label'] for anno_object in line['objects']]
 
-        boxes = np.array(boxes)
         annotated_text_image = draw_text_on_bounding_box(annotated_bbox_image, boxes[..., 1], boxes[..., 0], color,
                                                          classes, font_size=15)
 
         figure(figsize=(10, 10))
-
         plt.imshow(annotated_text_image)
         plt.show()
 
