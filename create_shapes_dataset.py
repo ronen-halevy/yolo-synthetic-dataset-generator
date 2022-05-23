@@ -68,7 +68,7 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
 
 def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, bg_color, iou_thresh, margin_from_edge,
                bbox_margin,
-               size_fluctuation
+               size_fluctuation, class_mode
 
                ):
     image = Image.new('RGB', image_size, tuple(bg_color))
@@ -79,7 +79,11 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
     for index in range(num_of_objects):
 
         shape_entry = np.random.choice(shapes)
-        axis_ratio = shape_entry['shape_aspect_ratio']
+        try:
+            axis_ratio = shape_entry['shape_aspect_ratio']
+        except Exception as e:
+            print(e)
+            pass
         shape_width_choices = shape_entry['shape_width_choices'] if 'shape_width_choices' in shape_entry else 1
         try:
             bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
@@ -94,28 +98,28 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
             bboxes.append(bbox.tolist())
         else:
             break
-        fill_color = tuple(shape_entry['fill_color']) if len(shape_entry['fill_color']) else None
-        outline_color = tuple(shape_entry['outline_color']) if len(shape_entry['outline_color']) else None
+        fill_color = shape_entry['fill_color']
+        outline_color = shape_entry['outline_color']
 
-        if shape_entry['label'] in ['ellipse', 'circle']:
+        if shape_entry['shape'] in ['ellipse', 'circle']:
             x_min, y_min, x_max, y_max = bbox.tolist()
             draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
 
-        elif shape_entry['label'] == 'rectangle':
+        elif shape_entry['shape'] in ['rectangle', 'square']:
             x_min, y_min, x_max, y_max = bbox.tolist()
             draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
 
-        elif shape_entry['label'] == 'triangle':
+        elif shape_entry['shape'] == 'triangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
             vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
             draw.polygon(vertices, fill=fill_color, outline=outline_color)
 
-        elif shape_entry['label'] == 'triangle':
+        elif shape_entry['shape'] == 'triangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
             vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
             draw.polygon(vertices, fill=fill_color, outline=outline_color)
 
-        elif shape_entry['label'] in ['trapezoid', 'hexagon']:
+        elif shape_entry['shape'] in ['trapezoid', 'hexagon']:
             x_min, y_min, x_max, y_max = bbox.tolist()
             sides = shape_entry['sides']
             center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
@@ -129,7 +133,16 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
 
         metadata_entry = copy.deepcopy(shape_entry)
         metadata_entry.pop('shape_width_choices')
+
+        if class_mode == 'color':
+            metadata_entry['label']  = metadata_entry['color']
+        elif class_mode == 'color_and_shape':
+            metadata_entry['label'] = f"{metadata_entry['color']}_{metadata_entry['shape']}"
+        else:
+            metadata_entry['label'] = metadata_entry['shape']
+
         added_shapes_metadata.append(metadata_entry)
+
 
     bboxes = [[(box[0] - bbox_margin) / image_size[0], (box[1] - bbox_margin) / image_size[1],
                (box[2] + bbox_margin) / image_size[0], (box[3] + bbox_margin) / image_size[1]] for box in bboxes]
@@ -158,7 +171,9 @@ def create_dataset(config, shapes):
                                                      config['iou_thresh'],
                                                      config['margin_from_edge'],
                                                      config['bbox_margin'],
-                                                     config['size_fluctuation'])
+                                                     config['size_fluctuation'],
+                                                     config['class_mode']
+                                                     )
         except Exception as e:
             msg = str(e)
             raise Exception(f'Error: While creating the {example}th image: {msg}')

@@ -22,5 +22,6 @@
   "iou_thresh": 0,
   "num_of_examples": 10000,
   "images_dir": "dataset/images/",
-  "annotations_path": "dataset/annotations/annotations.json"
+  "annotations_path": "dataset/annotations/annotations.json",
+  "class_mode": "shape"
 }

@@ -11,14 +11,23 @@
 # ================================================================
 import json
 
+config_file = 'config/config.json'
 shapes_in_file = 'config/shapes.json'
 class_out_files = 'dataset/class.names'
 
 with open(shapes_in_file) as f:
     shapes = json.load(f)['shapes']
-classes=[]
+
+with open(config_file) as f:
+    class_mode = json.load(f)['class_mode']
+
+labels = []
 with open(class_out_files, 'w') as f:
     for shape in shapes:
-        if shape['label'] not in classes:
-            classes.append(shape['label'] )
-            f.write("%s\n" % shape['label'] )
+        label = shape[
+            'color'] if class_mode == 'color' else f"{shape['color']}_{shape['shape']}" if class_mode == 'color_and_shape' else \
+        shape[
+            'shape']
+        if label not in labels:
+            labels.append(label)
+            f.write("%s\n" % label)
