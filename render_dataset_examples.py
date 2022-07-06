@@ -63,9 +63,10 @@ def draw_bounding_box(image, boxes, color, thickness=1):
                   fill=color)
     return image
 
+config_file_path = 'config/config.json'
 
 def main():
-    with open('config/config.json') as f:
+    with open(config_file_path) as f:
         config = json.load(f)
 
     annotations_path = config["annotations_path"]
@@ -102,7 +103,7 @@ def main():
         boxes[..., 1:4:2] = boxes[..., 1:4:2] * height
         annotated_bbox_image = draw_bounding_box(image, boxes, color, thickness=1)
 
-        classes = [anno_object['label'] for anno_object in line['objects']]
+        classes = [label for label in line['labels']]
 
         annotated_text_image = draw_text_on_bounding_box(annotated_bbox_image, boxes[..., 1], boxes[..., 0], color,
                                                          classes, font_size=15)

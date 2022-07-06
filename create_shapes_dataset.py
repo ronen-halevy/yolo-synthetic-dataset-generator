@@ -71,7 +71,7 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
                size_fluctuation, class_mode
 
                ):
-    image = Image.new('RGB', image_size, tuple(bg_color))
+    image = Image.new('RGB', image_size, bg_color)
     draw = ImageDraw.Draw(image)
     num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
     bboxes = []
@@ -132,17 +132,15 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
             draw.polygon(xy, fill=fill_color, outline=outline_color)
 
         metadata_entry = copy.deepcopy(shape_entry)
-        metadata_entry.pop('shape_width_choices')
 
         if class_mode == 'color':
-            metadata_entry['label']  = metadata_entry['color']
+            metadata_entry['label'] = metadata_entry['color']
         elif class_mode == 'color_and_shape':
             metadata_entry['label'] = f"{metadata_entry['color']}_{metadata_entry['shape']}"
         else:
             metadata_entry['label'] = metadata_entry['shape']
 
-        added_shapes_metadata.append(metadata_entry)
-
+        added_shapes_metadata.append(metadata_entry['label'])
 
     bboxes = [[(box[0] - bbox_margin) / image_size[0], (box[1] - bbox_margin) / image_size[1],
                (box[2] + bbox_margin) / image_size[0], (box[3] + bbox_margin) / image_size[1]] for box in bboxes]
@@ -162,6 +160,7 @@ def create_dataset(config, shapes):
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)  # c
 
+    print(f'Creating {int(num_of_examples)} examples.\n Running....')
     for example in range(int(num_of_examples)):
         try:
             image, bboxes, added_shapes = make_image(shapes, config['image_size'],
@@ -186,7 +185,7 @@ def create_dataset(config, shapes):
 
         image.save(file_path)
 
-        annotatons.append({'bboxes': bboxes, 'objects': added_shapes, 'image_filename': image_filename})
+        annotatons.append({'image_filename': image_filename, 'bboxes': bboxes, 'labels': added_shapes})
 
     data = {
         "annotations": annotatons
