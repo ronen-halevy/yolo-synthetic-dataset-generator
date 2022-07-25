@@ -1,0 +1,24 @@
+---
+image_size:
+ - 416
+ - 416
+
+min_objects_in_image: 3
+max_objects_in_image: 3
+x_diameter_choices:
+ - 60
+bg_color:
+  - 0
+  - 0
+  - 0
+  
+margin_from_edge: 8
+bbox_margin: 5
+size_fluctuation: 0.00
+iou_thresh: 0
+num_of_examples: 1000
+images_dir:  dataset/images/
+annotations_path:  dataset/annotations/annotations.yaml
+class_mode:  shape  # Determines class name assignment: use shape field or color field or concatenate both.
+                       # class_mode values: ['shape' 'color', 'color_and_shape'
+

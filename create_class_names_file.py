@@ -9,25 +9,26 @@
 #   Description : Create a class names file for dataset usage.
 #
 # ================================================================
-import json
+import yaml
 
-config_file = 'config/config.json'
-shapes_in_file = 'config/shapes.json'
+config_file = 'config/config.yaml'
+shapes_in_file = 'config/shapes.yaml'
 class_out_files = 'dataset/class.names'
 
-with open(shapes_in_file) as f:
-    shapes = json.load(f)['shapes']
+with open(config_file, 'r') as stream:
+    config = yaml.safe_load(stream)
 
-with open(config_file) as f:
-    class_mode = json.load(f)['class_mode']
+with open(shapes_in_file, 'r') as stream:
+    shapes = yaml.safe_load(stream)
 
+class_mode = config['class_mode']
 labels = []
 with open(class_out_files, 'w') as f:
     for shape in shapes:
         label = shape[
             'color'] if class_mode == 'color' else f"{shape['color']}_{shape['shape']}" if class_mode == 'color_and_shape' else \
-        shape[
-            'shape']
+            shape[
+                'shape']
         if label not in labels:
             labels.append(label)
             f.write("%s\n" % label)

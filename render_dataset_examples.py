@@ -10,7 +10,7 @@
 #
 # ================================================================
 
-import json
+import yaml
 
 from PIL import Image
 from PIL import ImageColor
@@ -63,17 +63,17 @@ def draw_bounding_box(image, boxes, color, thickness=1):
                   fill=color)
     return image
 
-config_file_path = 'config/config.json'
+config_file_path = 'config/config.yaml'
 
 def main():
     with open(config_file_path) as f:
-        config = json.load(f)
+        config = yaml.safe_load(f)
 
     annotations_path = config["annotations_path"]
     images_dir = config['images_dir']
 
     with open(annotations_path) as file:
-        annotations = json.load(file)['annotations']
+        annotations = yaml.safe_load(file)
 
     plot_setup_params = {
         'num_of_images': 2,

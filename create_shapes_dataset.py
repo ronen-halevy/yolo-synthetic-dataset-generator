@@ -13,7 +13,7 @@
 import numpy as np
 from PIL import Image, ImageDraw
 import math
-import json
+import yaml
 import os
 import copy
 
@@ -98,8 +98,8 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
             bboxes.append(bbox.tolist())
         else:
             break
-        fill_color = shape_entry['fill_color']
-        outline_color = shape_entry['outline_color']
+        fill_color = tuple(shape_entry['fill_color'])
+        outline_color = tuple(shape_entry['outline_color'])
 
         if shape_entry['shape'] in ['ellipse', 'circle']:
             x_min, y_min, x_max, y_max = bbox.tolist()
@@ -154,7 +154,6 @@ def create_dataset(config, shapes):
 
     annotations_path = config["annotations_path"]
 
-    import json
     annotatons = []
 
     if not os.path.exists(images_dir):
@@ -166,7 +165,7 @@ def create_dataset(config, shapes):
             image, bboxes, added_shapes = make_image(shapes, config['image_size'],
                                                      config['min_objects_in_image'],
                                                      config['max_objects_in_image'],
-                                                     config['bg_color'],
+                                                     tuple(config['bg_color']),
                                                      config['iou_thresh'],
                                                      config['margin_from_edge'],
                                                      config['bbox_margin'],
@@ -187,22 +186,20 @@ def create_dataset(config, shapes):
 
         annotatons.append({'image_filename': image_filename, 'bboxes': bboxes, 'labels': added_shapes})
 
-    data = {
-        "annotations": annotatons
-    }
-
     with open(annotations_path, 'w') as annotation_file:
-        json.dump(data, annotation_file, ensure_ascii=False, indent=4)
+        yaml.dump(annotatons, annotation_file)
 
 
 if __name__ == '__main__':
-    config_file = 'config/config.json'
-    shapes_file = 'config/shapes.json'
-    with open(config_file) as f:
-        config_data = json.load(f)
+    config_file = 'config/config.yaml'
+    shapes_file = 'config/shapes.yaml'
 
-    with open(shapes_file) as f:
-        shapes_data = json.load(f)['shapes']
+    with open(shapes_file, 'r') as stream:
+        shapes_data = yaml.safe_load(stream)
+
+    with open(config_file, 'r') as stream:
+        config_data = yaml.safe_load(stream)
+
     try:
         create_dataset(config=config_data, shapes=shapes_data)
     except Exception as e:
