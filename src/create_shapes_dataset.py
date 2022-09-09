@@ -37,6 +37,7 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
                 size_fluctuation=0.01):
     max_count = 10000
     count = 0
+    # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
     while True:
 
         import random
@@ -46,14 +47,13 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
         shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
         radius = np.array([shape_width / 2, shape_height / 2])
         center = np.random.randint(
-            radius + margin_from_edge, [np.floor(image_size - radius - margin_from_edge)], 2)
-
+            low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
         bbox_sides = radius
         new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
                                   np.array([np.negative(radius), radius]))
-
+        # iou new shape bbox with all prev bboxes. skip shape if max iou > thresh - try another placement for shpe
         iou = [compute_iou(new_bbox, bbox) for bbox in bboxes]
-        if len(iou) == 0 or max(iou) == iou_thresh:
+        if len(iou) == 0 or max(iou) >= iou_thresh:
             break
         if count > max_count:
             max_iou = max(iou)
@@ -201,14 +201,8 @@ if __name__ == '__main__':
     config_file = 'config/config.yaml'
     shapes_file = 'config/shapes.yaml'
 
-    with open(shapes_file, 'r') as stream:
-        shapes_data = yaml.safe_load(stream)
-
-    with open(config_file, 'r') as stream:
-        config_data = yaml.safe_load(stream)
-
     try:
-        create_dataset(config=config_data, shapes=shapes_data)
+        create_dataset(config_file=config_file, shapes_file=shapes_file)
     except Exception as e:
         print(e)
         exit(1)
