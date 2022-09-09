@@ -147,7 +147,13 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
     return image, bboxes, added_shapes_metadata
 
 
-def create_dataset(config, shapes):
+def create_dataset(config_file, shapes_file):
+    with open(shapes_file, 'r') as stream:
+        shapes = yaml.safe_load(stream)
+
+    with open(config_file, 'r') as stream:
+        config = yaml.safe_load(stream)
+
     num_of_examples = config["num_of_examples"]
 
     images_dir = config["images_dir"]
@@ -189,6 +195,7 @@ def create_dataset(config, shapes):
     with open(annotations_path, 'w') as annotation_file:
         yaml.dump(annotatons, annotation_file)
 
+    print(f'Completed!')
 
 if __name__ == '__main__':
     config_file = 'config/config.yaml'
