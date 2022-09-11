@@ -15,7 +15,9 @@ from PIL import Image, ImageDraw
 import math
 import yaml
 import os
-import copy
+import json
+from datetime import date, datetime
+import random
 
 
 def compute_iou(box1, box2):
@@ -39,11 +41,9 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
     count = 0
     # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
     while True:
-
-        import random
-
         shape_width = np.random.choice(shape_width_choices)
         shape_height = shape_width * axis_ratio * random.uniform(1 - size_fluctuation, 1)
+        # add fluctuations - config defuned
         shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
         radius = np.array([shape_width / 2, shape_height / 2])
         center = np.random.randint(
@@ -53,7 +53,7 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
                                   np.array([np.negative(radius), radius]))
         # iou new shape bbox with all prev bboxes. skip shape if max iou > thresh - try another placement for shpe
         iou = [compute_iou(new_bbox, bbox) for bbox in bboxes]
-        if len(iou) == 0 or max(iou) >= iou_thresh:
+        if len(iou) == 0 or max(iou) <= iou_thresh:
             break
         if count > max_count:
             max_iou = max(iou)
@@ -68,14 +68,14 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
 
 def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, bg_color, iou_thresh, margin_from_edge,
                bbox_margin,
-               size_fluctuation, class_mode
+               size_fluctuation
 
                ):
     image = Image.new('RGB', image_size, bg_color)
     draw = ImageDraw.Draw(image)
     num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
     bboxes = []
-    added_shapes_metadata = []
+    objects_categories_names = []
     for index in range(num_of_objects):
 
         shape_entry = np.random.choice(shapes)
@@ -88,6 +88,7 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
         try:
             bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
                                size_fluctuation)
+            objects_categories_names.append(shape_entry['category_name'])
 
         except Exception as e:
             msg = str(e)
@@ -131,20 +132,36 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
             ]
             draw.polygon(xy, fill=fill_color, outline=outline_color)
 
-        metadata_entry = copy.deepcopy(shape_entry)
+        # metadata_entry = copy.deepcopy(shape_entry)
 
-        if class_mode == 'color':
-            metadata_entry['label'] = metadata_entry['color']
-        elif class_mode == 'color_and_shape':
-            metadata_entry['label'] = f"{metadata_entry['color']}_{metadata_entry['shape']}"
-        else:
-            metadata_entry['label'] = metadata_entry['shape']
+    # transfer bbox coordinate to:  [xmin, ymin, w, h]: (bbox_margin is added distance between shape and bbox)
+    bboxes = [[(box[0] - bbox_margin) / image_size[0],
+               (box[1] - bbox_margin) / image_size[1],
+               (box[2] - box[0] + 2 * bbox_margin) / image_size[0],
+               (box[3] - box[1] + 2 * bbox_margin) / image_size[1]]
+              for box in bboxes]
+    return image, bboxes, objects_categories_names
 
-        added_shapes_metadata.append(metadata_entry['label'])
 
-    bboxes = [[(box[0] - bbox_margin) / image_size[0], (box[1] - bbox_margin) / image_size[1],
-               (box[2] + bbox_margin) / image_size[0], (box[3] + bbox_margin) / image_size[1]] for box in bboxes]
-    return image, bboxes, added_shapes_metadata
+def fill_categories_records(shapes):
+    categories_records = []
+    added_category_names = []
+    map_categories_id = {}
+    id = 0
+    for shape in shapes:
+        category_name = shape['category_name']
+        if category_name not in added_category_names:
+            categories_records.append({
+                "supercategory": shape['super_category'],
+                "id": id,
+                "name": category_name,
+            })
+            added_category_names.append(category_name)
+
+            map_categories_id.update({category_name: id})
+            id += 1
+
+    return categories_records, map_categories_id
 
 
 def create_dataset(config_file, shapes_file):
@@ -159,43 +176,90 @@ def create_dataset(config_file, shapes_file):
     images_dir = config["images_dir"]
 
     annotations_path = config["annotations_path"]
-
-    annotatons = []
+    annotatons_records = []
 
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)  # c
 
     print(f'Creating {int(num_of_examples)} examples.\n Running....')
-    for example in range(int(num_of_examples)):
+
+    categories_records, map_categories_id = fill_categories_records(shapes)
+
+    date_today = date.today()
+    info = {
+               "description": "Shapes Dataset",
+               "url": '',
+               "version": config.get('version', 1.0),
+               "year": date_today.year,
+               "contributor": config.get('contributor'),
+               "date_created": str(date_today),
+               "licenses": config.get('licenses', []),
+               "categories": categories_records
+           },
+
+    anno_id = 0
+    images_records = []
+
+    for image_id, example in enumerate(range(int(num_of_examples))):
         try:
-            image, bboxes, added_shapes = make_image(shapes, config['image_size'],
-                                                     config['min_objects_in_image'],
-                                                     config['max_objects_in_image'],
-                                                     tuple(config['bg_color']),
-                                                     config['iou_thresh'],
-                                                     config['margin_from_edge'],
-                                                     config['bbox_margin'],
-                                                     config['size_fluctuation'],
-                                                     config['class_mode']
-                                                     )
+            image, bboxes, objects_categories_names = make_image(shapes, config['image_size'],
+                                                                 config['min_objects_in_image'],
+                                                                 config['max_objects_in_image'],
+                                                                 tuple(config['bg_color']),
+                                                                 config['iou_thresh'],
+                                                                 config['margin_from_edge'],
+                                                                 config['bbox_margin'],
+                                                                 config['size_fluctuation'],
+                                                                 )
         except Exception as e:
             msg = str(e)
             raise Exception(f'Error: While creating the {example}th image: {msg}')
+        image_filename = f'{example + 1:06d}.jpg'
+        file_path = f'{images_dir}{image_filename}'
+        image.save(file_path)
 
         if len(bboxes) == 0:
             continue
 
-        image_filename = f'{example + 1:06d}.jpg'
-        file_path = f'{images_dir}{image_filename}'
+        images_records.append({
+            "license": '',
+            "file_name": image_filename,
+            "coco_url": "",
+            'width': image.height,
+            'height': image.height,
+            "date_captured": str(datetime.now()),
+            "flickr_url": "",
+            "id": image_id
+        })
 
-        image.save(file_path)
+        for bbox, category_name in zip(bboxes, objects_categories_names):
+            annotatons_records.append({
+                "segmentation": [],
+                "area": [],
+                "iscrowd": 0,
+                "image_id": image_id,
+                "bbox": bbox,
+                "category_id": map_categories_id[category_name],
+                "id": anno_id
+            }
+            )
+            anno_id += 1
+    output_records = {
+        "info": info,
+        "licenses": [],
+        "images": images_records,
+        "categories": categories_records,
+        "annotations": annotatons_records
+    }
 
-        annotatons.append({'image_filename': image_filename, 'bboxes': bboxes, 'labels': added_shapes})
+    with open(annotations_path, 'w') as annotations_path:
+        json.dump(output_records, annotations_path)
 
-    with open(annotations_path, 'w') as annotation_file:
-        yaml.dump(annotatons, annotation_file)
-
+    with open(config['class_names_file'], 'w') as f:
+        for category in categories_records:
+            f.write("%s\n" % category['name'])
     print(f'Completed!')
+
 
 if __name__ == '__main__':
     config_file = 'config/config.yaml'

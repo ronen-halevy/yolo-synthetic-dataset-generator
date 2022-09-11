@@ -18,7 +18,6 @@ size_fluctuation: 0.00
 iou_thresh: 0
 num_of_examples: 1000
 images_dir:  dataset/images/
-annotations_path:  dataset/annotations/annotations.yaml
-class_mode:  shape  # Determines class name assignment: use shape field or color field or concatenate both.
-                       # class_mode values: ['shape' 'color', 'color_and_shape'
+annotations_path:  dataset/annotations/annotations.json
+class_names_file:  dataset/class.names                      # class_mode values: ['shape' 'color', 'color_and_shape'
 

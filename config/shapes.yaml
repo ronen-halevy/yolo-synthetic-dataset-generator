@@ -5,6 +5,8 @@
 
 - shape: circle
   color: red
+  category_name: circle
+  super_category: shapes
   fill_color:
     - 255
     - 0
@@ -19,6 +21,8 @@
 
 - shape: circle
   color: blue
+  category_name: circle
+  super_category: shapes
   fill_color:
     - 0
     - 0
@@ -33,6 +37,8 @@
 
 - shape: triangle
   color: blue
+  category_name: triangle
+  super_category: shapes
   fill_color:
     - 0
     - 0
@@ -47,6 +53,8 @@
 
 - shape: triangle
   color: green
+  category_name: triangle
+  super_category: shapes
   fill_color:
     - 0
     - 255
@@ -61,6 +69,8 @@
 
 - shape: circle
   color: red
+  category_name: circle
+  super_category: shapes
   fill_color:
     - 255
     - 0
@@ -75,6 +85,8 @@
 
 - shape: circle
   color: blue
+  category_name: circle
+  super_category: shapes
   fill_color:
     - 0
     - 0
