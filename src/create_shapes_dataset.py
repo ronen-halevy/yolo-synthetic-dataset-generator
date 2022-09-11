@@ -67,6 +67,38 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
     return new_bbox
 
 
+def draw_shape(draw, shape, bbox, fill_color, outline_color):
+    if shape in ['ellipse', 'circle']:
+        x_min, y_min, x_max, y_max = bbox.tolist()
+        draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
+
+    elif shape in ['rectangle', 'square']:
+        x_min, y_min, x_max, y_max = bbox.tolist()
+        draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
+
+    elif shape == 'triangle':
+        x_min, y_min, x_max, y_max = bbox.tolist()
+        vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
+        draw.polygon(vertices, fill=fill_color, outline=outline_color)
+
+    elif shape == 'triangle':
+        x_min, y_min, x_max, y_max = bbox.tolist()
+        vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
+        draw.polygon(vertices, fill=fill_color, outline=outline_color)
+
+    elif shape in ['trapezoid''hexagon']:
+        sides = 5 if shape == 'trapezoid' else 6
+        x_min, y_min, x_max, y_max = bbox.tolist()
+        center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
+        rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
+        xy = [
+            (math.cos(th) * rad_x + center_x,
+             math.sin(th) * rad_y + center_y)
+            for th in [i * (2 * math.pi) / sides for i in range(sides)]
+        ]
+        draw.polygon(xy, fill=fill_color, outline=outline_color)
+
+
 def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, bg_color, iou_thresh, margin_from_edge,
                bbox_margin,
                size_fluctuation
@@ -89,8 +121,6 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
         try:
             bbox = create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
                                size_fluctuation)
-            objects_categories_names.append(shape_entry['category_name'])
-
         except Exception as e:
             msg = str(e)
             raise Exception(
@@ -100,48 +130,20 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
             bboxes.append(bbox.tolist())
         else:
             break
+        objects_categories_names.append(shape_entry['category_name'])
+
         fill_color = tuple(shape_entry['fill_color'])
         outline_color = tuple(shape_entry['outline_color'])
-
-        if shape_entry['shape'] in ['ellipse', 'circle']:
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
-
-        elif shape_entry['shape'] in ['rectangle', 'square']:
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
-
-        elif shape_entry['shape'] == 'triangle':
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
-            draw.polygon(vertices, fill=fill_color, outline=outline_color)
-
-        elif shape_entry['shape'] == 'triangle':
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
-            draw.polygon(vertices, fill=fill_color, outline=outline_color)
-
-        elif shape_entry['shape'] in ['trapezoid', 'hexagon']:
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            sides = shape_entry['sides']
-            center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
-            rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
-            xy = [
-                (math.cos(th) * rad_x + center_x,
-                 math.sin(th) * rad_y + center_y)
-                for th in [i * (2 * math.pi) / sides for i in range(sides)]
-            ]
-            draw.polygon(xy, fill=fill_color, outline=outline_color)
+        draw_shape(draw, shape_entry['shape'], bbox, fill_color, outline_color)
 
     bboxes = np.array(bboxes)
     # transfer bbox coordinate to:  [xmin, ymin, w, h]: (bbox_margin is added distance between shape and bbox)
-    bboxes = [bboxes[:,0]-bbox_margin,
-               bboxes[:,1]-bbox_margin,
-               bboxes[:,2]- bboxes[:,0]+2* bbox_margin,
-               bboxes[:,3]- bboxes[:,1]+2* bbox_margin]#/ np.tile(image_size,2)
+    bboxes = [bboxes[:, 0] - bbox_margin,
+              bboxes[:, 1] - bbox_margin,
+              bboxes[:, 2] - bboxes[:, 0] + 2 * bbox_margin,
+              bboxes[:, 3] - bboxes[:, 1] + 2 * bbox_margin]  # / np.tile(image_size,2)
 
-    bboxes = np.stack(bboxes, axis=1) / np.tile(image_size,2)
-
+    bboxes = np.stack(bboxes, axis=1) / np.tile(image_size, 2)
 
     return image, bboxes, objects_categories_names
 
@@ -190,15 +192,15 @@ def create_dataset(config_file, shapes_file):
 
     date_today = date.today()
     info = {
-               "description": "Shapes Dataset",
-               "url": '',
-               "version": config.get('version', 1.0),
-               "year": date_today.year,
-               "contributor": config.get('contributor'),
-               "date_created": str(date_today),
-               "licenses": config.get('licenses', []),
-               "categories": categories_records
-           },
+        "description": "Shapes Dataset",
+        "url": '',
+        "version": config.get('version', 1.0),
+        "year": date_today.year,
+        "contributor": config.get('contributor'),
+        "date_created": str(date_today),
+        "licenses": config.get('licenses', []),
+        "categories": categories_records
+    }
 
     anno_id = 0
     images_records = []
@@ -241,7 +243,7 @@ def create_dataset(config_file, shapes_file):
                 "area": [],
                 "iscrowd": 0,
                 "image_id": image_id,
-                "bbox": bbox,
+                "bbox": list(bbox),
                 "category_id": map_categories_id[category_name],
                 "id": anno_id
             }
