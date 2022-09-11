@@ -52,7 +52,8 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
         new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
                                   np.array([np.negative(radius), radius]))
         # iou new shape bbox with all prev bboxes. skip shape if max iou > thresh - try another placement for shpe
-        iou = [compute_iou(new_bbox, bbox) for bbox in bboxes]
+        iou = list(map(lambda x: compute_iou(new_bbox, x), bboxes))
+
         if len(iou) == 0 or max(iou) <= iou_thresh:
             break
         if count > max_count:
@@ -132,14 +133,16 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
             ]
             draw.polygon(xy, fill=fill_color, outline=outline_color)
 
-        # metadata_entry = copy.deepcopy(shape_entry)
-
+    bboxes = np.array(bboxes)
     # transfer bbox coordinate to:  [xmin, ymin, w, h]: (bbox_margin is added distance between shape and bbox)
-    bboxes = [[(box[0] - bbox_margin) / image_size[0],
-               (box[1] - bbox_margin) / image_size[1],
-               (box[2] - box[0] + 2 * bbox_margin) / image_size[0],
-               (box[3] - box[1] + 2 * bbox_margin) / image_size[1]]
-              for box in bboxes]
+    bboxes = [bboxes[:,0]-bbox_margin,
+               bboxes[:,1]-bbox_margin,
+               bboxes[:,2]- bboxes[:,0]+2* bbox_margin,
+               bboxes[:,3]- bboxes[:,1]+2* bbox_margin]#/ np.tile(image_size,2)
+
+    bboxes = np.stack(bboxes, axis=1) / np.tile(image_size,2)
+
+
     return image, bboxes, objects_categories_names
 
 
