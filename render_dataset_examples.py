@@ -103,13 +103,20 @@ def main():
         color = colors[0]
         bboxes = [annotation_record['bbox'] for annotation_record in annotation_records]
         bboxes = np.array(bboxes)
-        bboxes[..., 0:3:2] = bboxes[..., 0:3:2]
-        bboxes[..., 1:4:2] = bboxes[..., 1:4:2]
+        # width, height = image.size
+        bboxes[..., 0:3:2] = bboxes[..., 0:3:2] # * width
+        bboxes[..., 1:4:2] = bboxes[..., 1:4:2] #* height
         annotated_bbox_image = draw_bounding_box(image, bboxes, color, thickness=1)
         category_ids = [annotation_record['category_id'] for annotation_record in annotation_records]
-
+        # ss = annotations['categories']
+        # for category in annotations['categories']:
+        #     if category['id'] in category_ids:
+        #         print()
         category_names = [category['name'] for category in annotations['categories'] if category['id'] in category_ids]
 
+        # figure(figsize=(10, 10))
+        # plt.imshow(annotated_bbox_image)
+        # plt.show()
 
         annotated_text_image = draw_text_on_bounding_box(annotated_bbox_image, bboxes[..., 1], bboxes[..., 0], color,
                                                          category_names, font_size=15)

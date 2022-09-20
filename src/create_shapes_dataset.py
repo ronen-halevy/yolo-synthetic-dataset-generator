@@ -162,7 +162,7 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
               bboxes[:, 2] - bboxes[:, 0] + 2 * bbox_margin,
               bboxes[:, 3] - bboxes[:, 1] + 2 * bbox_margin]  # / np.tile(image_size,2)
 
-    bboxes = np.stack(bboxes, axis=1)
+    bboxes = np.stack(bboxes, axis=1) #/ np.tile(image_size, 2)
 
     return image, bboxes, objects_categories_names
 
