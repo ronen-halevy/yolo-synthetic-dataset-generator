@@ -37,6 +37,25 @@ def compute_iou(box1, box2):
 
 def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
                 size_fluctuation=0.01):
+    """
+                
+    :param image_size: Canvas size
+    :type image_size: 
+    :param bboxes: 
+    :type bboxes: 
+    :param shape_width_choices: 
+    :type shape_width_choices: 
+    :param axis_ratio: 
+    :type axis_ratio: 
+    :param iou_thresh: 
+    :type iou_thresh: 
+    :param margin_from_edge: 
+    :type margin_from_edge: 
+    :param size_fluctuation: 
+    :type size_fluctuation: 
+    :return: 
+    :rtype: 
+    """
     max_count = 10000
     count = 0
     # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
@@ -48,7 +67,7 @@ def create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
         radius = np.array([shape_width / 2, shape_height / 2])
         center = np.random.randint(
             low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
-        bbox_sides = radius
+        # bbox_sides = radius
         new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
                                   np.array([np.negative(radius), radius]))
         # iou new shape bbox with all prev bboxes. skip shape if max iou > thresh - try another placement for shpe
@@ -143,7 +162,7 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
               bboxes[:, 2] - bboxes[:, 0] + 2 * bbox_margin,
               bboxes[:, 3] - bboxes[:, 1] + 2 * bbox_margin]  # / np.tile(image_size,2)
 
-    bboxes = np.stack(bboxes, axis=1) / np.tile(image_size, 2)
+    bboxes = np.stack(bboxes, axis=1)
 
     return image, bboxes, objects_categories_names
 
@@ -170,6 +189,16 @@ def fill_categories_records(shapes):
 
 
 def create_dataset(config_file, shapes_file):
+    """
+    :param config_file: Configuration file. Holds common configs, e.g. image size, num of object in image
+    :type config_file: yaml
+    :param shapes_file: Configuration file. Defines characteristics of shapes objects included - se.g. type, ize, color
+    :type shapes_file: yaml
+    :return:  Creates 3 output files: 1. An annotation json file, in the format of coco dataset. Data is arranged a a dict object with 5 elements:
+        info, licenses, images, categories, annotations 2. class_names_file, which holds the class names table.
+        This table is used by inference for category id decoding. 3. Images files.
+    :rtype:
+    """
     with open(shapes_file, 'r') as stream:
         shapes = yaml.safe_load(stream)
 

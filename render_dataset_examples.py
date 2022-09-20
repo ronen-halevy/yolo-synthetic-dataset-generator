@@ -33,20 +33,27 @@ def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), fon
 
     text_margin_factor = 0.05
 
-    text_widths, text_heights = zip(*[font.getsize(display_str) for display_str in display_str_list])
+    left, top, right, bottom = zip(*[font.getbbox(display_str) for display_str in display_str_list])
+    text_heights= tuple(map(lambda i, j: i - j, bottom, top))
+    text_widths = tuple(map(lambda i, j: i - j, right, left))
+
     text_margins = np.ceil(text_margin_factor * np.array(text_heights))
     text_bottoms = ymin * (ymin > text_heights) + (ymin + text_heights) * (ymin <= text_heights)
 
     for idx, (display_str, xmint, text_bottom, text_width, text_height, text_margin) in enumerate(
             zip(display_str_list, xmin, text_bottoms, text_widths, text_heights, text_margins)):
-        text_width, text_height = font.getsize(display_str)
+
+        left, top, right, bottom = font.getbbox(display_str)
+        text_height = bottom - top
+        text_width = right - left
+
         text_margin = np.ceil(text_margin_factor * text_height)
 
         draw.rectangle(((xmint, text_bottom - text_height - 2 * text_margin),
                         (xmint + text_width + text_margin, text_bottom)),
                        fill=color)
 
-        draw.text((xmint + text_margin, text_bottom - text_height - text_margin),
+        draw.text((xmint + text_margin, text_bottom - text_height - 3 * text_margin),
                   display_str,
                   fill="black",
                   font=font)
@@ -56,8 +63,8 @@ def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), fon
 def draw_bounding_box(image, boxes, color, thickness=1):
     draw = ImageDraw.Draw(image)
     for box in boxes:
-        xmin, ymin, xmax, ymax = box
-        draw.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin),
+        xmin, ymin, w, h = box
+        draw.line([(xmin, ymin), (xmin, ymin+h), (xmin+w, ymin+h), (xmin+w, ymin),
                    (xmin, ymin)],
                   width=thickness,
                   fill=color)
@@ -88,25 +95,24 @@ def main():
 
     for idx in range(num_of_images):
         image_index = np.random.randint(start_index, len(annotations)) if random_select else start_index + idx
-        line = annotations[image_index]
-        boxes = line['bboxes']
-
-        image_path = f'{images_dir}{line["image_filename"]}'
-
+        image_record = annotations['images'][image_index]
+        annotation_records = [annotation for  annotation in annotations['annotations'] if annotation['image_id'] == image_record['id']]
+        image_path = f'{images_dir}{image_record["file_name"]}'
         image = Image.open(image_path)
         colors = list(ImageColor.colormap.values())
         color = colors[0]
+        bboxes = [annotation_record['bbox'] for annotation_record in annotation_records]
+        bboxes = np.array(bboxes)
+        bboxes[..., 0:3:2] = bboxes[..., 0:3:2]
+        bboxes[..., 1:4:2] = bboxes[..., 1:4:2]
+        annotated_bbox_image = draw_bounding_box(image, bboxes, color, thickness=1)
+        category_ids = [annotation_record['category_id'] for annotation_record in annotation_records]
 
-        boxes = np.array(boxes)
-        width, height = image.size
-        boxes[..., 0:3:2] = boxes[..., 0:3:2] * width
-        boxes[..., 1:4:2] = boxes[..., 1:4:2] * height
-        annotated_bbox_image = draw_bounding_box(image, boxes, color, thickness=1)
+        category_names = [category['name'] for category in annotations['categories'] if category['id'] in category_ids]
 
-        classes = [label for label in line['labels']]
 
-        annotated_text_image = draw_text_on_bounding_box(annotated_bbox_image, boxes[..., 1], boxes[..., 0], color,
-                                                         classes, font_size=15)
+        annotated_text_image = draw_text_on_bounding_box(annotated_bbox_image, bboxes[..., 1], bboxes[..., 0], color,
+                                                         category_names, font_size=15)
 
         figure(figsize=(10, 10))
         plt.imshow(annotated_text_image)
