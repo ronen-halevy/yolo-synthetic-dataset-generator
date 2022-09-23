@@ -162,7 +162,7 @@ def make_image(shapes, image_size, min_objects_in_image, max_objects_in_image, b
               bboxes[:, 2] - bboxes[:, 0] + 2 * bbox_margin,
               bboxes[:, 3] - bboxes[:, 1] + 2 * bbox_margin]  # / np.tile(image_size,2)
 
-    bboxes = np.stack(bboxes, axis=1) #/ np.tile(image_size, 2)
+    bboxes = np.stack(bboxes, axis=1)  # / np.tile(image_size, 2)
 
     return image, bboxes, objects_categories_names
 
@@ -205,19 +205,15 @@ def create_dataset(config_file, shapes_file):
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
 
-    num_of_examples = config["num_of_examples"]
-
-    images_dir = config["images_dir"]
-
-    annotations_path = config["annotations_path"]
-    annotatons_records = []
-
-    if not os.path.exists(images_dir):
-        os.makedirs(images_dir)  # c
-
-    print(f'Creating {int(num_of_examples)} examples.\n Running....')
+    splits = config["splits"]
+    output_dir = config["output_dir"]
+    class_names_out_file = f'{output_dir}/{config["class_names_file"]}'
 
     categories_records, map_categories_id = fill_categories_records(shapes)
+
+    with open(class_names_out_file, 'w') as f:
+        for category in categories_records:
+            f.write("%s\n" % category['name'])
 
     date_today = date.today()
     info = {
@@ -230,68 +226,73 @@ def create_dataset(config_file, shapes_file):
         "licenses": config.get('licenses', []),
         "categories": categories_records
     }
+    from pathlib import Path
 
     anno_id = 0
-    images_records = []
+    for split in splits:
+        images_records = []
+        annotatons_records = []
 
-    for image_id, example in enumerate(range(int(num_of_examples))):
-        try:
-            image, bboxes, objects_categories_names = make_image(shapes, config['image_size'],
-                                                                 config['min_objects_in_image'],
-                                                                 config['max_objects_in_image'],
-                                                                 tuple(config['bg_color']),
-                                                                 config['iou_thresh'],
-                                                                 config['margin_from_edge'],
-                                                                 config['bbox_margin'],
-                                                                 config['size_fluctuation'],
-                                                                 )
-        except Exception as e:
-            msg = str(e)
-            raise Exception(f'Error: While creating the {example}th image: {msg}')
-        image_filename = f'{example + 1:06d}.jpg'
-        file_path = f'{images_dir}{image_filename}'
-        image.save(file_path)
+        split_output_dir = Path(f'{output_dir}/{split}')
+        split_output_dir.mkdir(parents=True, exist_ok=True)
+        print(f'Creating {split} split in {output_dir}/{split}: {int(splits[split])} examples.\n Running....')
 
-        if len(bboxes) == 0:
-            continue
+        annotations_path = f'{output_dir}/{split}/annotations.json'
+        for example_id in range(int(splits[split])):
+            try:
+                image, bboxes, objects_categories_names = make_image(shapes, config['image_size'],
+                                                                     config['min_objects_in_image'],
+                                                                     config['max_objects_in_image'],
+                                                                     tuple(config['bg_color']),
+                                                                     config['iou_thresh'],
+                                                                     config['margin_from_edge'],
+                                                                     config['bbox_margin'],
+                                                                     config['size_fluctuation'],
+                                                                     )
+            except Exception as e:
+                msg = str(e)
+                raise Exception(f'Error: While creating the {example_id}th image: {msg}')
+            image_filename = f'img_{example_id + 1:06d}.jpg'
+            file_path = f'{output_dir}/{split}/{image_filename}'
+            image.save(file_path)
 
-        images_records.append({
-            "license": '',
-            "file_name": image_filename,
-            "coco_url": "",
-            'width': image.height,
-            'height': image.height,
-            "date_captured": str(datetime.now()),
-            "flickr_url": "",
-            "id": image_id
-        })
+            if len(bboxes) == 0:
+                continue
 
-        for bbox, category_name in zip(bboxes, objects_categories_names):
-            annotatons_records.append({
-                "segmentation": [],
-                "area": [],
-                "iscrowd": 0,
-                "image_id": image_id,
-                "bbox": list(bbox),
-                "category_id": map_categories_id[category_name],
-                "id": anno_id
-            }
-            )
-            anno_id += 1
-    output_records = {
-        "info": info,
-        "licenses": [],
-        "images": images_records,
-        "categories": categories_records,
-        "annotations": annotatons_records
-    }
+            images_records.append({
+                "license": '',
+                "file_name": image_filename,
+                "coco_url": "",
+                'width': image.height,
+                'height': image.height,
+                "date_captured": str(datetime.now()),
+                "flickr_url": "",
+                "id": example_id
+            })
 
-    with open(annotations_path, 'w') as annotations_path:
-        json.dump(output_records, annotations_path)
+            for bbox, category_name in zip(bboxes, objects_categories_names):
+                annotatons_records.append({
+                    "segmentation": [],
+                    "area": [],
+                    "iscrowd": 0,
+                    "image_id": example_id,
+                    "bbox": list(bbox),
+                    "category_id": map_categories_id[category_name],
+                    "id": anno_id
+                }
+                )
+                anno_id += 1
+        output_records = {
+            "info": info,
+            "licenses": [],
+            "images": images_records,
+            "categories": categories_records,
+            "annotations": annotatons_records
+        }
+        print(f'Save annotation  in {annotations_path}')
+        with open(annotations_path, 'w') as fp:
+            json.dump(output_records, fp)
 
-    with open(config['class_names_file'], 'w') as f:
-        for category in categories_records:
-            f.write("%s\n" % category['name'])
     print(f'Completed!')
 
 

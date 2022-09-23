@@ -3,8 +3,8 @@ image_size:
  - 416
  - 416
 
-min_objects_in_image: 3
-max_objects_in_image: 3
+min_objects_in_image: 1
+max_objects_in_image: 1
 x_diameter_choices:
  - 60
 bg_color:
@@ -16,8 +16,12 @@ margin_from_edge: 8
 bbox_margin: 5
 size_fluctuation: 0.00
 iou_thresh: 0
-num_of_examples: 1000
-images_dir:  dataset/images/
-annotations_path:  dataset/annotations/annotations.json
-class_names_file:  dataset/class.names                      # class_mode values: ['shape' 'color', 'color_and_shape'
+splits:
+ train: 700
+ valid: 200
+ test: 100
+
+output_dir: dataset
+
+class_names_file:  class.names
 
