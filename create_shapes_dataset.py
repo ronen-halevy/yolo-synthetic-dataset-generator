@@ -14,10 +14,10 @@ import numpy as np
 from PIL import Image, ImageDraw
 import math
 import yaml
-import os
 import json
 from datetime import date, datetime
 import random
+import argparse
 
 
 def compute_iou(box1, box2):
@@ -296,12 +296,32 @@ def create_dataset(config_file, shapes_file):
     print(f'Completed!')
 
 
-if __name__ == '__main__':
-    config_file = 'config/config.yaml'
-    shapes_file = 'config/shapes.yaml'
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config_file", type=str, default='config/config.yaml',
+                        help='yaml config file')
+
+    parser.add_argument("--shapes_file", type=str, default='config/shapes.yaml',
+                        help='shapes yaml config file')
+
+    parser.add_argument("--class_names_out_file", type=str, default='dataset/class.names',
+                        help='class_names output _file')
+
+    args = parser.parse_args()
+    config_file = args.config_file
+    shapes_file = args.shapes_file
+    class_names_out_file = args.class_names_out_file
 
     try:
-        create_dataset(config_file=config_file, shapes_file=shapes_file)
+        create_dataset(config_file, shapes_file)
     except Exception as e:
         print(e)
         exit(1)
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
