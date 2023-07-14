@@ -18,6 +18,8 @@ import json
 from datetime import date, datetime
 import random
 import argparse
+import os
+from pathlib import Path
 
 
 def compute_iou(box1, box2):
@@ -188,6 +190,145 @@ def fill_categories_records(shapes):
     return categories_records, map_categories_id
 
 
+# # output box format: x_center, y_center, w,h
+def gen_per_image_label_text_file(annotations, images_records, categories_records, output_dir):
+
+    output_dir = f'{output_dir}labels/'
+    try:
+        os.makedirs(output_dir)
+    except FileExistsError:
+        # directory already exists
+        pass
+    for image_entry in images_records:
+        im_height = image_entry['height']
+        im_width = image_entry['width']
+        annots = [annot for annot in annotations if annot['image_id'] == image_entry['id']]
+        filename = image_entry['file_name']
+
+        labels_filename =   f"{output_dir}{filename.rsplit('.', 1)[0]}.txt"
+        with open(labels_filename, 'w') as f:
+            for annot in annots:
+                category = categories_records[annot['category_id']]['id']
+                bbox = annot['bbox']
+                bbox_arr = np.array(bbox, dtype=float)
+                xcycwh_bbox = [(bbox_arr[0]+ bbox_arr[2]/2)/im_width, (bbox_arr[1]+ bbox_arr[3]/2)/im_height, bbox_arr[2]/im_width, bbox_arr[3]/im_height]
+                entry = f"{category} {' '.join(str(e) for e in xcycwh_bbox)}"
+                f.write(entry)
+
+def gen_per_image_label_text_file(annotations, images_records, categories_records, output_dir):
+
+    output_dir = f'{output_dir}labels/'
+    try:
+        os.makedirs(output_dir)
+    except FileExistsError:
+        # directory already exists
+        pass
+    for image_entry in images_records:
+        im_height = image_entry['height']
+        im_width = image_entry['width']
+        annots = [annot for annot in annotations if annot['image_id'] == image_entry['id']]
+        filename = image_entry['file_name']
+
+        labels_filename =   f"{output_dir}{filename.rsplit('.', 1)[0]}.txt"
+        with open(labels_filename, 'w') as f:
+            for annot in annots:
+                category = categories_records[annot['category_id']]['id']
+                bbox = annot['bbox']
+                bbox_arr = np.array(bbox, dtype=float)
+                xcycwh_bbox = [(bbox_arr[0]+ bbox_arr[2]/2)/im_width, (bbox_arr[1]+ bbox_arr[3]/2)/im_height, bbox_arr[2]/im_width, bbox_arr[3]/im_height]
+                entry = f"{category} {' '.join(str(e) for e in xcycwh_bbox)}"
+                f.write(entry)
+
+
+
+
+# prepare a single label text file.  box format: xy_min, xy_max:
+def gen_label_text_file(annotations, images_records, categories_records, output_dir, split):
+    entries = []
+    for image_entry in images_records:
+        # im_height = image_entry['height']
+        # im_width = image_entry['width']
+        annots = [annot for annot in annotations if annot['image_id'] == image_entry['id']]
+        filename = image_entry['file_name']
+
+        entry = f'{output_dir}/{split}/{filename} '
+        for annot in annots:
+            bbox = annot['bbox']
+            category = categories_records[annot['category_id']]['id']
+            bbox_arr = np.array(bbox, dtype=float)
+            xyxy_bbox = [bbox_arr[0], bbox_arr[1], bbox_arr[0] + bbox_arr[2], bbox_arr[1] + bbox_arr[3]]
+            for vertex in xyxy_bbox:
+                entry = f'{entry}{vertex},'
+            entry = f'{entry}{float(category)} '
+        entries.append(entry)
+        opath = f'{output_dir}/{split}/all_entries.txt'
+        file = open(opath, 'w')
+        for item in entries:
+            file.write(item + "\n")
+        file.close()
+
+
+anno_id=0
+def arrange_coco_like_dataset_format(output_dir, splits, split, shapes, config, map_categories_id):
+    global anno_id
+
+    images_records = []
+    annotatons_records = []
+
+    split_output_dir = Path(f'{output_dir}/{split}')
+    split_output_dir.mkdir(parents=True, exist_ok=True)
+    print(f'Creating {split} split in {output_dir}/{split}: {int(splits[split])} examples.\n Running....')
+
+    # annotations_path = f'{output_dir}/{split}/annotations.json'
+    for example_id in range(int(splits[split])):
+        try:
+            # bboxes xmin ,ymin, w,h
+            image, bboxes, objects_categories_names = make_image(shapes, config['image_size'],
+                                                                 config['min_objects_in_image'],
+                                                                 config['max_objects_in_image'],
+                                                                 tuple(config['bg_color']),
+                                                                 config['iou_thresh'],
+                                                                 config['margin_from_edge'],
+                                                                 config['bbox_margin'],
+                                                                 config['size_fluctuation'],
+                                                                 )
+        except Exception as e:
+            msg = str(e)
+            raise Exception(f'Error: While creating the {example_id}th image: {msg}')
+        image_filename = f'img_{example_id + 1:06d}.jpg'
+        file_path = f'{output_dir}/{split}/images/{image_filename}'
+        image.save(file_path)
+
+        if len(bboxes) == 0:
+            continue
+
+        images_records.append({
+            "license": '',
+            "file_name": image_filename,
+            "coco_url": "",
+            'width': image.height,
+            'height': image.height,
+            "date_captured": str(datetime.now()),
+            "flickr_url": "",
+            "id": example_id
+        })
+
+        for bbox, category_name in zip(bboxes, objects_categories_names):
+            annotatons_records.append({
+                "segmentation": [],
+                "area": [],
+                "iscrowd": 0,
+                "image_id": example_id,
+                "bbox": list(bbox),
+                "category_id": map_categories_id[category_name],
+                "id": anno_id
+            }
+            )
+            anno_id += 1
+
+    return images_records, annotatons_records
+
+
 def create_dataset(config_file, shapes_file):
     """
     :param config_file: Configuration file. Holds common configs, e.g. image size, num of object in image
@@ -211,6 +352,12 @@ def create_dataset(config_file, shapes_file):
 
     categories_records, map_categories_id = fill_categories_records(shapes)
 
+    # segmentatio or detection:
+    output_lables_type  = config.get('output_lables_type')
+    # coco or yolov5:
+    output_files_format  = config.get('output_files_format')
+
+
     with open(class_names_out_file, 'w') as f:
         for category in categories_records:
             f.write("%s\n" % category['name'])
@@ -226,62 +373,18 @@ def create_dataset(config_file, shapes_file):
         "licenses": config.get('licenses', []),
         "categories": categories_records
     }
-    from pathlib import Path
 
-    anno_id = 0
+
+    # Generate labels output in 3 formats:
+    # 1. coco format - a json file arranged in a coco like kformat
+    # 2. single text file - row format is: image file path, xyxy, class
+    # 3. text file per an image, follows Ultralitics yolov5 format. files row format: class, polygon vertice.
+
+    # anno_id = 0
     for split in splits:
-        images_records = []
-        annotatons_records = []
+        # 1 coco format:
+        images_records, annotatons_records = arrange_coco_like_dataset_format(output_dir, splits, split, shapes, config, map_categories_id)
 
-        split_output_dir = Path(f'{output_dir}/{split}')
-        split_output_dir.mkdir(parents=True, exist_ok=True)
-        print(f'Creating {split} split in {output_dir}/{split}: {int(splits[split])} examples.\n Running....')
-
-        annotations_path = f'{output_dir}/{split}/annotations.json'
-        for example_id in range(int(splits[split])):
-            try:
-                image, bboxes, objects_categories_names = make_image(shapes, config['image_size'],
-                                                                     config['min_objects_in_image'],
-                                                                     config['max_objects_in_image'],
-                                                                     tuple(config['bg_color']),
-                                                                     config['iou_thresh'],
-                                                                     config['margin_from_edge'],
-                                                                     config['bbox_margin'],
-                                                                     config['size_fluctuation'],
-                                                                     )
-            except Exception as e:
-                msg = str(e)
-                raise Exception(f'Error: While creating the {example_id}th image: {msg}')
-            image_filename = f'img_{example_id + 1:06d}.jpg'
-            file_path = f'{output_dir}/{split}/{image_filename}'
-            image.save(file_path)
-
-            if len(bboxes) == 0:
-                continue
-
-            images_records.append({
-                "license": '',
-                "file_name": image_filename,
-                "coco_url": "",
-                'width': image.height,
-                'height': image.height,
-                "date_captured": str(datetime.now()),
-                "flickr_url": "",
-                "id": example_id
-            })
-
-            for bbox, category_name in zip(bboxes, objects_categories_names):
-                annotatons_records.append({
-                    "segmentation": [],
-                    "area": [],
-                    "iscrowd": 0,
-                    "image_id": example_id,
-                    "bbox": list(bbox),
-                    "category_id": map_categories_id[category_name],
-                    "id": anno_id
-                }
-                )
-                anno_id += 1
         output_records = {
             "info": info,
             "licenses": [],
@@ -289,9 +392,19 @@ def create_dataset(config_file, shapes_file):
             "categories": categories_records,
             "annotations": annotatons_records
         }
+        annotations_path = f'{output_dir}/{split}/images/annotations.json'
+
         print(f'Save annotation  in {annotations_path}')
         with open(annotations_path, 'w') as fp:
             json.dump(output_records, fp)
+
+        # 2. single text file:
+        # prepare a single label text file.  row format: image file path, x_min, y_min, x_max, y_max, classid
+        gen_label_text_file(annotatons_records, images_records, categories_records, output_dir, split)
+
+        # 3. Ultralitics like format
+        # prepare a label text file per image.  box format: x_center, y_center, w,h
+        gen_per_image_label_text_file(annotatons_records, images_records, categories_records, f'{output_dir}/{split}/')
 
     print(f'Completed!')
 
@@ -304,13 +417,13 @@ def main():
     parser.add_argument("--shapes_file", type=str, default='config/shapes.yaml',
                         help='shapes yaml config file')
 
-    parser.add_argument("--class_names_out_file", type=str, default='dataset/class.names',
-                        help='class_names output _file')
+    # parser.add_argument("--class_names_out_file", type=str, default='dataset/class.names',
+    #                     help='class_names output _file')
 
     args = parser.parse_args()
     config_file = args.config_file
     shapes_file = args.shapes_file
-    class_names_out_file = args.class_names_out_file
+    # class_names_out_file = args.class_names_out_file
 
     try:
         create_dataset(config_file, shapes_file)
