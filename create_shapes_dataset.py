@@ -215,32 +215,6 @@ def gen_per_image_label_text_file(annotations, images_records, categories_record
                 entry = f"{category} {' '.join(str(e) for e in xcycwh_bbox)}"
                 f.write(entry)
 
-def gen_per_image_label_text_file(annotations, images_records, categories_records, output_dir):
-
-    output_dir = f'{output_dir}labels/'
-    try:
-        os.makedirs(output_dir)
-    except FileExistsError:
-        # directory already exists
-        pass
-    for image_entry in images_records:
-        im_height = image_entry['height']
-        im_width = image_entry['width']
-        annots = [annot for annot in annotations if annot['image_id'] == image_entry['id']]
-        filename = image_entry['file_name']
-
-        labels_filename =   f"{output_dir}{filename.rsplit('.', 1)[0]}.txt"
-        with open(labels_filename, 'w') as f:
-            for annot in annots:
-                category = categories_records[annot['category_id']]['id']
-                bbox = annot['bbox']
-                bbox_arr = np.array(bbox, dtype=float)
-                xcycwh_bbox = [(bbox_arr[0]+ bbox_arr[2]/2)/im_width, (bbox_arr[1]+ bbox_arr[3]/2)/im_height, bbox_arr[2]/im_width, bbox_arr[3]/im_height]
-                entry = f"{category} {' '.join(str(e) for e in xcycwh_bbox)}"
-                f.write(entry)
-
-
-
 
 # prepare a single label text file.  box format: xy_min, xy_max:
 def gen_label_text_file(annotations, images_records, categories_records, output_dir, split):
