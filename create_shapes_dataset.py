@@ -21,6 +21,34 @@ import argparse
 import os
 from pathlib import Path
 
+# def gen_per_image_label_text_file(annotations, images_records, categories_records, output_dir):
+def gen_per_image_label_text_file(images_bboxes, images_filenames, images_sizes, images_objects_categories_names, map_category_id,
+                            output_dir, split):
+
+    output_dir = f'{output_dir}labels/'
+    try:
+        os.makedirs(output_dir)
+    except FileExistsError:
+        # directory already exists
+        pass
+    for bboxes, filename, images_size, categories_name in zip(images_bboxes, images_filenames, images_sizes, images_objects_categories_names):
+        im_height = images_size[0]
+        im_width = images_size[1]
+        # annots = [annot for annot in annotations if annot['image_id'] == image_entry['id']]
+        # filename = image_entry['file_name']
+
+        labels_filename =   f"{output_dir}{filename.rsplit('.', 1)[0]}.txt"
+        with open(labels_filename, 'w') as f:
+            for bbox, category_name in zip(bboxes, categories_name):
+                # category = categories_records[annot['category_id']]['id']
+                category_id = map_category_id[category_name]
+
+                # bbox = annot['bbox']
+                bbox_arr = np.array(bbox, dtype=float)
+                xcycwh_bbox = [(bbox_arr[0]+ bbox_arr[2]/2)/im_width, (bbox_arr[1]+ bbox_arr[3]/2)/im_height, bbox_arr[2]/im_width, bbox_arr[3]/im_height]
+                entry = f"{category_id} {' '.join(str(e) for e in xcycwh_bbox)}"
+                f.write(entry)
+
 
 def gen_label_text_file(images_bboxes, images_filenames, images_objects_categories_names, map_category_id, output_dir, split):
     entries = []
@@ -38,8 +66,8 @@ def gen_label_text_file(images_bboxes, images_filenames, images_objects_categori
             xyxy_bbox = [bbox_arr[0], bbox_arr[1], bbox_arr[0] + bbox_arr[2], bbox_arr[1] + bbox_arr[3]]
             for vertex in xyxy_bbox:
                 entry = f'{entry}{vertex},'
-            entry = f'{entry}{float(map_category_id[category_name])} '
-        entries.append(entry)
+            category_id = f'{entry}{float(map_category_id[category_name])} '
+        entries.append(category_id)
         opath = f'{output_dir}/{split}/all_entries.txt'
         file = open(opath, 'w')
         for item in entries:
