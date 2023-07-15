@@ -22,6 +22,30 @@ import os
 from pathlib import Path
 
 
+def gen_label_text_file(images_bboxes, images_filenames, images_objects_categories_names, map_category_id, output_dir, split):
+    entries = []
+    for filename, categories_names, bboxes in zip(images_filenames, images_objects_categories_names, images_bboxes):
+        # im_height = image_entry['height']
+        # im_width = image_entry['width']
+        # annots = [annot for annot in annotations if annot['image_id'] == image_entry['id']]
+        # filename = image_entry['file_name']
+
+        entry = f'{output_dir}/{split}/{filename} '
+        for bbox, category_name in zip(bboxes, categories_names):
+            # bbox = annot['bbox']
+            # category = categories_records[annot['category_id']]['id']
+            bbox_arr = np.array(bbox, dtype=float)
+            xyxy_bbox = [bbox_arr[0], bbox_arr[1], bbox_arr[0] + bbox_arr[2], bbox_arr[1] + bbox_arr[3]]
+            for vertex in xyxy_bbox:
+                entry = f'{entry}{vertex},'
+            entry = f'{entry}{float(map_category_id[category_name])} '
+        entries.append(entry)
+        opath = f'{output_dir}/{split}/all_entries.txt'
+        file = open(opath, 'w')
+        for item in entries:
+            file.write(item + "\n")
+        file.close()
+
 def fill_categories_records(shapes):
     categories_records = []
     added_category_names = []
@@ -339,6 +363,8 @@ def main():
 
         category_names =  [ shape['category_name'] for shape in shapes]
         super_category_names =  [ shape['super_category'] for shape in shapes]
+        map_category_id =  { shape['category_name']: idx for idx, shape in enumerate(shapes)}
+
 
         # contributor = config.get('contributor')
         # licenses = config.get('licenses')
@@ -348,7 +374,7 @@ def main():
         output_records = create_coco_dataset(images_filenames, images_sizes, images_bboxes, images_objects_categories_names, category_names,
                                 super_category_names)
 
-        annotations_path = f'{output_dir}/{split}/images/annotations1.json'
+        annotations_path = f'{output_dir}/{split}/images/annotations.json'
 
         print(f'Save annotation  in {annotations_path}')
         with open(annotations_path, 'w') as fp:
@@ -362,8 +388,10 @@ def main():
         # # prepare a label text file per image.  box format: x_center, y_center, w,h
         # gen_per_image_label_text_file(annotatons_records, images_records, categories_records, f'{output_dir}/{split}/')
 
+        gen_label_text_file(images_bboxes, images_filenames, images_objects_categories_names, map_category_id, output_dir, split)
 
-    # try:
+
+# try:
     #     create_dataset(config_file, shapes_file)
     # except Exception as e:
     #     print(e)
