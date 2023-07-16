@@ -250,14 +250,17 @@ def main():
     bbox_margin = config['bbox_margin']
     size_fluctuation = config['size_fluctuation']
 
-    cb = ShapesDataset()
-
     splits = config["splits"]
     class_names_out_file = f'{output_dir}/{config["class_names_file"]}'
 
     for split in splits:
         nentries = int(splits[split])
-        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices = cb.create_dataset(shapes,
+        split_output_dir = Path(f'{output_dir}/{split}/images')
+        split_output_dir.mkdir(parents=True, exist_ok=True)
+        split_output_dir = Path(f'{output_dir}/{split}/labels')
+        split_output_dir.mkdir(parents=True, exist_ok=True)
+
+        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices = ShapesDataset().create_dataset(shapes,
                                                                                                              image_size,
                                                                                                              min_objects_in_image,
                                                                                                              max_objects_in_image,
