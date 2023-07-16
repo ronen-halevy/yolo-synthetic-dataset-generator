@@ -120,7 +120,7 @@ class ShapesDataset:
             ]
             draw.polygon(xy, fill=fill_color, outline=outline_color)
 
-    def create_ds_example(self, shapes, image_size, num_of_objects, bg_color, iou_thresh,
+    def create_ds_example(self, shapes_attributes, image_size, num_of_objects, bg_color, iou_thresh,
                           margin_from_edge,
                           bbox_margin,
                           size_fluctuation
@@ -132,35 +132,22 @@ class ShapesDataset:
         objects_categories_names = []
         objects_categories_indices = []
 
-        for index in range(num_of_objects):
+        for entry_id, category_name, shape_aspect_ratio, shape_width_choices, fill_color, outline_color in shapes_attributes:
             try:
-                shape_entry = np.random.choice(shapes)
-                objects_categories_indices.append(shape_entry['id'])
-                objects_categories_names.append(shape_entry['category_name'])
-                axis_ratio = shape_entry['shape_aspect_ratio']
-                shape_width_choices = shape_entry['shape_width_choices'] if 'shape_width_choices' in shape_entry else 1
-
-            except Exception as e:
-                print(e)
-                pass
-            try:
-                bbox = self.__create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
+                bbox = self.__create_bbox(image_size, bboxes, shape_width_choices, shape_aspect_ratio, iou_thresh,
                                           margin_from_edge,
                                           size_fluctuation)
             except Exception as e:
                 msg = str(e)
-                raise Exception(
-                    f'Failed in placing the {index} object into image:\n{msg}.\nHere is the failed-to-be-placed shape entry: {shape_entry}')
+                raise Exception(f'Failed in __create_bbox :\n{msg}.\nHere is the failed-to-be-placed shape entry: {entry_id}, {category_name}')
 
             if len(bbox):
                 bboxes.append(bbox.tolist())
             else:
                 break
-            # objects_categories_names.append(category_name)
-
-            fill_color = tuple(shape_entry['fill_color'])
-            outline_color = tuple(shape_entry['outline_color'])
-            self.draw_shape(draw, shape_entry['category_name'], bbox, fill_color, outline_color)
+            self.draw_shape(draw, category_name, bbox, fill_color, outline_color)
+            objects_categories_names.append(category_name)
+            objects_categories_indices.append(entry_id)
 
         bboxes = np.array(bboxes)
         # transfer bbox coordinate to:  [xmin, ymin, w, h]: (bbox_margin is added distance between shape and bbox)
@@ -204,8 +191,11 @@ class ShapesDataset:
         for example_id in range(nentries):
             num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
 
+            shape_entris= [np.random.choice(shapes) for idx in range(num_of_objects)]
+            shapes_attributes = [[shape_entry['id'],  shape_entry['category_name'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
+                                 tuple(shape_entry['fill_color']), tuple(shape_entry['outline_color'])] for shape_entry in shape_entris]
             try:
-                image, bboxes, objects_categories_indices, objects_categories_names = self.create_ds_example(shapes,
+                image, bboxes, objects_categories_indices, objects_categories_names = self.create_ds_example(shapes_attributes,
                                                                                                              image_size,
                                                                                                              num_of_objects,
                                                                                                              bg_color,
