@@ -3,7 +3,7 @@
 # supported shapes: circle, triangle, ellipse, square, trapezoid, rectangle, hexagon
 # color field is used for class labeling in 'color' or 'color' and 'shape' mode.
 
-- shape: circle
+- id: 0
   color: red
   category_name: circle
   super_category: shapes
@@ -17,59 +17,14 @@
     - 0
   shape_aspect_ratio: 1
   shape_width_choices:
+    - 240
+    - 120
     - 60
 
-- shape: circle
-  color: blue
-  category_name: circle
-  super_category: shapes
-  fill_color:
-    - 0
-    - 0
-    - 255
-  outline_color:
-    - 0
-    - 0
-    - 255
-  shape_aspect_ratio: 1
-  shape_width_choices:
-    - 60
+- id: 1
 
-- shape: triangle
-  color: blue
-  category_name: triangle
-  super_category: shapes
-  fill_color:
-    - 0
-    - 0
-    - 255
-  outline_color:
-    - 0
-    - 0
-    - 255
-  shape_aspect_ratio: 1
-  shape_width_choices:
-    - 60
-
-- shape: triangle
-  color: green
-  category_name: triangle
-  super_category: shapes
-  fill_color:
-    - 0
-    - 255
-    - 0
-  outline_color:
-    - 0
-    - 255
-    - 0
-  shape_aspect_ratio: 1
-  shape_width_choices:
-   - 60
-
-- shape: circle
   color: red
-  category_name: circle
+  category_name: ellipse
   super_category: shapes
   fill_color:
     - 255
@@ -81,23 +36,89 @@
     - 0
   shape_aspect_ratio: 1
   shape_width_choices:
-    - 30
+    - 240
+    - 120
+    - 60
 
-- shape: circle
-  color: blue
-  category_name: circle
-  super_category: shapes
-  fill_color:
-    - 0
-    - 0
-    - 255
-  outline_color:
-    - 0
-    - 0
-    - 255
-  shape_aspect_ratio: 1
-  shape_width_choices:
-    - 30
-
-
-
+#- shape: circle
+#  color: blue
+#  category_name: circle
+#  super_category: shapes
+#  fill_color:
+#    - 0
+#    - 0
+#    - 255
+#  outline_color:
+#    - 0
+#    - 0
+#    - 255
+#  shape_aspect_ratio: 1
+#  shape_width_choices:
+#    - 60
+#
+#- shape: triangle
+#  color: blue
+#  category_name: triangle
+#  super_category: shapes
+#  fill_color:
+#    - 0
+#    - 0
+#    - 255
+#  outline_color:
+#    - 0
+#    - 0
+#    - 255
+#  shape_aspect_ratio: 1
+#  shape_width_choices:
+#    - 60
+#
+#- shape: triangle
+#  color: green
+#  category_name: triangle
+#  super_category: shapes
+#  fill_color:
+#    - 0
+#    - 255
+#    - 0
+#  outline_color:
+#    - 0
+#    - 255
+#    - 0
+#  shape_aspect_ratio: 1
+#  shape_width_choices:
+#   - 60
+#
+#- shape: circle
+#  color: red
+#  category_name: circle
+#  super_category: shapes
+#  fill_color:
+#    - 255
+#    - 0
+#    - 0
+#  outline_color:
+#    - 255
+#    - 0
+#    - 0
+#  shape_aspect_ratio: 1
+#  shape_width_choices:
+#    - 30
+#
+#- shape: circle
+#  color: blue
+#  category_name: circle
+#  super_category: shapes
+#  fill_color:
+#    - 0
+#    - 0
+#    - 255
+#  outline_color:
+#    - 0
+#    - 0
+#    - 255
+#  shape_aspect_ratio: 1
+#  shape_width_choices:
+#    - 30
+#
+#
+#

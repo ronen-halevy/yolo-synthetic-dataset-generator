@@ -22,16 +22,15 @@ import os
 from pathlib import Path
 
 
-def create_per_image_labels_files(images_filenames, images_bboxes, images_sizes, images_objects_categories_names,
-                                  map_category_id,
+def create_per_image_labels_files(images_filenames, images_bboxes, images_sizes, images_objects_categories_indices,
+
                                   output_dir):
     """
 
     :param images_filenames: list of dataset image filenames
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
     :param images_sizes:
-    :param images_objects_categories_names:  list of per image categories_names arrays
-    :param map_category_id: category name to category id dict
+    :param images_objects_categories_indices:  list of per image categories_indices arrays
     :param output_dir: output dir of labels text files
     :return:
     """
@@ -41,18 +40,14 @@ def create_per_image_labels_files(images_filenames, images_bboxes, images_sizes,
     except FileExistsError:
         # directory already exists
         pass
-    for bboxes, filename, images_size, categories_name in zip(images_bboxes, images_filenames, images_sizes,
-                                                              images_objects_categories_names):
+    for bboxes, filename, images_size, categories_indices in zip(images_bboxes, images_filenames, images_sizes,
+                                                              images_objects_categories_indices):
         im_height = images_size[0]
         im_width = images_size[1]
 
         labels_filename = f"{output_dir}{filename.rsplit('.', 1)[0]}.txt"
         with open(labels_filename, 'w') as f:
-            for bbox, category_name in zip(bboxes, categories_name):
-                # category = categories_records[annot['category_id']]['id']
-                category_id = map_category_id[category_name]
-
-                # bbox = annot['bbox']
+            for bbox, category_id in zip(bboxes, categories_indices):
                 bbox_arr = np.array(bbox, dtype=float)
                 xcycwh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2) / im_width, (bbox_arr[1] + bbox_arr[3] / 2) / im_height,
                                bbox_arr[2] / im_width, bbox_arr[3] / im_height]
@@ -65,27 +60,26 @@ def create_per_image_labels_files(images_filenames, images_bboxes, images_sizes,
 # .
 # imagm_path x0l,y0l,x0h,y0h,c, ......xnl,ynl,xnh,ynh,c
 
-def create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_names, map_category_id,
+def create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
                                 output_dir):
     """
     :param images_filenames: list of dataset image filenames
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
-    :param images_objects_categories_names:  list of per image categories_names arrays
-    :param map_category_id: category name to category id dict
+    :param images_objects_categories_indices:  list of per image categories_indices arrays
     :param output_dir: output dir of labels text files
     :return:
     """
     entries = []
-    for filename, categories_names, bboxes in zip(images_filenames, images_objects_categories_names, images_bboxes):
+    for filename, categories_indices, bboxes in zip(images_filenames, images_objects_categories_indices, images_bboxes):
 
         image_path = f'{output_dir}/{filename} '
         entry = image_path
-        for bbox, category_name in zip(bboxes, categories_names):
+        for bbox, category_id in zip(bboxes, categories_indices):
             bbox_arr = np.array(bbox, dtype=float)
             xyxy_bbox = [bbox_arr[0], bbox_arr[1], bbox_arr[0] + bbox_arr[2], bbox_arr[1] + bbox_arr[3]]
             for vertex in xyxy_bbox:
                 entry = f'{entry}{vertex},'
-            category_id = f'{entry}{float(map_category_id[category_name])} '
+            category_id = f'{entry}{float(category_id)} '
         entries.append(category_id)
         opath = f'{output_dir}/all_entries.txt'
         file = open(opath, 'w')
@@ -95,13 +89,13 @@ def create_row_text_labels_file(images_filenames, images_bboxes, images_objects_
 
 
 # Create a coco like format label file
-def create_coco_labels_file(images_filenames, images_sizes, images_bboxes, images_objects_categories_names,
+def create_coco_labels_file(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                             category_names, super_category_names, annotations_output_path):
     """
      :param images_filenames: list of dataset image filenames
     :param images_sizes: list of per image [im.height, im.width] tuples
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
-    :param images_objects_categories_names: list of per image categories_names arrays
+    :param images_objects_categories_indices: list of per image categories_indices arrays
     :param category_names: list of all dataset's category names
     :param super_category_names:  list of all dataset's super_category_names
     :param annotations_output_path: path for output file storage
@@ -112,7 +106,7 @@ def create_coco_labels_file(images_filenames, images_sizes, images_bboxes, image
     # for example_id in range(nex):
     added_category_names = []
     categories_records = []
-    map_categories_id = {}
+    # map_categories_id = {}
 
     # fill category
     id = 0
@@ -125,13 +119,13 @@ def create_coco_labels_file(images_filenames, images_sizes, images_bboxes, image
                 "name": category_name,
             })
             added_category_names.append(category_name)
-            map_categories_id.update({category_name: id})
+            # map_categories_id.update({category_name: id})
             id += 1
 
     images_records = []
     annotatons_records = []
-    for example_id, (image_filename, image_size, bboxes, objects_categories_names) in enumerate(
-            zip(images_filenames, images_sizes, images_bboxes, images_objects_categories_names)):
+    for example_id, (image_filename, image_size, bboxes, objects_categories_indices) in enumerate(
+            zip(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices)):
 
         # images records:
 
@@ -147,14 +141,14 @@ def create_coco_labels_file(images_filenames, images_sizes, images_bboxes, image
         })
 
         # annotatons_records
-        for bbox, category_name in zip(bboxes, objects_categories_names):
+        for bbox, category_id in zip(bboxes, objects_categories_indices):
             annotatons_records.append({
                 "segmentation": [],
                 "area": [],
                 "iscrowd": 0,
                 "image_id": example_id,
                 "bbox": list(bbox),
-                "category_id": map_categories_id[category_name],
+                "category_id": category_id,
                 "id": anno_id
             }
             )
@@ -261,15 +255,19 @@ class CreateBbox:
         num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
         bboxes = []
         objects_categories_names = []
-        for index in range(num_of_objects):
+        objects_categories_indices = []
 
-            shape_entry = np.random.choice(shapes)
+        for index in range(num_of_objects):
             try:
+                shape_entry = np.random.choice(shapes)
+                objects_categories_indices.append(shape_entry['id'])
+                objects_categories_names.append(shape_entry['category_name'])
                 axis_ratio = shape_entry['shape_aspect_ratio']
+                shape_width_choices = shape_entry['shape_width_choices'] if 'shape_width_choices' in shape_entry else 1
+
             except Exception as e:
                 print(e)
                 pass
-            shape_width_choices = shape_entry['shape_width_choices'] if 'shape_width_choices' in shape_entry else 1
             try:
                 bbox = self.create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
                                         margin_from_edge,
@@ -283,7 +281,7 @@ class CreateBbox:
                 bboxes.append(bbox.tolist())
             else:
                 break
-            objects_categories_names.append(shape_entry['category_name'])
+            # objects_categories_names.append(category_name)
 
             # fill_color = tuple(shape_entry['fill_color'])
             # outline_color = tuple(shape_entry['outline_color'])
@@ -298,7 +296,7 @@ class CreateBbox:
 
         bboxes = np.stack(bboxes, axis=1)  # / np.tile(image_size, 2)
 
-        return image, bboxes, objects_categories_names
+        return image, bboxes, objects_categories_indices, objects_categories_names
 
 
 def main():
@@ -342,11 +340,12 @@ def main():
         images_filenames = []
         images_sizes = []
         images_bboxes = []
+        images_objects_categories_indices=[]
         images_objects_categories_names = []
 
         for example_id in range(int(splits[split])):
             try:
-                image, bboxes, objects_categories_names = cb.run(shapes, image_size, min_objects_in_image,
+                image, bboxes, objects_categories_indices, objects_categories_names = cb.run(shapes, image_size, min_objects_in_image,
                                                                  max_objects_in_image, bg_color, iou_thresh,
                                                                  margin_from_edge,
                                                                  bbox_margin,
@@ -363,18 +362,16 @@ def main():
             images_filenames.append(image_filename)
             images_sizes.append([image.height, image.width])
             images_bboxes.append(bboxes)
+            images_objects_categories_indices.append(objects_categories_indices)
             images_objects_categories_names.append(objects_categories_names)
+
 
         category_names = [shape['category_name'] for shape in shapes]
         super_category_names = [shape['super_category'] for shape in shapes]
-        map_category_id = {shape['category_name']: idx for idx, shape in enumerate(shapes)}
-
-        # annotations_path = f'{output_dir}/{split}/images/annotations.json'
-
 
         annotations_output_path = f'{output_dir}/{split}/images/annotations.json'
 
-        create_coco_labels_file(images_filenames, images_sizes, images_bboxes, images_objects_categories_names,
+        create_coco_labels_file(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                                 category_names,
                                 super_category_names, annotations_output_path)
 
@@ -387,10 +384,10 @@ def main():
         # # prepare a label text file per image.  box format: x_center, y_center, w,h
 
         create_per_image_labels_files(images_filenames, images_bboxes, images_sizes,
-                                      images_objects_categories_names, map_category_id
+                                      images_objects_categories_indices
                                       , f'{output_dir}/{split}/')
 
-        create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_names, map_category_id,
+        create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
                                     f'{output_dir}/{split}/')
 
 
