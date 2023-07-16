@@ -155,7 +155,7 @@ def create_coco_labels_file(images_filenames, images_sizes, images_bboxes, image
             anno_id += 1
     date_today = date.today()
     info = {
-        "description": "Shapes Dataset",
+        "description": " Dataset",
         "url": '',
         # "version": config.get('version', 1.0),
         "year": date_today.year,
@@ -175,10 +175,8 @@ def create_coco_labels_file(images_filenames, images_sizes, images_bboxes, image
     with open(annotations_output_path, 'w') as fp:
         json.dump(output_records, fp)
 
-    return output_records
 
-
-class CreateBbox:
+class ShapesDataset:
 
     def compute_iou(self, box1, box2):
         """x_min, y_min, x_max, y_max"""
@@ -319,7 +317,7 @@ def main():
 
     output_dir = config["output_dir"]
     class_names_out_file = f'{output_dir}/{config["class_names_file"]}'
-    cb = CreateBbox()
+    cb = ShapesDataset()
 
     image_size = config['image_size']
     min_objects_in_image = config['min_objects_in_image']
