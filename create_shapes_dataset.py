@@ -23,11 +23,7 @@ from pathlib import Path
 from output_formatters import create_per_image_labels_files, create_row_text_labels_file, create_coco_labels_file
 
 
-
-
-
 class ShapesDataset:
-
 
     def __compute_iou(self, box1, box2):
         """x_min, y_min, x_max, y_max"""
@@ -44,7 +40,7 @@ class ShapesDataset:
         return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
     def __create_bbox(self, image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
-                    size_fluctuation=0.01):
+                      size_fluctuation=0.01):
         """
 
         :param image_size: Canvas size
@@ -93,15 +89,45 @@ class ShapesDataset:
 
         return new_bbox
 
-    def run(self, shapes, image_size, min_objects_in_image, max_objects_in_image, bg_color, iou_thresh,
-            margin_from_edge,
-            bbox_margin,
-            size_fluctuation
+    def draw_shape(self, draw, shape, bbox, fill_color, outline_color):
+        if shape in ['ellipse', 'circle']:
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
 
-            ):
+        elif shape in ['rectangle', 'square']:
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
+
+        elif shape == 'triangle':
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
+            draw.polygon(vertices, fill=fill_color, outline=outline_color)
+
+        elif shape == 'triangle':
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
+            draw.polygon(vertices, fill=fill_color, outline=outline_color)
+
+        elif shape in ['trapezoid''hexagon']:
+            sides = 5 if shape == 'trapezoid' else 6
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
+            rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
+            xy = [
+                (math.cos(th) * rad_x + center_x,
+                 math.sin(th) * rad_y + center_y)
+                for th in [i * (2 * math.pi) / sides for i in range(sides)]
+            ]
+            draw.polygon(xy, fill=fill_color, outline=outline_color)
+
+    def create_ds_example(self, shapes, image_size, num_of_objects, bg_color, iou_thresh,
+                          margin_from_edge,
+                          bbox_margin,
+                          size_fluctuation
+
+                          ):
         image = Image.new('RGB', image_size, bg_color)
-        # draw = ImageDraw.Draw(image)
-        num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
+        draw = ImageDraw.Draw(image)
         bboxes = []
         objects_categories_names = []
         objects_categories_indices = []
@@ -119,8 +145,8 @@ class ShapesDataset:
                 pass
             try:
                 bbox = self.__create_bbox(image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh,
-                                        margin_from_edge,
-                                        size_fluctuation)
+                                          margin_from_edge,
+                                          size_fluctuation)
             except Exception as e:
                 msg = str(e)
                 raise Exception(
@@ -132,9 +158,9 @@ class ShapesDataset:
                 break
             # objects_categories_names.append(category_name)
 
-            # fill_color = tuple(shape_entry['fill_color'])
-            # outline_color = tuple(shape_entry['outline_color'])
-            # draw_shape(draw, shape_entry['shape'], bbox, fill_color, outline_color)
+            fill_color = tuple(shape_entry['fill_color'])
+            outline_color = tuple(shape_entry['outline_color'])
+            self.draw_shape(draw, shape_entry['category_name'], bbox, fill_color, outline_color)
 
         bboxes = np.array(bboxes)
         # transfer bbox coordinate to:  [xmin, ymin, w, h]: (bbox_margin is added distance between shape and bbox)
@@ -146,6 +172,63 @@ class ShapesDataset:
         bboxes = np.stack(bboxes, axis=1)  # / np.tile(image_size, 2)
 
         return image, bboxes, objects_categories_indices, objects_categories_names
+
+    def create_dataset(self, shapes, image_size,
+                       min_objects_in_image,
+                       max_objects_in_image, bg_color,
+                       iou_thresh,
+                       margin_from_edge,
+                       bbox_margin,
+                       size_fluctuation, nentries, output_dir):
+        """
+
+        :param shapes:
+        :param image_size:
+        :param min_objects_in_image:
+        :param max_objects_in_image:
+        :param bg_color:
+        :param iou_thresh:
+        :param margin_from_edge:
+        :param bbox_margin:
+        :param size_fluctuation:
+        :param nentries:
+        :param output_dir:
+        :return:
+        """
+
+        images_filenames = []
+        images_sizes = []
+        images_bboxes = []
+        images_objects_categories_indices = []
+        images_objects_categories_names = []
+        for example_id in range(nentries):
+            num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
+
+            try:
+                image, bboxes, objects_categories_indices, objects_categories_names = self.create_ds_example(shapes,
+                                                                                                             image_size,
+                                                                                                             num_of_objects,
+                                                                                                             bg_color,
+                                                                                                             iou_thresh,
+                                                                                                             margin_from_edge,
+                                                                                                             bbox_margin,
+                                                                                                             size_fluctuation)
+            except Exception as e:
+                msg = str(e)
+                raise Exception(f'Error: While creating the {example_id}th image: {msg}')
+            image_filename = f'img_{example_id + 1:06d}.jpg'
+            file_path = f'{output_dir}/images/{image_filename}'
+            image.save(file_path)
+            if len(bboxes) == 0:
+                continue
+
+            images_filenames.append(image_filename)
+            images_sizes.append([image.height, image.width])
+            images_bboxes.append(bboxes)
+            images_objects_categories_indices.append(objects_categories_indices)
+            images_objects_categories_names.append(objects_categories_names)
+
+        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices
 
 
 def main():
@@ -167,8 +250,6 @@ def main():
         config = yaml.safe_load(stream)
 
     output_dir = config["output_dir"]
-    class_names_out_file = f'{output_dir}/{config["class_names_file"]}'
-    cb = ShapesDataset()
 
     image_size = config['image_size']
     min_objects_in_image = config['min_objects_in_image']
@@ -178,64 +259,46 @@ def main():
     margin_from_edge = config['margin_from_edge']
     bbox_margin = config['bbox_margin']
     size_fluctuation = config['size_fluctuation']
+
+    cb = ShapesDataset()
+
     splits = config["splits"]
+    class_names_out_file = f'{output_dir}/{config["class_names_file"]}'
 
     for split in splits:
-
-        split_output_dir = Path(f'{output_dir}/{split}')
-        split_output_dir.mkdir(parents=True, exist_ok=True)
-        print(f'Creating {split} split in {output_dir}/{split}: {int(splits[split])} examples.\n Running....')
-
-        images_filenames = []
-        images_sizes = []
-        images_bboxes = []
-        images_objects_categories_indices=[]
-        images_objects_categories_names = []
-
-        for example_id in range(int(splits[split])):
-            try:
-                image, bboxes, objects_categories_indices, objects_categories_names = cb.run(shapes, image_size, min_objects_in_image,
-                                                                 max_objects_in_image, bg_color, iou_thresh,
-                                                                 margin_from_edge,
-                                                                 bbox_margin,
-                                                                 size_fluctuation)
-            except Exception as e:
-                msg = str(e)
-                raise Exception(f'Error: While creating the {example_id}th image: {msg}')
-            image_filename = f'img_{example_id + 1:06d}.jpg'
-            file_path = f'{output_dir}/{split}/images/{image_filename}'
-            image.save(file_path)
-            if len(bboxes) == 0:
-                continue
-
-            images_filenames.append(image_filename)
-            images_sizes.append([image.height, image.width])
-            images_bboxes.append(bboxes)
-            images_objects_categories_indices.append(objects_categories_indices)
-            images_objects_categories_names.append(objects_categories_names)
-
+        nentries = int(splits[split])
+        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices = cb.create_dataset(shapes,
+                                                                                                             image_size,
+                                                                                                             min_objects_in_image,
+                                                                                                             max_objects_in_image,
+                                                                                                             bg_color,
+                                                                                                             iou_thresh,
+                                                                                                             margin_from_edge,
+                                                                                                             bbox_margin,
+                                                                                                             size_fluctuation,
+                                                                                                             nentries,
+                                                                                                             f'{output_dir}/{split}')
 
         category_names = [shape['category_name'] for shape in shapes]
+        with open(class_names_out_file, 'w') as f:
+            for category_name in category_names:
+                f.write(f'{category_name}\n')
+
         super_category_names = [shape['super_category'] for shape in shapes]
 
         annotations_output_path = f'{output_dir}/{split}/images/annotations.json'
 
+        # coco format
         create_coco_labels_file(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                                 category_names,
                                 super_category_names, annotations_output_path)
 
-
-        # # 2. single text file:
-        # # prepare a single label text file.  row format: image file path, x_min, y_min, x_max, y_max, classid
-        # gen_label_text_file(annotatons_records, images_records, categories_records, output_dir, split)
-        #
-        # # 3. Ultralitics like format
-        # # prepare a label text file per image.  box format: x_center, y_center, w,h
-
+        # 2. single text file:
         create_per_image_labels_files(images_filenames, images_bboxes, images_sizes,
                                       images_objects_categories_indices
                                       , f'{output_dir}/{split}/')
 
+        # # 3. Ultralitics like format
         create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
                                     f'{output_dir}/{split}/')
 
