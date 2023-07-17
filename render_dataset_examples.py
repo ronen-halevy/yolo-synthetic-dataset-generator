@@ -64,6 +64,7 @@ def draw_bounding_box(image, boxes, color, thickness=1):
     draw = ImageDraw.Draw(image)
     for box in boxes:
         xmin, ymin, w, h = box
+        print((xmin, ymin), (xmin, ymin+h), (xmin+w, ymin+h), (xmin+w, ymin))
         draw.line([(xmin, ymin), (xmin, ymin+h), (xmin+w, ymin+h), (xmin+w, ymin),
                    (xmin, ymin)],
                   width=thickness,
@@ -72,18 +73,17 @@ def draw_bounding_box(image, boxes, color, thickness=1):
 
 config_file_path = 'config/config.yaml'
 
-def main():
+def main(images_dir, annotations_path):
     with open(config_file_path) as f:
         config = yaml.safe_load(f)
 
-    annotations_path = config["annotations_path"]
-    images_dir = config['images_dir']
+
 
     with open(annotations_path) as file:
         annotations = yaml.safe_load(file)
 
     plot_setup_params = {
-        'num_of_images': 2,
+        'num_of_images': 1,
         'start_index': 0,
         'random_select': True,
         'figsize': (7, 7)
@@ -97,18 +97,21 @@ def main():
         image_index = np.random.randint(start_index, len(annotations)) if random_select else start_index + idx
         image_record = annotations['images'][image_index]
         annotation_records = [annotation for  annotation in annotations['annotations'] if annotation['image_id'] == image_record['id']]
-        image_path = f'{images_dir}{image_record["file_name"]}'
+        image_path = f'{image_record["file_name"]}'
         image = Image.open(image_path)
         colors = list(ImageColor.colormap.values())
         color = colors[0]
         bboxes = [annotation_record['bbox'] for annotation_record in annotation_records]
         bboxes = np.array(bboxes)
+        print(bboxes)
         # width, height = image.size
-        bboxes[..., 0:3:2] = bboxes[..., 0:3:2] # * width
-        bboxes[..., 1:4:2] = bboxes[..., 1:4:2] #* height
+        # bboxes[..., 0:3:2] = bboxes[..., 0:3:2] # * width
+        # bboxes[..., 1:4:2] = bboxes[..., 1:4:2] #* height
         annotated_bbox_image = draw_bounding_box(image, bboxes, color, thickness=1)
         category_ids = [annotation_record['category_id'] for annotation_record in annotation_records]
         category_names = [category['name'] for category in annotations['categories'] if category['id'] in category_ids]
+        category_names = [ category ['name']  for category_id in category_ids for category in annotations['categories'] if category['id'] ==category_id]
+
         annotated_text_image = draw_text_on_bounding_box(annotated_bbox_image, bboxes[..., 1], bboxes[..., 0], color,
                                                          category_names, font_size=15)
 
@@ -118,4 +121,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    annotations_path = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/images/annotations.json' # config["annotations_path"]
+    images_dir = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/images' # config['images_dir']
+    main(images_dir, annotations_path)
