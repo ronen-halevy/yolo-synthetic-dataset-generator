@@ -7,8 +7,8 @@
 #   Author      : ronen halevy
 #   Created date:  4/16/22
 #   Description :
-#   main method for creation shapes dataset.
-#   1. reads config and shape json files
+#   main method for  shapes dataset creation.
+#   1. reads splits sizes and destination output path from config.json
 #   2. Creates an instance of  ShapesDataset and generates the dataset
 #   3. Envokes formatters to save dataset labels in various formats e.g. coco, multi text file (yolov5 ultralics like),
 #   single text file
