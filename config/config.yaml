@@ -1,27 +1,5 @@
 ---
-# yolov5 640x640 will require no resize:
-# yolov3 416x416 will require no resize:
 
-image_size:
- - 640
- - 640
-
-min_objects_in_image: 3
-max_objects_in_image: 3
-
-bg_color:
-  - 0
-  - 0
-  - 0
-
-# min margin between objects and image edged in pixels:
-margin_from_edge: 8
-# margin betweem bbox and shape - in pixels:
-bbox_margin: 5
-# fluctuations of object size:
-size_fluctuation: 0.00
-# max permited objects overlap. iou=0 means no overlap
-iou_thresh: 0
 splits:
  train: 100
  valid: 10
@@ -29,5 +7,4 @@ splits:
 
 output_dir: dataset
 
-class_names_file:  class.names
 

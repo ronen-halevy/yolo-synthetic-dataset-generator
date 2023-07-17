@@ -2,11 +2,52 @@ import numpy as np
 from PIL import Image, ImageDraw
 import math
 import random
+import yaml
+
+shapes_file = '../config/shapes.yaml'
 
 
 class ShapesDataset:
+    """
+    A class to generate shapes dataset, based on config
+    Public method: create_dataset
+
+    """
+    def __init__(self):
+
+
+        shapes_file = 'config/shapes.yaml'
+        with open(shapes_file, 'r') as stream:
+            config = yaml.safe_load(stream)
+
+        self.image_size = config['image_size']
+        self.min_objects_in_image = config['min_objects_in_image']
+        self.max_objects_in_image = config['max_objects_in_image']
+        self.bg_color = tuple(config['bg_color'])
+        self.iou_thresh = config['iou_thresh']
+        self.margin_from_edge = config['margin_from_edge']
+        self.bbox_margin = config['bbox_margin']
+        self.size_fluctuation = config['size_fluctuation']
+        self.shapes=config['shapes']
+
+
+        self.category_names = [shape['category_name'] for shape in self.shapes]
+        with open(config['class_names_file'], 'w') as f:
+            for category_name in self.category_names:
+                f.write(f'{category_name}\n')
+
+        self.super_category_names = [shape['super_category'] for shape in self.shapes]
+        pass
+
 
     def __compute_iou(self, box1, box2):
+        """
+        Computes iou (intersection over union) of 2 boxes: iou=0 if no overlap and 1 if totally overlap.
+        Used for  objects placement in image
+        :param box1: format x_min, y_min, x_max, y_max
+        :param box2: x_min, y_min, x_max, y_max
+        :return: (boxes intesection area)/(boxes union area)
+        """
         """x_min, y_min, x_max, y_max"""
         area_box_1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
         area_box_2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
@@ -70,7 +111,7 @@ class ShapesDataset:
 
         return new_bbox
 
-    def draw_shape(self, draw, shape, bbox, fill_color, outline_color):
+    def __draw_shape(self, draw, shape, bbox, fill_color, outline_color):
         if shape in ['ellipse', 'circle']:
             x_min, y_min, x_max, y_max = bbox.tolist()
             draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
@@ -101,7 +142,7 @@ class ShapesDataset:
             ]
             draw.polygon(xy, fill=fill_color, outline=outline_color)
 
-    def create_ds_example(self, shapes_attributes, image_size, num_of_objects, bg_color, iou_thresh,
+    def __create_ds_example(self, shapes_attributes, image_size, num_of_objects, bg_color, iou_thresh,
                           margin_from_edge,
                           bbox_margin,
                           size_fluctuation
@@ -126,7 +167,7 @@ class ShapesDataset:
                 bboxes.append(bbox.tolist())
             else:
                 break
-            self.draw_shape(draw, category_name, bbox, fill_color, outline_color)
+            self.__draw_shape(draw, category_name, bbox, fill_color, outline_color)
             objects_categories_names.append(category_name)
             objects_categories_indices.append(entry_id)
 
@@ -141,13 +182,7 @@ class ShapesDataset:
 
         return image, bboxes, objects_categories_indices, objects_categories_names
 
-    def create_dataset(self, shapes, image_size,
-                       min_objects_in_image,
-                       max_objects_in_image, bg_color,
-                       iou_thresh,
-                       margin_from_edge,
-                       bbox_margin,
-                       size_fluctuation, nentries, output_dir):
+    def create_dataset(self,  nentries, output_dir):
         """
 
         :param shapes:
@@ -170,20 +205,20 @@ class ShapesDataset:
         images_objects_categories_indices = []
         images_objects_categories_names = []
         for example_id in range(nentries):
-            num_of_objects = np.random.randint(min_objects_in_image, max_objects_in_image + 1)
+            num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
 
-            shape_entris= [np.random.choice(shapes) for idx in range(num_of_objects)]
+            shape_entris= [np.random.choice(self.shapes) for idx in range(num_of_objects)]
             shapes_attributes = [[shape_entry['id'],  shape_entry['category_name'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
                                  tuple(shape_entry['fill_color']), tuple(shape_entry['outline_color'])] for shape_entry in shape_entris]
             try:
-                image, bboxes, objects_categories_indices, objects_categories_names = self.create_ds_example(shapes_attributes,
-                                                                                                             image_size,
+                image, bboxes, objects_categories_indices, objects_categories_names = self.__create_ds_example(shapes_attributes,
+                                                                                                             self.image_size,
                                                                                                              num_of_objects,
-                                                                                                             bg_color,
-                                                                                                             iou_thresh,
-                                                                                                             margin_from_edge,
-                                                                                                             bbox_margin,
-                                                                                                             size_fluctuation)
+                                                                                                             self.bg_color,
+                                                                                                             self.iou_thresh,
+                                                                                                             self.margin_from_edge,
+                                                                                                             self.bbox_margin,
+                                                                                                             self.size_fluctuation)
             except Exception as e:
                 msg = str(e)
                 raise Exception(f'Error: While creating the {example_id}th image: {msg}')
@@ -199,4 +234,4 @@ class ShapesDataset:
             images_objects_categories_indices.append(objects_categories_indices)
             images_objects_categories_names.append(objects_categories_names)
 
-        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices
+        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names,  self.super_category_names
