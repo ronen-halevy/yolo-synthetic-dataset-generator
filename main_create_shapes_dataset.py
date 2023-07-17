@@ -21,7 +21,6 @@ from src.labels_text_file_formatter import create_row_text_labels_file
 from src.labels_coco_formatter import coco_formatter
 from src.lables_per_image_text_file_formatter import raw_text_files_labels_formatter
 
-
 from src.shapes_dataset import ShapesDataset
 
 
@@ -29,8 +28,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_file", type=str, default='config/config.yaml',
                         help='yaml config file')
-
-
 
     args = parser.parse_args()
     config_file = args.config_file
@@ -49,18 +46,17 @@ def main():
         split_output_dir = Path(f'{output_dir}/{split}/labels')
         split_output_dir.mkdir(parents=True, exist_ok=True)
 
-        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names,  super_category_names= shapes_dataset.create_dataset(
-                                                                                                             nentries,
-                                                                                                             f'{output_dir}/{split}')
-
+        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, super_category_names = shapes_dataset.create_dataset(
+            nentries,
+            f'{output_dir}/{split}')
 
         annotations_output_path = f'{output_dir}/{split}/images/annotations.json'
         images_filenames = [f'dataset/{split}/images/{images_filename}' for images_filename in images_filenames]
 
         # coco format
         coco_formatter(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
-                                category_names,
-                                super_category_names, annotations_output_path)
+                       category_names,
+                       super_category_names, annotations_output_path)
 
         # 2. single text file:
         create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
@@ -68,8 +64,8 @@ def main():
 
         # # 3. Ultralitics like format
         raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
-                                      images_objects_categories_indices
-                                      , f'{output_dir}/{split}/')
+                                        images_objects_categories_indices
+                                        , f'{output_dir}/{split}/')
 
 
 if __name__ == '__main__':
