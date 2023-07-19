@@ -3,6 +3,10 @@ from PIL import Image, ImageDraw
 import math
 import random
 import yaml
+import cv2
+
+import matplotlib.pyplot as plt
+
 
 shapes_file = '../config/shapes.yaml'
 
@@ -14,8 +18,6 @@ class ShapesDataset:
 
     """
     def __init__(self):
-
-
         shapes_file = 'config/shapes.yaml'
         with open(shapes_file, 'r') as stream:
             config = yaml.safe_load(stream)
@@ -60,6 +62,10 @@ class ShapesDataset:
         if y_min >= y_max or x_min >= x_max:
             return 0
         return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
+
+    import math
+
+    # This function gets just one pair of coordinates based on the angle theta
 
     def __create_bbox(self, image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
                       size_fluctuation=0.01):
@@ -115,32 +121,44 @@ class ShapesDataset:
         if shape in ['ellipse', 'circle']:
             x_min, y_min, x_max, y_max = bbox.tolist()
             draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
+            n_points=100
+            t = np.linspace(0,360,n_points)
+            x_coord =(x_min+x_max)/2+(x_max-x_min)/2*np.cos(np.radians(t))
+            y_coord = (y_min+y_max)/2+(y_max-y_min)/2*np.sin(np.radians(t))
+            polygon  = [[ x_poly,y_poly] for x_poly,y_poly in zip(x_coord,y_coord)]
+            polygon=np.asarray(polygon).astype(np.int32)
+
 
         elif shape in ['rectangle', 'square']:
             x_min, y_min, x_max, y_max = bbox.tolist()
             draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
+            polygon=[ [x_min, y_min],[x_min, y_max], [x_max, y_max], [x_max, y_min]]
+            polygon=np.asarray(polygon).astype(np.int32)
+
 
         elif shape == 'triangle':
             x_min, y_min, x_max, y_max = bbox.tolist()
             vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
             draw.polygon(vertices, fill=fill_color, outline=outline_color)
+            polygon=[ [x_min, y_max],[x_max, y_max], [(x_min + x_max) / 2, y_min]]
+## use same polygon for all:
 
-        elif shape == 'triangle':
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
-            draw.polygon(vertices, fill=fill_color, outline=outline_color)
-
-        elif shape in ['trapezoid''hexagon']:
+        elif shape in ['trapezoid', 'hexagon']:
             sides = 5 if shape == 'trapezoid' else 6
             x_min, y_min, x_max, y_max = bbox.tolist()
             center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
             rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
-            xy = [
+            polygon= [
                 (math.cos(th) * rad_x + center_x,
                  math.sin(th) * rad_y + center_y)
                 for th in [i * (2 * math.pi) / sides for i in range(sides)]
             ]
-            draw.polygon(xy, fill=fill_color, outline=outline_color)
+            draw.polygon(polygon, fill=fill_color, outline=outline_color)
+
+
+
+        return  np.asarray(polygon).astype(np.int32)
+
 
     def __create_ds_example(self, shapes_attributes, image_size, num_of_objects, bg_color, iou_thresh,
                           margin_from_edge,
