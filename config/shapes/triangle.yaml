@@ -1,0 +1,16 @@
+cname: triangle
+color: red
+super_category: shapes
+fill_color:
+  - 255
+  - 0
+  - 0
+outline_color:
+  - 255
+  - 0
+  - 0
+shape_aspect_ratio: 1
+shape_width_choices:
+  - 240
+  - 120
+  - 60

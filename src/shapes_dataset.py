@@ -3,43 +3,52 @@ from PIL import Image, ImageDraw
 import math
 import random
 import yaml
-import cv2
-
-import matplotlib.pyplot as plt
+import os
 
 
-shapes_file = '../config/shapes.yaml'
-
+shapes_config_file = 'config/shapes_config.yaml'
+shapes_dir = 'config/shapes/'
 
 class ShapesDataset:
     """
-    A class to generate shapes dataset, based on config
+    A class to generate shapes dataset, based on a set of yaml config files:
+    1. per shape configuration files located at shapes_config_file
+    2. shapes_config.yaml - with defintions for image composing and a dataset_selector object which detemines
+    the set of dataset shapes categories assigned to category id.
     Public method: create_dataset
 
     """
     def __init__(self):
-        shapes_file = 'config/shapes.yaml'
-        with open(shapes_file, 'r') as stream:
-            config = yaml.safe_load(stream)
+        with open(shapes_config_file, 'r') as stream:
+            shapes_config = yaml.safe_load(stream)
 
-        self.image_size = config['image_size']
-        self.min_objects_in_image = config['min_objects_in_image']
-        self.max_objects_in_image = config['max_objects_in_image']
-        self.bg_color = tuple(config['bg_color'])
-        self.iou_thresh = config['iou_thresh']
-        self.margin_from_edge = config['margin_from_edge']
-        self.bbox_margin = config['bbox_margin']
-        self.size_fluctuation = config['size_fluctuation']
-        self.shapes=config['shapes']
+        dir_files = os.scandir(shapes_dir)
+        self.shapes=[]
+        for shape_file in dir_files:
+            if shape_file.name.endswith(".yaml") :#and shape_file.name in shapes_config['select']:
+                with open(f'{shapes_dir}{shape_file.name}', 'r') as stream:
+                    shape = yaml.safe_load(stream)
+                if shape['cname'] in shapes_config['select'].keys():
+                    shape.update({'id':  shapes_config['select'][shape['cname']]['id']})
+                    self.shapes.append(shape)
+
+        self.image_size = tuple(shapes_config['image_size'])
+        self.min_objects_in_image = shapes_config['min_objects_in_image']
+        self.max_objects_in_image = shapes_config['max_objects_in_image']
+        self.bg_color = tuple(shapes_config['bg_color'])
+        self.iou_thresh = shapes_config['iou_thresh']
+        self.margin_from_edge = shapes_config['margin_from_edge']
+        self.bbox_margin = shapes_config['bbox_margin']
+        self.size_fluctuation = shapes_config['size_fluctuation']
+        # self.shapes=shapes_config['shapes']
+        self.rotate_shapes=shapes_config['rotate_shapes']
 
 
-        self.category_names = [shape['category_name'] for shape in self.shapes]
-        with open(config['class_names_file'], 'w') as f:
+        self.category_names = [shape['cname'] for shape in self.shapes]
+        with open(shapes_config['class_names_file'], 'w') as f:
             for category_name in self.category_names:
                 f.write(f'{category_name}\n')
 
-        self.super_category_names = [shape['super_category'] for shape in self.shapes]
-        pass
 
 
     def __compute_iou(self, box1, box2):
@@ -63,30 +72,34 @@ class ShapesDataset:
             return 0
         return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
-    import math
 
-    # This function gets just one pair of coordinates based on the angle theta
 
     def __create_bbox(self, image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
                       size_fluctuation=0.01):
         """
+        Description: Creates a bbox, randomly placed within image boundaries according to margin_from_edge and iou
+        constraint on overlap with other created bboxes. Bbox width and height is according to shape_width_choices,
+        axis_ratio and size_fluctuation.
 
-        :param image_size: Canvas size
-        :type image_size:
-        :param bboxes:
-        :type bboxes:
-        :param shape_width_choices:
-        :type shape_width_choices:
-        :param axis_ratio:
+        :param image_size: Canvas size of target image
+        :type image_size: 2 tuple, ints
+        :param bboxes: a list of already created bboxes, used for iou calc.
+        :type bboxes: float
+        :param shape_width_choices: A list of widths choices for random selection.
+        :type shape_width_choices: floats list
+        :param axis_ratio: ratio between shapes height and width
         :type axis_ratio:
-        :param iou_thresh:
-        :type iou_thresh:
-        :param margin_from_edge:
-        :type margin_from_edge:
-        :param size_fluctuation:
+        :param iou_thresh: Max permitted iou between new bbox and other already created bbox. iou_thresh=[0,1], where 1
+        means fully overlapped.
+        :type iou_thresh: float
+        :param margin_from_edge: Minimal distance in pixels between bbox and image edge.
+        :type margin_from_edge: int
+        :param size_fluctuation: fluctuations of new bbox dims, each multiplied by (1-rand(0, size_fluctuation)) where
+        <=0size_fluctuation<1
         :type size_fluctuation:
         :return:
         :rtype:
+        new_bbox: np array dim [4]. created bbox
         """
         max_count = 10000
         count = 0
@@ -117,62 +130,87 @@ class ShapesDataset:
 
         return new_bbox
 
-    def __draw_shape(self, draw, shape, bbox, fill_color, outline_color):
+    def rotate(self):
+        val = math.pi/4*np.random.randint(0, 8) if self.rotate_shapes else 0
+        return val
+
+    def __create_polygon(self, shape, x_min, y_min, x_max, y_max):
+        """
+        Description: Creates a polygon given a shape name and a bounding box
+        :param shape: type: string name of a supported shape
+        :param x_min: type: float. x_min coordinate of the bbox
+        :param y_min: type: float. y_min coordinate of the bbox
+        :param x_max: type: float. x_max coordinate of the bbox
+        :param y_max: type: float. y_max coordinate of the bbox
+        :return:
+        polygon: type:float. a list of n 2 tuples, where n is the num of polygon vertices and tuples hold x,y coords
+        """
         if shape in ['ellipse', 'circle']:
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
+            # draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
             n_points=100
             t = np.linspace(0,360,n_points)
             x_coord =(x_min+x_max)/2+(x_max-x_min)/2*np.cos(np.radians(t))
-            y_coord = (y_min+y_max)/2+(y_max-y_min)/2*np.sin(np.radians(t))
-            polygon  = [[ x_poly,y_poly] for x_poly,y_poly in zip(x_coord,y_coord)]
-            polygon=np.asarray(polygon).astype(np.int32)
-
-
+            y_coord = (y_min+y_max)/2+(y_max-y_min)/2*np.sin(np.radians(t+180))
+            polygon  = [(x_poly,y_poly) for x_poly,y_poly in zip(x_coord,y_coord)]
         elif shape in ['rectangle', 'square']:
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
-            polygon=[ [x_min, y_min],[x_min, y_max], [x_max, y_max], [x_max, y_min]]
-            polygon=np.asarray(polygon).astype(np.int32)
-
+            # draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
+            polygon=[ (x_min, y_min),(x_min, y_max), (x_max, y_max), (x_max, y_min)]
 
         elif shape == 'triangle':
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            vertices = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
-            draw.polygon(vertices, fill=fill_color, outline=outline_color)
-            polygon=[ [x_min, y_max],[x_max, y_max], [(x_min + x_max) / 2, y_min]]
-## use same polygon for all:
+            polygon = [(x_min, y_min), (x_min, y_max), ((x_min + x_max) / 2, y_min)]
+            polygon = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
 
-        elif shape in ['trapezoid', 'hexagon']:
-            sides = 5 if shape == 'trapezoid' else 6
-            x_min, y_min, x_max, y_max = bbox.tolist()
+        elif shape in ['trapezoid', 'hexagon',  'rhombus', 'triangle']:
+            sides = 3 if shape in ['triangle'] else 4 if shape in  ['parallelogram', 'rhombus'] else 5 if shape == 'trapezoid' else 6
             center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
             rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
+            rot_angle=self.rotate()
             polygon= [
-                (math.cos(th) * rad_x + center_x,
-                 math.sin(th) * rad_y + center_y)
-                for th in [i * (2 * math.pi) / sides for i in range(sides)]
+                (math.cos(th+rot_angle) * rad_x + center_x,
+                 math.sin(th+rot_angle) * rad_y + center_y)
+                for th in [i * (2 * math.pi)/ sides  for i in range(sides)]
             ]
-            draw.polygon(polygon, fill=fill_color, outline=outline_color)
+
+        else:
+            raise Exception(f'Error: shape {shape} undefined. terminating')
+        return polygon
 
 
-
-        return  np.asarray(polygon).astype(np.int32)
-
-
-    def __create_ds_example(self, shapes_attributes, image_size, num_of_objects, bg_color, iou_thresh,
+    def __create_ds_entry(self, objects_attributes, image_size, bg_color, iou_thresh,
                           margin_from_edge,
                           bbox_margin,
                           size_fluctuation
-
                           ):
+        """
+        Description: Create a single dataset entry, consists of an of shape objects, along with bbox and polygons
+        objects. THe latters a . Store created images in output_dir, and return dataset metadata.
+
+        :param objects_attributes: a list of num_of_objects entries with attributes: id,cname, shape_aspect_ratio,
+        shape_width_choices, fill_color,outline_color
+
+        :param image_size: type: 2 tuple of ints. required entry's image size.
+        :param bg_color: image's bg color
+        :param iou_thresh: type: float [0,1], maximal iou value for adjacent bboxes. iou=1 means complete overlap. iou=0 means no overlap
+        :param margin_from_edge: type: int. minimal distance in pixels of bbox from image's edge.
+        :param bbox_margin: type: int. distance in pixels between bbox and shape
+        :param size_fluctuation: int float [0,1), images' width and height are multiplied by (1-rand(size_fluctuation))
+        :return:
+
+        image: an RGB pillow image drawn with shapes
+        bboxes: type: float ndarray [nobjects,4]
+        polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
+        tuple(objects_categories_indices): type in. tuple of nobjects category indices
+        objects_categories_names: type: str. list of nobjects category names
+
+        """
         image = Image.new('RGB', image_size, bg_color)
         draw = ImageDraw.Draw(image)
         bboxes = []
+        polygons=[]
         objects_categories_names = []
         objects_categories_indices = []
 
-        for entry_id, category_name, shape_aspect_ratio, shape_width_choices, fill_color, outline_color in shapes_attributes:
+        for entry_id, category_name, shape_aspect_ratio, shape_width_choices, fill_color, outline_color in objects_attributes:
             try:
                 bbox = self.__create_bbox(image_size, bboxes, shape_width_choices, shape_aspect_ratio, iou_thresh,
                                           margin_from_edge,
@@ -185,7 +223,12 @@ class ShapesDataset:
                 bboxes.append(bbox.tolist())
             else:
                 break
-            self.__draw_shape(draw, category_name, bbox, fill_color, outline_color)
+            x_min, y_min, x_max, y_max = bbox.tolist()
+            polygon = self.__create_polygon(category_name, x_min, y_min, x_max, y_max)
+            # draw shape on image:
+            draw.polygon(polygon, fill=fill_color, outline=outline_color)
+
+            polygons.append(polygon)
             objects_categories_names.append(category_name)
             objects_categories_indices.append(entry_id)
 
@@ -194,27 +237,25 @@ class ShapesDataset:
         bboxes = [bboxes[:, 0] - bbox_margin,
                   bboxes[:, 1] - bbox_margin,
                   bboxes[:, 2] - bboxes[:, 0] + 2 * bbox_margin,
-                  bboxes[:, 3] - bboxes[:, 1] + 2 * bbox_margin]  # / np.tile(image_size,2)
+                  bboxes[:, 3] - bboxes[:, 1] + 2 * bbox_margin]
 
         bboxes = np.stack(bboxes, axis=1)  # / np.tile(image_size, 2)
 
-        return image, bboxes, objects_categories_indices, objects_categories_names
+        return image, bboxes, polygons, tuple(objects_categories_indices), objects_categories_names
+
 
     def create_dataset(self,  nentries, output_dir):
         """
+        Description: Create nentries dataset. Store created images in output_dir, and return dataset metadata.
 
-        :param shapes:
-        :param image_size:
-        :param min_objects_in_image:
-        :param max_objects_in_image:
-        :param bg_color:
-        :param iou_thresh:
-        :param margin_from_edge:
-        :param bbox_margin:
-        :param size_fluctuation:
-        :param nentries:
-        :param output_dir:
+        :param nentries: type: int, number of entries to produce
+        :param output_dir: type: str,  destination output dir for dataset's images
         :return:
+        images_filenames: type: list of str size:  nentries. created images filenames, w/o dir prefix
+        images_sizes: type:  list of 2 tuples ints.  size:  nentries. (image.height, image.width)
+        images_bboxes: type:  list of float [nobjects, 4] arrays . size:  nentries. Bounding boxes of image's nobjects
+        images_objects_categories_indices: type: list of nobjects tuples size: nentries. Category id of image's nobjects
+        self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
         """
 
         images_filenames = []
@@ -224,14 +265,14 @@ class ShapesDataset:
         images_objects_categories_names = []
         for example_id in range(nentries):
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
-
-            shape_entris= [np.random.choice(self.shapes) for idx in range(num_of_objects)]
-            shapes_attributes = [[shape_entry['id'],  shape_entry['category_name'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
-                                 tuple(shape_entry['fill_color']), tuple(shape_entry['outline_color'])] for shape_entry in shape_entris]
+            # randomly select num_of_objects shapes:
+            sel_shape_entris= [np.random.choice(self.shapes) for idx in range(num_of_objects)]
+            # arrange target objects attributes from selected shapes:
+            objects_attributes = [[shape_entry['id'],  shape_entry['cname'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
+                                 tuple(shape_entry['fill_color']), tuple(shape_entry['outline_color'])] for shape_entry in sel_shape_entris]
             try:
-                image, bboxes, objects_categories_indices, objects_categories_names = self.__create_ds_example(shapes_attributes,
+                image, bboxes, polygons, objects_categories_indices, objects_categories_names = self.__create_ds_entry(objects_attributes,
                                                                                                              self.image_size,
-                                                                                                             num_of_objects,
                                                                                                              self.bg_color,
                                                                                                              self.iou_thresh,
                                                                                                              self.margin_from_edge,
@@ -247,9 +288,9 @@ class ShapesDataset:
                 continue
 
             images_filenames.append(image_filename)
-            images_sizes.append([image.height, image.width])
+            images_sizes.append((image.height, image.width))
             images_bboxes.append(bboxes)
             images_objects_categories_indices.append(objects_categories_indices)
             images_objects_categories_names.append(objects_categories_names)
 
-        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names,  self.super_category_names
+        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names

@@ -1,0 +1,43 @@
+---
+
+image_size:
+ - 640
+ - 640
+
+min_objects_in_image: 3
+max_objects_in_image: 3
+
+bg_color:
+  - 0
+  - 0
+  - 0
+
+# min margin between objects and image edged in pixels:
+margin_from_edge: 8
+# margin betweem bbox and shape - in pixels:
+bbox_margin: 5
+# fluctuations of object size:
+size_fluctuation: 0.00
+# max permited objects overlap. iou=0 means no overlap
+iou_thresh: 0
+
+rotate_shapes: true # boolean
+# Notes:
+# supported shapes: circle, triangle, ellipse, square, trapezoid, rectangle, hexagon rhombus
+# color field is used for class labeling in 'color' or 'color' and 'shape' mode.
+
+class_names_file:  class.names
+
+dataset_selector:
+  {
+square: {id: 0},
+#  triangle: {id: 1},
+#    circle: { id: 2 },
+#  trapezoid: {id: 3},
+#   ellipse: { id: 4 },
+#   hexagon: { id: 5 },
+#   rhombus: { id: 6 },
+
+  }
+
+

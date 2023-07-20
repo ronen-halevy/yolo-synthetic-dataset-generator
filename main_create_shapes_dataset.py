@@ -26,7 +26,7 @@ from src.shapes_dataset import ShapesDataset
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", type=str, default='config/config.yaml',
+    parser.add_argument("--config_file", type=str, default='config/dataset_config.yaml',
                         help='yaml config file')
 
     args = parser.parse_args()
@@ -46,7 +46,7 @@ def main():
         split_output_dir = Path(f'{output_dir}/{split}/labels')
         split_output_dir.mkdir(parents=True, exist_ok=True)
 
-        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, super_category_names = shapes_dataset.create_dataset(
+        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names = shapes_dataset.create_dataset(
             nentries,
             f'{output_dir}/{split}')
 
@@ -56,7 +56,7 @@ def main():
         # coco format
         coco_formatter(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                        category_names,
-                       super_category_names, annotations_output_path)
+                        annotations_output_path)
 
         # 2. single text file:
         create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,

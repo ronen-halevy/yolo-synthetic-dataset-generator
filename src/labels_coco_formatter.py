@@ -10,7 +10,7 @@ from datetime import date, datetime
 #     "categories": categories_records,
 #     "annotations": annotatons_records
 def coco_formatter(images_paths, images_sizes, images_bboxes, images_objects_categories_indices,
-                   category_names, super_category_names, annotations_output_path):
+                   category_names,  annotations_output_path):
     """
      :param images_paths: list of dataset image filenames
     :param images_sizes: list of per image [im.height, im.width] tuples
@@ -32,11 +32,11 @@ def coco_formatter(images_paths, images_sizes, images_bboxes, images_objects_cat
 
     # fill category
     id = 0
-    for category_name, supercategory in zip(category_names, super_category_names):
+    for category_name in category_names:
 
         if category_name not in added_category_names:
             categories_records.append({
-                "supercategory": supercategory,
+                "supercategory": category_names,
                 "id": id,
                 "name": category_name,
             })
