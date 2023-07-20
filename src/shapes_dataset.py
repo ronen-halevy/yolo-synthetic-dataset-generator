@@ -199,9 +199,10 @@ class ShapesDataset:
 
         image: an RGB pillow image drawn with shapes
         bboxes: type: float ndarray [nobjects,4]
-        polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
         tuple(objects_categories_indices): type in. tuple of nobjects category indices
         objects_categories_names: type: str. list of nobjects category names
+        polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
+
 
         """
         image = Image.new('RGB', image_size, bg_color)
@@ -242,7 +243,7 @@ class ShapesDataset:
 
         bboxes = np.stack(bboxes, axis=1)  # / np.tile(image_size, 2)
 
-        return image, bboxes, polygons, tuple(objects_categories_indices), objects_categories_names
+        return image, bboxes, tuple(objects_categories_indices), objects_categories_names, polygons
 
 
     def create_dataset(self,  nentries, output_dir):
@@ -257,6 +258,8 @@ class ShapesDataset:
         images_bboxes: type:  list of float [nobjects, 4] arrays . size:  nentries. Bounding boxes of image's nobjects
         images_objects_categories_indices: type: list of nobjects tuples size: nentries. Category id of image's nobjects
         self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
+        polygons: type: float. list of nobjects, each object shape with own 2 points nvertices. Needed for segmentation
+
         """
 
         images_filenames = []
@@ -272,7 +275,7 @@ class ShapesDataset:
             objects_attributes = [[shape_entry['id'],  shape_entry['cname'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
                                  tuple(shape_entry['fill_color']), tuple(shape_entry['outline_color'])] for shape_entry in sel_shape_entris]
             try:
-                image, bboxes, polygons, objects_categories_indices, objects_categories_names = self.__create_ds_entry(objects_attributes,
+                image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(objects_attributes,
                                                                                                              self.image_size,
                                                                                                              self.bg_color,
                                                                                                              self.iou_thresh,
@@ -294,4 +297,4 @@ class ShapesDataset:
             images_objects_categories_indices.append(objects_categories_indices)
             images_objects_categories_names.append(objects_categories_names)
 
-        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names
+        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names, polygons

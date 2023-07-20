@@ -20,6 +20,9 @@ from pathlib import Path
 from src.labels_text_file_formatter import create_row_text_labels_file
 from src.labels_coco_formatter import coco_formatter
 from src.lables_per_image_text_file_formatter import raw_text_files_labels_formatter
+from src.segmentation_lables_formatter import segmentation_labels_formatter
+
+
 
 from src.shapes_dataset import ShapesDataset
 
@@ -46,7 +49,8 @@ def main():
         split_output_dir = Path(f'{output_dir}/{split}/labels')
         split_output_dir.mkdir(parents=True, exist_ok=True)
 
-        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names = shapes_dataset.create_dataset(
+        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, images_polygons= \
+            shapes_dataset.create_dataset(
             nentries,
             f'{output_dir}/{split}')
 
@@ -62,10 +66,21 @@ def main():
         create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
                                     f'{output_dir}/{split}')
 
-        # # 3. Ultralitics like format
+        # 3. Ultralitics like format
         raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
                                         , f'{output_dir}/{split}/')
+
+        #  4. Ultralitics like segmentation
+        raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
+                                        images_objects_categories_indices
+                                        , f'{output_dir}/{split}/')
+
+        Path(f'{output_dir}/{split}/segmentation').mkdir(parents=True, exist_ok=True)
+        segmentation_labels_formatter(images_filenames, images_polygons, images_sizes,
+                                          images_objects_categories_indices,
+                                          f'{output_dir}/{split}/segmentation/')
+        #
 
 
 if __name__ == '__main__':

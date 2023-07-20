@@ -31,12 +31,12 @@ class_names_file:  class.names
 dataset_selector:
   {
 square: {id: 0},
-#  triangle: {id: 1},
-#    circle: { id: 2 },
-#  trapezoid: {id: 3},
-#   ellipse: { id: 4 },
-#   hexagon: { id: 5 },
-#   rhombus: { id: 6 },
+triangle: { id: 1 },
+circle: { id: 2 },
+trapezoid: { id: 3 },
+ellipse: { id: 4 },
+hexagon: { id: 5 },
+rhombus: { id: 6 },
 
   }
 
