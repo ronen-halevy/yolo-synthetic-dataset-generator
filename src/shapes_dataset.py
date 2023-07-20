@@ -21,15 +21,17 @@ class ShapesDataset:
     def __init__(self):
         with open(shapes_config_file, 'r') as stream:
             shapes_config = yaml.safe_load(stream)
-
+        # load shape yaml files.
         dir_files = os.scandir(shapes_dir)
         self.shapes=[]
         for shape_file in dir_files:
-            if shape_file.name.endswith(".yaml") :#and shape_file.name in shapes_config['select']:
+            if shape_file.name.endswith(".yaml"):
                 with open(f'{shapes_dir}{shape_file.name}', 'r') as stream:
                     shape = yaml.safe_load(stream)
-                if shape['cname'] in shapes_config['select'].keys():
-                    shape.update({'id':  shapes_config['select'][shape['cname']]['id']})
+                # add shape category to dataset if included  by dataset_selector setup:
+                if shape['cname'] in shapes_config['dataset_selector'].keys():
+                    # assign shape category with an id according to dataset_selector setup:
+                    shape.update({'id':  shapes_config['dataset_selector'][shape['cname']]['id']})
                     self.shapes.append(shape)
 
         self.image_size = tuple(shapes_config['image_size'])
@@ -40,10 +42,9 @@ class ShapesDataset:
         self.margin_from_edge = shapes_config['margin_from_edge']
         self.bbox_margin = shapes_config['bbox_margin']
         self.size_fluctuation = shapes_config['size_fluctuation']
-        # self.shapes=shapes_config['shapes']
         self.rotate_shapes=shapes_config['rotate_shapes']
 
-
+        # create a class names output file:
         self.category_names = [shape['cname'] for shape in self.shapes]
         with open(shapes_config['class_names_file'], 'w') as f:
             for category_name in self.category_names:
