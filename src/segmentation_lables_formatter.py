@@ -37,7 +37,7 @@ def segmentation_labels_formatter(images_paths, images_polygons, images_sizes, i
 
                 entry = f"{category_id} {' '.join(str(vertix) for vertix in image_polygon)}\n"
                 entry = f"{category_id} {list(np.array(image_polygon).reshape(-1))}\n"
-                entry = f"{category_id} {' '.join(str(vertix) for vertix in list(np.array(image_polygon).reshape(-1).round().astype(int)))}\n"
+                entry = f"{category_id} {' '.join(str(vertix) for vertix in list(np.array(image_polygon).reshape(-1)))}\n"
 
 
                 f.write(entry)
