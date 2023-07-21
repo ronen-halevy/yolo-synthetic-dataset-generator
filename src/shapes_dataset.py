@@ -4,6 +4,8 @@ import math
 import random
 import yaml
 import os
+from PIL import Image,ImageColor
+
 
 
 shapes_config_file = 'config/shapes_config.yaml'
@@ -212,7 +214,7 @@ class ShapesDataset:
         objects_categories_names = []
         objects_categories_indices = []
 
-        for entry_id, category_name, shape_aspect_ratio, shape_width_choices, fill_color, outline_color in objects_attributes:
+        for entry_id, category_name, shape_aspect_ratio, shape_width_choices, color, outline_color in objects_attributes:
             try:
                 bbox = self.__create_bbox(image_size, bboxes, shape_width_choices, shape_aspect_ratio, iou_thresh,
                                           margin_from_edge,
@@ -228,7 +230,8 @@ class ShapesDataset:
             x_min, y_min, x_max, y_max = bbox.tolist()
             polygon = self.__create_polygon(category_name, x_min, y_min, x_max, y_max)
             # draw shape on image:
-            draw.polygon(polygon, fill=fill_color, outline=outline_color)
+            draw.polygon(polygon, fill=ImageColor.getrgb(color), outline=outline_color)
+
 
             polygons.append(polygon)
             objects_categories_names.append(category_name)
@@ -267,13 +270,14 @@ class ShapesDataset:
         images_bboxes = []
         images_objects_categories_indices = []
         images_objects_categories_names = []
+        images_polygons=[]
         for example_id in range(nentries):
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
             # randomly select num_of_objects shapes:
             sel_shape_entris= [np.random.choice(self.shapes) for idx in range(num_of_objects)]
             # arrange target objects attributes from selected shapes:
             objects_attributes = [[shape_entry['id'],  shape_entry['cname'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
-                                 tuple(shape_entry['fill_color']), tuple(shape_entry['outline_color'])] for shape_entry in sel_shape_entris]
+                                 shape_entry['color'], tuple(shape_entry['outline_color'])] for shape_entry in sel_shape_entris]
             try:
                 image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(objects_attributes,
                                                                                                              self.image_size,
@@ -296,5 +300,7 @@ class ShapesDataset:
             images_bboxes.append(bboxes)
             images_objects_categories_indices.append(objects_categories_indices)
             images_objects_categories_names.append(objects_categories_names)
+            images_polygons.append(polygons)
 
-        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names, polygons
+
+        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names, images_polygons

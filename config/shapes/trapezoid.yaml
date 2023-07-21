@@ -1,9 +1,5 @@
 cname: trapezoid
 color: red
-fill_color:
-  - 255
-  - 0
-  - 0
 outline_color:
   - 255
   - 0
