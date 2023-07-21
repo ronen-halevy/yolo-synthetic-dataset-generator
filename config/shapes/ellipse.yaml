@@ -1,9 +1,6 @@
 cname: ellipse
 color: red
-outline_color:
-  - 255
-  - 0
-  - 0
+outline_color: red
 shape_aspect_ratio: 2
 shape_width_choices:
   - 240

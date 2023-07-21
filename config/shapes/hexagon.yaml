@@ -1,9 +1,6 @@
 cname: hexagon
 color: red
-outline_color:
-  - 255
-  - 0
-  - 0
+outline_color: red
 shape_aspect_ratio: 1
 shape_width_choices:
   - 240

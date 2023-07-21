@@ -277,7 +277,7 @@ class ShapesDataset:
             sel_shape_entris= [np.random.choice(self.shapes) for idx in range(num_of_objects)]
             # arrange target objects attributes from selected shapes:
             objects_attributes = [[shape_entry['id'],  shape_entry['cname'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
-                                 shape_entry['color'], tuple(shape_entry['outline_color'])] for shape_entry in sel_shape_entris]
+                                 shape_entry['color'], shape_entry['outline_color']] for shape_entry in sel_shape_entris]
             try:
                 image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(objects_attributes,
                                                                                                              self.image_size,
