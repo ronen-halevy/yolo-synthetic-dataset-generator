@@ -1,6 +1,5 @@
 cname: circle
 color: blue
-super_category: shapes
 fill_color:
   - 0
   - 0

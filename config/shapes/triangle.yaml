@@ -1,6 +1,5 @@
 cname: triangle
 color: red
-super_category: shapes
 fill_color:
   - 255
   - 0
