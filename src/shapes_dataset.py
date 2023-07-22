@@ -5,6 +5,7 @@ import random
 import yaml
 import os
 from PIL import Image, ImageColor
+import sys
 
 shapes_config_file = 'config/shapes_config.yaml'
 shapes_dir = 'config/shapes/'
@@ -67,72 +68,42 @@ class ShapesDataset:
             return 0
         return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
-    def __create_bbox(self, image_size, bboxes, shape_width_choices, shape_aspect_ratio, iou_thresh, margin_from_edge,
-                      size_fluctuation=0.01):
+
+    def __polygon_to_box(self,  polygon):
         """
-        Description: Creates a bbox, randomly placed within image boundaries according to margin_from_edge and iou
-        constraint on overlap with other created bboxes. Bbox width and height is according to shape_width_choices,
-        shape_aspect_ratio and size_fluctuation.
+        Description: Creates a bbox given a polygon
 
-        :param image_size: Canvas size of target image
-        :type image_size: 2 tuple, ints
-        :param bboxes: a list of already created bboxes, used for iou calc.
-        :type bboxes: float
-        :param shape_width_choices: A list of widths choices for random selection.
-        :type shape_width_choices: floats list
-        :param shape_aspect_ratio: ratio between shapes height and width
-        :type shape_aspect_ratio:
-        :param iou_thresh: Max permitted iou between new bbox and other already created bbox. iou_thresh=[0,1], where 1
-        means fully overlapped.
-        :type iou_thresh: float
-        :param margin_from_edge: Minimal distance in pixels between bbox and image edge.
-        :type margin_from_edge: int
-        :param size_fluctuation: fluctuations of new bbox dims, each multiplied by (1-rand(0, size_fluctuation)) where
-        <=0size_fluctuation<1
-        :type size_fluctuation:
-        :return:
-        :rtype:
-        new_bbox: np array dim [4]. created bbox
+        :param polygon:   a list of nvertices 2 tuples which hold polygon's 2d vertices
+        :type polygon: float.
+        :return: bbox: [xmin, ymin, xmax, ymax]
+        :rtype: float
         """
-        max_count = 10000
-        count = 0
-        # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
-        while True:
-            shape_width = np.random.choice(shape_width_choices)
-            shape_height = shape_width * shape_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
-            # add fluctuations - config defuned
-            shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
-            radius = np.array([shape_width / 2, shape_height / 2])
-            center = np.random.randint(
-                low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
-            # bbox_sides = radius
-            new_bbox = np.concatenate(np.tile(center, 2).reshape(2, 2) +
-                                      np.array([np.negative(radius), radius]))
-            # iou new shape bbox with all prev bboxes. skip shape if max iou > thresh - try another placement for shpe
-            iou = list(map(lambda x: self.__compute_iou(new_bbox, x), bboxes))
-
-            if len(iou) == 0 or max(iou) <= iou_thresh:
-                break
-            if count > max_count:
-                max_iou = max(iou)
-                raise Exception(
-                    f'Shape Objects Placement Failed after {count} placement itterations: max(iou)={max_iou}, '
-                    f'but required iou_thresh is {iou_thresh} shape_width: {shape_width},'
-                    f' shape_height: {shape_height}. . \nHint: reduce objects size or quantity of objects in an image')
-            count += 1
-
+        x,y = np.array(polygon)[:,0], np.array(polygon)[:,1]
+        return  [x.min(), y.min(), x.max(), y.max()]
         return new_bbox
+
 
     def rotate(self):
         val = math.pi/4*np.random.randint(0, 8) if self.rotate_shapes else 0
         return val
 
-    # def __create_polygon(self, nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation, margin_from_edge, image_size):
+    def __create_polygon(self, nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation, margin_from_edge, image_size):
 
-    def __create_polygon(self, shape, nvertices, x_min, y_min, x_max, y_max):
         """
-        Description: Creates a polygon given a shape name and a bounding box
-        :param shape: type: string name of a supported shape
+        Description: Creates a polygon given nvertices, and data on shape's dims
+        :param nvertices: type: string name of a supported shape
+        :param shape_width_choices: A list of widths choices for random selection.
+        :type shape_width_choices: floats list
+        :param shape_aspect_ratio: ratio between shapes height and width
+        :type shape_aspect_ratio:
+        :param size_fluctuation: fluctuations of new bbox dims, each multiplied by (1-rand(0, size_fluctuation)) where
+        <=0size_fluctuation<1
+        :type size_fluctuation:
+        :param margin_from_edge: Minimal distance in pixels between bbox and image edge.
+        :type margin_from_edge: int
+
+        :param image_size: Canvas size of target image
+        :type image_size: 2 tuple, ints
         :param x_min: type: float. x_min coordinate of the bbox
         :param y_min: type: float. y_min coordinate of the bbox
         :param x_max: type: float. x_max coordinate of the bbox
@@ -140,48 +111,23 @@ class ShapesDataset:
         :return:
         polygon: type:float. a list of n 2 tuples, where n is the num of polygon vertices and tuples hold x,y coords
         """
-        # if shape in ['ellipse', 'circle']:
-        #     # draw.ellipse([x_min, y_min, x_max, y_max], fill=ImageColor.getrgb('blue'), outline=ImageColor.getrgb('yellow'), width=3)
-        #     n_points=100
-        #     t = np.linspace(0,360,n_points)
-        #     x_coord =(x_min+x_max)/2+(x_max-x_min)/2*np.cos(np.radians(t))
-        #     y_coord = (y_min+y_max)/2+(y_max-y_min)/2*np.sin(np.radians(t+180))
-        #     polygon  = [(x_poly,y_poly) for x_poly,y_poly in zip(x_coord,y_coord)]
-        # elif shape in ['rectangle']:
-        #     # draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
-        #     polygon=[ (x_min, y_min),(x_min, y_max), (x_max, y_max), (x_max, y_min)]
 
-        # elif shape == 'triangle':
-        #     polygon = [(x_min, y_min), (x_min, y_max), ((x_min + x_max) / 2, y_min)]
-        #     polygon = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
+        shape_width = np.random.choice(shape_width_choices)
+        shape_height = shape_width * shape_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
+        # add fluctuations - config defuned
+        shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
 
-        # if shape in ['trapezoid', 'hexagon',  'rhombus', 'triangle', 'square', 'circle', 'ellipse']:
-
-        # shape_width = np.random.choice(shape_width_choices)
-        # shape_height = shape_width * shape_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
-        # # add fluctuations - config defuned
-        # shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
-        # radius = np.array([shape_width / 2, shape_height / 2])
-        # center = np.random.randint(
-        #     low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
-        #
-
-        sides = nvertices  # 3 if shape in ['triangle'] else 4 if shape in  ['parallelogram', 'rhombus'] else 5 if shape == 'trapezoid' else 6
-        center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
-        rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
-        rot_angle = self.rotate() if nvertices < 10 else 0  # don't rotate circle TBD
+        radius = np.array([shape_width / 2, shape_height / 2])
+        center = np.random.randint(
+            low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
 
         polygon = [
-            (math.cos(th) * rad_x + center_x,
+            (math.cos(th) * radius[0] + center[0],
              math.sin(th
-                      ) * rad_y + center_y)
-            for th in [i * (2 * math.pi) / sides for i in range(sides)]
+                      ) * radius[1] + center[1])
+            for th in [i * (2 * math.pi) / nvertices for i in range(nvertices)]
         ]
 
-
-
-        # else:
-        #     raise Exception(f'Error: shape {shape} undefined. terminating')
         return polygon
 
     def __create_ds_entry(self, objects_attributes, image_size, bg_color, iou_thresh,
@@ -220,23 +166,28 @@ class ShapesDataset:
         objects_categories_indices = []
 
         for entry_id, nvertices, category_name, shape_aspect_ratio, shape_width_choices, color in objects_attributes:
-            try:
-                bbox = self.__create_bbox(image_size, bboxes, shape_width_choices, shape_aspect_ratio, iou_thresh,
-                                          margin_from_edge,
-                                          size_fluctuation)
-            except Exception as e:
-                msg = str(e)
-                raise Exception(f'Failed in __create_bbox :\n{msg}.\nHere is the failed-to-be-placed shape entry: {entry_id}, {category_name}')
+            max_count = 10000
+            count = 0
+            # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
+            while True:
 
+                polygon = self.__create_polygon(nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation,
+                                                margin_from_edge,
+                                                image_size)
+                bbox = self.__polygon_to_box(polygon)
+
+                iou = list(map(lambda x: self.__compute_iou(bbox, x), bboxes))
+
+                if len(iou) == 0 or max(iou) <= iou_thresh:
+                    break
+                if count > max_count:
+                    max_iou = max(iou)
+                    raise Exception(
+                        f'Shape Objects Placement Failed after {count} placement itterations: max(iou)={max_iou}, '
+                        f'but required iou_thresh is {iou_thresh} shape_width: . \nHint: reduce objects size or'
+                        f' quantity of objects in an image')
             if len(bbox):
-                bboxes.append(bbox.tolist())
-            else:
-                break
-            x_min, y_min, x_max, y_max = bbox.tolist()
-            polygon = self.__create_polygon(category_name, nvertices, x_min, y_min, x_max, y_max)
-
-            # polygon = self.__create_polygon(self, nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation, margin_from_edge,
-            #                      image_size)
+                bboxes.append(bbox)
 
             # draw shape on image:
             draw.polygon(polygon, fill=ImageColor.getrgb(color) )
@@ -298,8 +249,12 @@ class ShapesDataset:
                     self.bbox_margin,
                     self.size_fluctuation)
             except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                # print(exc_type, fname, exc_tb.tb_lineno)
+
                 msg = str(e)
-                raise Exception(f'Error: While creating the {example_id}th image: {msg}')
+                raise Exception(f'Error type: {exc_type}, file: {fname},{exc_tb.tb_lineno}, Desc: {msg}')
             image_filename = f'img_{example_id + 1:06d}.jpg'
             file_path = f'{output_dir}/images/{image_filename}'
             image.save(file_path)
