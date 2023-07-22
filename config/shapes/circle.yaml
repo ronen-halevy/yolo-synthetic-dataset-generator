@@ -1,6 +1,8 @@
 cname: circle
+nvertices: 80
 color: blue
 outline_color: blue
 shape_aspect_ratio: 1
 shape_width_choices:
   - 60
+  - 240

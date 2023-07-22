@@ -7,11 +7,7 @@ image_size:
 min_objects_in_image: 3
 max_objects_in_image: 3
 
-bg_color:
-  - 0
-  - 0
-  - 0
-
+bg_color: black
 # min margin between objects and image edged in pixels:
 margin_from_edge: 8
 # margin betweem bbox and shape - in pixels:
@@ -39,5 +35,6 @@ hexagon: { id: 5 },
 rhombus: { id: 6 },
 
   }
+
 
 

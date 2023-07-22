@@ -1,7 +1,8 @@
 cname: rhombus
+nvertices: 4
 color: red
 outline_color: red
-shape_aspect_ratio: 1
+shape_aspect_ratio: 2
 shape_width_choices:
   - 240
   - 120

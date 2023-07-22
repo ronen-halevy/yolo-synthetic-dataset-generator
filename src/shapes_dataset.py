@@ -39,7 +39,7 @@ class ShapesDataset:
         self.image_size = tuple(shapes_config['image_size'])
         self.min_objects_in_image = shapes_config['min_objects_in_image']
         self.max_objects_in_image = shapes_config['max_objects_in_image']
-        self.bg_color = tuple(shapes_config['bg_color'])
+        self.bg_color = shapes_config['bg_color']
         self.iou_thresh = shapes_config['iou_thresh']
         self.margin_from_edge = shapes_config['margin_from_edge']
         self.bbox_margin = shapes_config['bbox_margin']
@@ -137,7 +137,7 @@ class ShapesDataset:
         val = math.pi/4*np.random.randint(0, 8) if self.rotate_shapes else 0
         return val
 
-    def __create_polygon(self, shape, x_min, y_min, x_max, y_max):
+    def __create_polygon(self, shape, nvertices, x_min, y_min, x_max, y_max):
         """
         Description: Creates a polygon given a shape name and a bounding box
         :param shape: type: string name of a supported shape
@@ -148,26 +148,27 @@ class ShapesDataset:
         :return:
         polygon: type:float. a list of n 2 tuples, where n is the num of polygon vertices and tuples hold x,y coords
         """
-        if shape in ['ellipse', 'circle']:
-            # draw.ellipse([x_min, y_min, x_max, y_max], fill=fill_color, outline=outline_color, width=3)
-            n_points=100
-            t = np.linspace(0,360,n_points)
-            x_coord =(x_min+x_max)/2+(x_max-x_min)/2*np.cos(np.radians(t))
-            y_coord = (y_min+y_max)/2+(y_max-y_min)/2*np.sin(np.radians(t+180))
-            polygon  = [(x_poly,y_poly) for x_poly,y_poly in zip(x_coord,y_coord)]
-        elif shape in ['rectangle', 'square']:
-            # draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
-            polygon=[ (x_min, y_min),(x_min, y_max), (x_max, y_max), (x_max, y_min)]
+        # if shape in ['ellipse', 'circle']:
+        #     # draw.ellipse([x_min, y_min, x_max, y_max], fill=ImageColor.getrgb('blue'), outline=ImageColor.getrgb('yellow'), width=3)
+        #     n_points=100
+        #     t = np.linspace(0,360,n_points)
+        #     x_coord =(x_min+x_max)/2+(x_max-x_min)/2*np.cos(np.radians(t))
+        #     y_coord = (y_min+y_max)/2+(y_max-y_min)/2*np.sin(np.radians(t+180))
+        #     polygon  = [(x_poly,y_poly) for x_poly,y_poly in zip(x_coord,y_coord)]
+        # elif shape in ['rectangle']:
+        #     # draw.rectangle((x_min, y_min, x_max, y_max), fill=fill_color, outline=outline_color, width=3)
+        #     polygon=[ (x_min, y_min),(x_min, y_max), (x_max, y_max), (x_max, y_min)]
 
-        elif shape == 'triangle':
-            polygon = [(x_min, y_min), (x_min, y_max), ((x_min + x_max) / 2, y_min)]
-            polygon = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
+        # elif shape == 'triangle':
+        #     polygon = [(x_min, y_min), (x_min, y_max), ((x_min + x_max) / 2, y_min)]
+        #     polygon = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
 
-        elif shape in ['trapezoid', 'hexagon',  'rhombus', 'triangle']:
-            sides = 3 if shape in ['triangle'] else 4 if shape in  ['parallelogram', 'rhombus'] else 5 if shape == 'trapezoid' else 6
+        if shape in ['trapezoid', 'hexagon',  'rhombus', 'triangle', 'square', 'circle', 'ellipse']:
+            sides = nvertices # 3 if shape in ['triangle'] else 4 if shape in  ['parallelogram', 'rhombus'] else 5 if shape == 'trapezoid' else 6
             center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
             rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
-            rot_angle=self.rotate()
+            rot_angle=self.rotate() if nvertices<10 else 0 # don't rotate circle TBD
+
             polygon= [
                 (math.cos(th+rot_angle) * rad_x + center_x,
                  math.sin(th+rot_angle) * rad_y + center_y)
@@ -192,7 +193,7 @@ class ShapesDataset:
         shape_width_choices, fill_color,outline_color
 
         :param image_size: type: 2 tuple of ints. required entry's image size.
-        :param bg_color: image's bg color
+        :param bg_color: type: str image's bg color
         :param iou_thresh: type: float [0,1], maximal iou value for adjacent bboxes. iou=1 means complete overlap. iou=0 means no overlap
         :param margin_from_edge: type: int. minimal distance in pixels of bbox from image's edge.
         :param bbox_margin: type: int. distance in pixels between bbox and shape
@@ -214,7 +215,7 @@ class ShapesDataset:
         objects_categories_names = []
         objects_categories_indices = []
 
-        for entry_id, category_name, shape_aspect_ratio, shape_width_choices, color, outline_color in objects_attributes:
+        for entry_id, nvertices, category_name, shape_aspect_ratio, shape_width_choices, color, outline_color in objects_attributes:
             try:
                 bbox = self.__create_bbox(image_size, bboxes, shape_width_choices, shape_aspect_ratio, iou_thresh,
                                           margin_from_edge,
@@ -228,9 +229,9 @@ class ShapesDataset:
             else:
                 break
             x_min, y_min, x_max, y_max = bbox.tolist()
-            polygon = self.__create_polygon(category_name, x_min, y_min, x_max, y_max)
+            polygon = self.__create_polygon(category_name, nvertices, x_min, y_min, x_max, y_max)
             # draw shape on image:
-            draw.polygon(polygon, fill=ImageColor.getrgb(color), outline=outline_color)
+            draw.polygon(polygon, fill=ImageColor.getrgb(color), outline=ImageColor.getrgb(outline_color) )
 
 
             polygons.append(polygon)
@@ -276,7 +277,7 @@ class ShapesDataset:
             # randomly select num_of_objects shapes:
             sel_shape_entris= [np.random.choice(self.shapes) for idx in range(num_of_objects)]
             # arrange target objects attributes from selected shapes:
-            objects_attributes = [[shape_entry['id'],  shape_entry['cname'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
+            objects_attributes = [[shape_entry['id'], shape_entry['nvertices'], shape_entry['cname'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
                                  shape_entry['color'], shape_entry['outline_color']] for shape_entry in sel_shape_entris]
             try:
                 image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(objects_attributes,
