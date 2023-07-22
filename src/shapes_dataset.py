@@ -4,12 +4,11 @@ import math
 import random
 import yaml
 import os
-from PIL import Image,ImageColor
-
-
+from PIL import Image, ImageColor
 
 shapes_config_file = 'config/shapes_config.yaml'
 shapes_dir = 'config/shapes/'
+
 
 class ShapesDataset:
     """
@@ -20,16 +19,16 @@ class ShapesDataset:
     Public method: create_dataset
 
     """
+
     def __init__(self):
         with open(shapes_config_file, 'r') as stream:
             shapes_config = yaml.safe_load(stream)
         # load shape yaml files.
         dir_files = os.scandir(shapes_dir)
-        self.shapes=[]
+        self.shapes = []
 
         for shape in shapes_config['dataset_selector']:
             self.shapes.append(shape)
-
 
         self.image_size = tuple(shapes_config['image_size'])
         self.min_objects_in_image = shapes_config['min_objects_in_image']
@@ -39,15 +38,13 @@ class ShapesDataset:
         self.margin_from_edge = shapes_config['margin_from_edge']
         self.bbox_margin = shapes_config['bbox_margin']
         self.size_fluctuation = shapes_config['size_fluctuation']
-        self.rotate_shapes=shapes_config['rotate_shapes']
+        self.rotate_shapes = shapes_config['rotate_shapes']
 
         # create a class names output file:
         self.category_names = [shape['cname'] for shape in self.shapes]
         with open(shapes_config['class_names_file'], 'w') as f:
             for category_name in self.category_names:
                 f.write(f'{category_name}\n')
-
-
 
     def __compute_iou(self, box1, box2):
         """
@@ -69,8 +66,6 @@ class ShapesDataset:
         if y_min >= y_max or x_min >= x_max:
             return 0
         return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
-
-
 
     def __create_bbox(self, image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
                       size_fluctuation=0.01):
@@ -158,22 +153,24 @@ class ShapesDataset:
         #     polygon = [(x_min, y_min), (x_min, y_max), ((x_min + x_max) / 2, y_min)]
         #     polygon = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
 
-        if shape in ['trapezoid', 'hexagon',  'rhombus', 'triangle', 'square', 'circle', 'ellipse']:
-            sides = nvertices # 3 if shape in ['triangle'] else 4 if shape in  ['parallelogram', 'rhombus'] else 5 if shape == 'trapezoid' else 6
-            center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
-            rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
-            rot_angle=self.rotate() if nvertices<10 else 0 # don't rotate circle TBD
+        # if shape in ['trapezoid', 'hexagon',  'rhombus', 'triangle', 'square', 'circle', 'ellipse']:
+        sides = nvertices  # 3 if shape in ['triangle'] else 4 if shape in  ['parallelogram', 'rhombus'] else 5 if shape == 'trapezoid' else 6
+        center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
+        rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
+        rot_angle = self.rotate() if nvertices < 10 else 0  # don't rotate circle TBD
 
-            polygon= [
-                (math.cos(th+rot_angle) * rad_x + center_x,
-                 math.sin(th+rot_angle) * rad_y + center_y)
-                for th in [i * (2 * math.pi)/ sides  for i in range(sides)]
-            ]
+        polygon = [
+            (math.cos(th) * rad_x + center_x,
+             math.sin(th
+                      ) * rad_y + center_y)
+            for th in [i * (2 * math.pi) / sides for i in range(sides)]
+        ]
 
-        else:
-            raise Exception(f'Error: shape {shape} undefined. terminating')
+
+
+        # else:
+        #     raise Exception(f'Error: shape {shape} undefined. terminating')
         return polygon
-
 
     def __create_ds_entry(self, objects_attributes, image_size, bg_color, iou_thresh,
                           margin_from_edge,
@@ -228,7 +225,6 @@ class ShapesDataset:
             # draw shape on image:
             draw.polygon(polygon, fill=ImageColor.getrgb(color) )
 
-
             polygons.append(polygon)
             objects_categories_names.append(category_name)
             objects_categories_indices.append(entry_id)
@@ -266,22 +262,25 @@ class ShapesDataset:
         images_bboxes = []
         images_objects_categories_indices = []
         images_objects_categories_names = []
-        images_polygons=[]
+        images_polygons = []
         for example_id in range(nentries):
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
             # randomly select num_of_objects shapes:
-            sel_shape_entris= [np.random.choice(self.shapes) for idx in range(num_of_objects)]
+            sel_shape_entris = [np.random.choice(self.shapes) for idx in range(num_of_objects)]
             # arrange target objects attributes from selected shapes:
-            objects_attributes = [[shape_entry['id'], shape_entry['nvertices'], shape_entry['cname'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
-                                 shape_entry['color']] for shape_entry in sel_shape_entris]
+            objects_attributes = [
+                [shape_entry['id'], shape_entry['nvertices'], shape_entry['cname'], shape_entry['shape_aspect_ratio'],
+                 shape_entry['shape_width_choices'],
+                 shape_entry['color']] for shape_entry in sel_shape_entris]
             try:
-                image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(objects_attributes,
-                                                                                                             self.image_size,
-                                                                                                             self.bg_color,
-                                                                                                             self.iou_thresh,
-                                                                                                             self.margin_from_edge,
-                                                                                                             self.bbox_margin,
-                                                                                                             self.size_fluctuation)
+                image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(
+                    objects_attributes,
+                    self.image_size,
+                    self.bg_color,
+                    self.iou_thresh,
+                    self.margin_from_edge,
+                    self.bbox_margin,
+                    self.size_fluctuation)
             except Exception as e:
                 msg = str(e)
                 raise Exception(f'Error: While creating the {example_id}th image: {msg}')
@@ -297,6 +296,5 @@ class ShapesDataset:
             images_objects_categories_indices.append(objects_categories_indices)
             images_objects_categories_names.append(objects_categories_names)
             images_polygons.append(polygons)
-
 
         return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names, images_polygons
