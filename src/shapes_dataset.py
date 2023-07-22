@@ -67,12 +67,12 @@ class ShapesDataset:
             return 0
         return ((x_max - x_min) * (y_max - y_min)) / (area_box_2 + area_box_1)
 
-    def __create_bbox(self, image_size, bboxes, shape_width_choices, axis_ratio, iou_thresh, margin_from_edge,
+    def __create_bbox(self, image_size, bboxes, shape_width_choices, shape_aspect_ratio, iou_thresh, margin_from_edge,
                       size_fluctuation=0.01):
         """
         Description: Creates a bbox, randomly placed within image boundaries according to margin_from_edge and iou
         constraint on overlap with other created bboxes. Bbox width and height is according to shape_width_choices,
-        axis_ratio and size_fluctuation.
+        shape_aspect_ratio and size_fluctuation.
 
         :param image_size: Canvas size of target image
         :type image_size: 2 tuple, ints
@@ -80,8 +80,8 @@ class ShapesDataset:
         :type bboxes: float
         :param shape_width_choices: A list of widths choices for random selection.
         :type shape_width_choices: floats list
-        :param axis_ratio: ratio between shapes height and width
-        :type axis_ratio:
+        :param shape_aspect_ratio: ratio between shapes height and width
+        :type shape_aspect_ratio:
         :param iou_thresh: Max permitted iou between new bbox and other already created bbox. iou_thresh=[0,1], where 1
         means fully overlapped.
         :type iou_thresh: float
@@ -99,7 +99,7 @@ class ShapesDataset:
         # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
         while True:
             shape_width = np.random.choice(shape_width_choices)
-            shape_height = shape_width * axis_ratio * random.uniform(1 - size_fluctuation, 1)
+            shape_height = shape_width * shape_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
             # add fluctuations - config defuned
             shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
             radius = np.array([shape_width / 2, shape_height / 2])
@@ -126,6 +126,8 @@ class ShapesDataset:
     def rotate(self):
         val = math.pi/4*np.random.randint(0, 8) if self.rotate_shapes else 0
         return val
+
+    # def __create_polygon(self, nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation, margin_from_edge, image_size):
 
     def __create_polygon(self, shape, nvertices, x_min, y_min, x_max, y_max):
         """
@@ -154,6 +156,16 @@ class ShapesDataset:
         #     polygon = [x_min, y_max, x_max, y_max, (x_min + x_max) / 2, y_min]
 
         # if shape in ['trapezoid', 'hexagon',  'rhombus', 'triangle', 'square', 'circle', 'ellipse']:
+
+        # shape_width = np.random.choice(shape_width_choices)
+        # shape_height = shape_width * shape_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
+        # # add fluctuations - config defuned
+        # shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
+        # radius = np.array([shape_width / 2, shape_height / 2])
+        # center = np.random.randint(
+        #     low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
+        #
+
         sides = nvertices  # 3 if shape in ['triangle'] else 4 if shape in  ['parallelogram', 'rhombus'] else 5 if shape == 'trapezoid' else 6
         center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
         rad_x, rad_y = (x_max - x_min) / 2, (y_max - y_min) / 2
@@ -222,6 +234,10 @@ class ShapesDataset:
                 break
             x_min, y_min, x_max, y_max = bbox.tolist()
             polygon = self.__create_polygon(category_name, nvertices, x_min, y_min, x_max, y_max)
+
+            # polygon = self.__create_polygon(self, nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation, margin_from_edge,
+            #                      image_size)
+
             # draw shape on image:
             draw.polygon(polygon, fill=ImageColor.getrgb(color) )
 
