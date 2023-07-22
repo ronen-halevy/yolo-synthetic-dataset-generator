@@ -26,15 +26,10 @@ class ShapesDataset:
         # load shape yaml files.
         dir_files = os.scandir(shapes_dir)
         self.shapes=[]
-        for shape_file in dir_files:
-            if shape_file.name.endswith(".yaml"):
-                with open(f'{shapes_dir}{shape_file.name}', 'r') as stream:
-                    shape = yaml.safe_load(stream)
-                # add shape category to dataset if included  by dataset_selector setup:
-                if shape['cname'] in shapes_config['dataset_selector'].keys():
-                    # assign shape category with an id according to dataset_selector setup:
-                    shape.update({'id':  shapes_config['dataset_selector'][shape['cname']]['id']})
-                    self.shapes.append(shape)
+
+        for shape in shapes_config['dataset_selector']:
+            self.shapes.append(shape)
+
 
         self.image_size = tuple(shapes_config['image_size'])
         self.min_objects_in_image = shapes_config['min_objects_in_image']
@@ -190,7 +185,7 @@ class ShapesDataset:
         objects. THe latters a . Store created images in output_dir, and return dataset metadata.
 
         :param objects_attributes: a list of num_of_objects entries with attributes: id,cname, shape_aspect_ratio,
-        shape_width_choices, fill_color,outline_color
+        shape_width_choices, fill_color
 
         :param image_size: type: 2 tuple of ints. required entry's image size.
         :param bg_color: type: str image's bg color
@@ -215,7 +210,7 @@ class ShapesDataset:
         objects_categories_names = []
         objects_categories_indices = []
 
-        for entry_id, nvertices, category_name, shape_aspect_ratio, shape_width_choices, color, outline_color in objects_attributes:
+        for entry_id, nvertices, category_name, shape_aspect_ratio, shape_width_choices, color in objects_attributes:
             try:
                 bbox = self.__create_bbox(image_size, bboxes, shape_width_choices, shape_aspect_ratio, iou_thresh,
                                           margin_from_edge,
@@ -231,7 +226,7 @@ class ShapesDataset:
             x_min, y_min, x_max, y_max = bbox.tolist()
             polygon = self.__create_polygon(category_name, nvertices, x_min, y_min, x_max, y_max)
             # draw shape on image:
-            draw.polygon(polygon, fill=ImageColor.getrgb(color), outline=ImageColor.getrgb(outline_color) )
+            draw.polygon(polygon, fill=ImageColor.getrgb(color) )
 
 
             polygons.append(polygon)
@@ -278,7 +273,7 @@ class ShapesDataset:
             sel_shape_entris= [np.random.choice(self.shapes) for idx in range(num_of_objects)]
             # arrange target objects attributes from selected shapes:
             objects_attributes = [[shape_entry['id'], shape_entry['nvertices'], shape_entry['cname'], shape_entry['shape_aspect_ratio'], shape_entry['shape_width_choices'],
-                                 shape_entry['color'], shape_entry['outline_color']] for shape_entry in sel_shape_entris]
+                                 shape_entry['color']] for shape_entry in sel_shape_entris]
             try:
                 image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(objects_attributes,
                                                                                                              self.image_size,

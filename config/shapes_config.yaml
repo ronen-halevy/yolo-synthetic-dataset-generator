@@ -25,16 +25,35 @@ rotate_shapes: true # boolean
 class_names_file:  class.names
 
 dataset_selector:
-  {
-square: {id: 0},
-triangle: { id: 1 },
-circle: { id: 2 },
-trapezoid: { id: 3 },
-ellipse: { id: 4 },
-hexagon: { id: 5 },
-rhombus: { id: 6 },
+  [
+#square: {id: 0},
+{ id: 0, nvertices: 4, shape_aspect_ratio: 1, cname: square, color: red, shape_width_choices: [60, 240]},
 
-  }
+#triangle: { id: 1 },
+{ id: 1, nvertices: 3, shape_aspect_ratio: 1, cname: triangle, color: red, shape_width_choices: [60, 240] },
+#
+##circle: { id: 2 },
+ { id: 2, nvertices: 80, shape_aspect_ratio: 1, cname: circle, color: red, shape_width_choices: [60, 240] },
+
+##trapezoid: { id: 3 },
+#hexagon: { id: 5 },
+#rhombus: { id: 6 },
+ { id: 6, nvertices: 4, shape_aspect_ratio: 2, cname: rhombus, color: red, shape_width_choices: [60, 240] },
+
+
+  ]
+
+#dataset_selectorb:
+#  {
+#square: {id: 0},
+#triangle: { id: 1 },
+#circle: { id: 2 },
+#trapezoid: { id: 3 },
+#ellipse: { id: 4 },
+#hexagon: { id: 5 },
+#rhombus: { id: 6 },
+#
+#  }
 
 
 
