@@ -71,7 +71,7 @@ def draw_bounding_box(image, boxes, color, thickness=1):
                   fill=color)
     return image
 
-config_file_path = 'config/config.yaml'
+config_file_path = 'config/dataset_config.yaml'
 
 def main(images_dir, annotations_path):
     with open(config_file_path) as f:
