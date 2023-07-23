@@ -98,7 +98,7 @@ class ShapesDataset:
 
         return polygon
 
-    def __create_polygon(self, nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation, margin_from_edge, image_size):
+    def __create_polygon(self, nvertices, theta0, shape_width_choices, shape_aspect_ratio, size_fluctuation, margin_from_edge, image_size):
 
         """
         Description: Creates a polygon given nvertices, and data on shape's dims
@@ -131,7 +131,7 @@ class ShapesDataset:
             (cos(th) * radius[0],
              sin(th
                       ) * radius[1])
-            for th in [i * (2 * math.pi) / nvertices for i in range(nvertices)]
+            for th in [i * (2 * math.pi) / nvertices + math.radians(theta0)for i in range(nvertices)]
         ]
         # rotate shape:
         if self.rotate_shapes:
@@ -151,8 +151,8 @@ class ShapesDataset:
         Description: Create a single dataset entry, consists of an of shape objects, along with bbox and polygons
         objects. THe latters a . Store created images in output_dir, and return dataset metadata.
 
-        :param objects_attributes: a list of num_of_objects entries with attributes: id,cname, shape_aspect_ratio,
-        shape_width_choices, fill_color
+        :param objects_attributes: a list of num_of_objects entries with attributes: category_id, nvertices, theta0,
+        category_name, shape_aspect_ratio, shape_width_choices, color
 
         :param image_size: type: 2 tuple of ints. required entry's image size.
         :param bg_color: type: str image's bg color
@@ -177,13 +177,13 @@ class ShapesDataset:
         objects_categories_names = []
         objects_categories_indices = []
 
-        for entry_id, nvertices, category_name, shape_aspect_ratio, shape_width_choices, color in objects_attributes:
+        for category_id, nvertices, theta0, category_name, shape_aspect_ratio, shape_width_choices, color in objects_attributes:
             max_count = 10000
             count = 0
             # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
             while True:
 
-                polygon = self.__create_polygon(nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation,
+                polygon = self.__create_polygon(nvertices,theta0, shape_width_choices, shape_aspect_ratio, size_fluctuation,
                                                 margin_from_edge,
                                                 image_size)
                 bbox = self.__polygon_to_box(polygon)
@@ -206,7 +206,7 @@ class ShapesDataset:
 
             polygons.append(polygon)
             objects_categories_names.append(category_name)
-            objects_categories_indices.append(entry_id)
+            objects_categories_indices.append(category_id)
 
         bboxes = np.array(bboxes)
         # transfer bbox coordinate to:  [xmin, ymin, w, h]: (bbox_margin is added distance between shape and bbox)
@@ -249,7 +249,7 @@ class ShapesDataset:
             sel_shape_entris = [np.random.choice(self.shapes) for idx in range(num_of_objects)]
             # arrange target objects attributes from selected shapes:
             objects_attributes = [
-                [shape_entry['id'], shape_entry['nvertices'], shape_entry['cname'], shape_entry['shape_aspect_ratio'],
+                [shape_entry['id'], shape_entry['nvertices'], shape_entry['theta0'], shape_entry['cname'], shape_entry['shape_aspect_ratio'],
                  shape_entry['shape_width_choices'],
                  shape_entry['color']] for shape_entry in sel_shape_entris]
             image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(
@@ -261,7 +261,7 @@ class ShapesDataset:
                     self.bbox_margin,
                     self.size_fluctuation)
 
-            image_filename = f'img_{example_id + 1:06d}.jpg'
+            image_filename = f'img_{example_id:06d}.jpg'
             file_path = f'{output_dir}/images/{image_filename}'
             image.save(file_path)
             if len(bboxes) == 0:
