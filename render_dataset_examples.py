@@ -94,7 +94,9 @@ def main(images_dir, annotations_path):
     random_select = plot_setup_params['random_select']
 
     for idx in range(num_of_images):
+        # randomy select an image index from dataset:
         image_index = np.random.randint(start_index, len(annotations)) if random_select else start_index + idx
+        # take records by index
         image_record = annotations['images'][image_index]
         annotation_records = [annotation for  annotation in annotations['annotations'] if annotation['image_id'] == image_record['id']]
         image_path = f'{image_record["file_name"]}'
@@ -109,6 +111,7 @@ def main(images_dir, annotations_path):
         # bboxes[..., 1:4:2] = bboxes[..., 1:4:2] #* height
         annotated_bbox_image = draw_bounding_box(image, bboxes, color, thickness=1)
         category_ids = [annotation_record['category_id'] for annotation_record in annotation_records]
+        # fetch category names entry from category table, which match selected category_ids:
         category_names = [category['name'] for category in annotations['categories'] if category['id'] in category_ids]
         category_names = [ category ['name']  for category_id in category_ids for category in annotations['categories'] if category['id'] ==category_id]
 

@@ -49,7 +49,7 @@ def main():
         split_output_dir = Path(f'{output_dir}/{split}/labels')
         split_output_dir.mkdir(parents=True, exist_ok=True)
 
-        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, images_polygons= \
+        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons= \
             shapes_dataset.create_dataset(
             nentries,
             f'{output_dir}/{split}')
@@ -59,7 +59,7 @@ def main():
 
         # coco format
         coco_formatter(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
-                       category_names,
+                       category_names, category_ids,
                         annotations_output_path)
 
         # 2. single text file:

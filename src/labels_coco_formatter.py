@@ -10,14 +10,15 @@ from datetime import date, datetime
 #     "categories": categories_records,
 #     "annotations": annotatons_records
 def coco_formatter(images_paths, images_sizes, images_bboxes, images_objects_categories_indices,
-                   category_names,  annotations_output_path):
+                   category_names,  category_ids, annotations_output_path):
     """
      :param images_paths: list of dataset image filenames
     :param images_sizes: list of per image [im.height, im.width] tuples
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
     :param images_objects_categories_indices: list of per image categories_indices arrays
     :param category_names: list of all dataset's category names
-    :param super_category_names:  list of all dataset's super_category_names
+    :param category_ids:  list of all dataset's category ids
+
     :param annotations_output_path: path for output file storage
     :return:
     """
@@ -31,18 +32,15 @@ def coco_formatter(images_paths, images_sizes, images_bboxes, images_objects_cat
     # map_categories_id = {}
 
     # fill category
-    id = 0
-    for category_name in category_names:
+    for category_name, category_id in zip(category_names, category_ids):
 
         if category_name not in added_category_names:
             categories_records.append({
                 "supercategory": category_names,
-                "id": id,
+                "id": category_id,
                 "name": category_name,
             })
             added_category_names.append(category_name)
-            # map_categories_id.update({category_name: id})
-            id += 1
 
     images_records = []
     annotatons_records = []

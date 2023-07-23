@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image, ImageDraw
 import math
+from math import cos, sin
 import random
 import yaml
 import os
@@ -8,15 +9,12 @@ from PIL import Image, ImageColor
 import sys
 
 shapes_config_file = 'config/shapes_config.yaml'
-shapes_dir = 'config/shapes/'
 
 
 class ShapesDataset:
     """
-    A class to generate shapes dataset, based on a set of yaml config files:
-    1. per shape configuration files located at shapes_config_file
-    2. shapes_config.yaml - with defintions for image composing and a dataset_selector object which detemines
-    the set of dataset shapes categories assigned to category id.
+    A class to generate shapes dataset, based on a config file:
+
     Public method: create_dataset
 
     """
@@ -25,7 +23,6 @@ class ShapesDataset:
         with open(shapes_config_file, 'r') as stream:
             shapes_config = yaml.safe_load(stream)
         # load shape yaml files.
-        dir_files = os.scandir(shapes_dir)
         self.shapes = []
 
         for shape in shapes_config['dataset_selector']:
@@ -43,6 +40,8 @@ class ShapesDataset:
 
         # create a class names output file:
         self.category_names = [shape['cname'] for shape in self.shapes]
+        self.category_ids = [shape['id'] for shape in self.shapes]
+
         with open(shapes_config['class_names_file'], 'w') as f:
             for category_name in self.category_names:
                 f.write(f'{category_name}\n')
@@ -83,9 +82,21 @@ class ShapesDataset:
         return new_bbox
 
 
-    def rotate(self):
-        val = math.pi/4*np.random.randint(0, 8) if self.rotate_shapes else 0
-        return val
+    def rotate(self, polygon):
+        # patch - dirty image for circle and ellipse if rotated by pi/4 - TBD
+        rot_tick = math.pi/4 if len(polygon) < 10 else  math.pi/2
+        # random rotation angle:
+        rot_angle = rot_tick*np.random.randint(0, 8)
+
+        rotate_x = lambda x, y: x * cos(rot_angle) + y * sin(rot_angle)
+        rotate_y = lambda x, y: -x * sin(rot_angle) + y * cos(rot_angle)
+        x, y = np.split(np.array(polygon), 2, axis=-1)
+
+        x, y = rotate_x(x, y), rotate_y(x, y)
+        polygon = np.concatenate([x, y], axis=-1)
+
+
+        return polygon
 
     def __create_polygon(self, nvertices, shape_width_choices, shape_aspect_ratio, size_fluctuation, margin_from_edge, image_size):
 
@@ -101,20 +112,15 @@ class ShapesDataset:
         :type size_fluctuation:
         :param margin_from_edge: Minimal distance in pixels between bbox and image edge.
         :type margin_from_edge: int
-
         :param image_size: Canvas size of target image
         :type image_size: 2 tuple, ints
-        :param x_min: type: float. x_min coordinate of the bbox
-        :param y_min: type: float. y_min coordinate of the bbox
-        :param x_max: type: float. x_max coordinate of the bbox
-        :param y_max: type: float. y_max coordinate of the bbox
+
         :return:
-        polygon: type:float. a list of n 2 tuples, where n is the num of polygon vertices and tuples hold x,y coords
+        polygon: type:float. a nvertices size list of tuple entries. tuples hold vertices x,y coords
         """
 
         shape_width = np.random.choice(shape_width_choices)
         shape_height = shape_width * shape_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
-        # add fluctuations - config defuned
         shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
 
         radius = np.array([shape_width / 2, shape_height / 2])
@@ -122,12 +128,18 @@ class ShapesDataset:
             low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
 
         polygon = [
-            (math.cos(th) * radius[0] + center[0],
-             math.sin(th
-                      ) * radius[1] + center[1])
+            (cos(th) * radius[0],
+             sin(th
+                      ) * radius[1])
             for th in [i * (2 * math.pi) / nvertices for i in range(nvertices)]
         ]
+        # rotate shape:
+        if self.rotate_shapes:
+            polygon= self.rotate(polygon)
 
+        # translate to center:
+        polygon+=center
+        polygon=tuple(map(tuple, polygon))
         return polygon
 
     def __create_ds_entry(self, objects_attributes, image_size, bg_color, iou_thresh,
@@ -220,6 +232,7 @@ class ShapesDataset:
         images_bboxes: type:  list of float [nobjects, 4] arrays . size:  nentries. Bounding boxes of image's nobjects
         images_objects_categories_indices: type: list of nobjects tuples size: nentries. Category id of image's nobjects
         self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
+        self.category_ids:  type: list of int. size: ncategories. Created dataset's entries ids.
         polygons: type: float. list of nobjects, each object shape with own 2 points nvertices. Needed for segmentation
 
         """
@@ -239,8 +252,7 @@ class ShapesDataset:
                 [shape_entry['id'], shape_entry['nvertices'], shape_entry['cname'], shape_entry['shape_aspect_ratio'],
                  shape_entry['shape_width_choices'],
                  shape_entry['color']] for shape_entry in sel_shape_entris]
-            try:
-                image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(
+            image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(
                     objects_attributes,
                     self.image_size,
                     self.bg_color,
@@ -248,13 +260,7 @@ class ShapesDataset:
                     self.margin_from_edge,
                     self.bbox_margin,
                     self.size_fluctuation)
-            except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                # print(exc_type, fname, exc_tb.tb_lineno)
 
-                msg = str(e)
-                raise Exception(f'Error type: {exc_type}, file: {fname},{exc_tb.tb_lineno}, Desc: {msg}')
             image_filename = f'img_{example_id + 1:06d}.jpg'
             file_path = f'{output_dir}/images/{image_filename}'
             image.save(file_path)
@@ -268,4 +274,4 @@ class ShapesDataset:
             images_objects_categories_names.append(objects_categories_names)
             images_polygons.append(polygons)
 
-        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names, images_polygons
+        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names, self.category_ids, images_polygons
