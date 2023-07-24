@@ -19,7 +19,7 @@ def segmentation_labels_formatter(images_paths, images_polygons, images_sizes, i
     :return:
     """
     print('segmentation_labels_formatter')
-    output_dir = f'{output_dir}labels/'
+    output_dir = f'{output_dir}/labels/'
     try:
         os.makedirs(output_dir)
     except FileExistsError:
@@ -34,9 +34,6 @@ def segmentation_labels_formatter(images_paths, images_polygons, images_sizes, i
         labels_filename = f"{output_dir}{filename.rsplit('.', 1)[0]}.txt"
         with open(labels_filename, 'w') as f:
             for image_polygon, category_id in zip(image_polygons, categories_indices):
-
-                entry = f"{category_id} {' '.join(str(vertix) for vertix in image_polygon)}\n"
-                entry = f"{category_id} {list(np.array(image_polygon).reshape(-1))}\n"
                 entry = f"{category_id} {' '.join(str(vertix) for vertix in list(np.array(image_polygon).reshape(-1)))}\n"
 
 

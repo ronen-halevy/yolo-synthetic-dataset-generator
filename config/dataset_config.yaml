@@ -5,6 +5,6 @@ splits:
  valid: 10
  test: 10
 
-output_dir: dataset
+output_dir: dataset/segmentation
 
 

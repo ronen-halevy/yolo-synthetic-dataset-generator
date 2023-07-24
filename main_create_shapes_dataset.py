@@ -66,20 +66,17 @@ def main():
         create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
                                     f'{output_dir}/{split}')
 
-        # 3. Ultralitics like format
+        # 3. text file per image
         raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
                                         , f'{output_dir}/{split}/')
+        # #
+        # #  4. Ultralitics like segmentation
 
-        #  4. Ultralitics like segmentation
-        raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
-                                        images_objects_categories_indices
-                                        , f'{output_dir}/{split}/')
-
-        Path(f'{output_dir}/{split}/segmentation').mkdir(parents=True, exist_ok=True)
+        Path(f'{output_dir}/{split}/labels').mkdir(parents=True, exist_ok=True)
         segmentation_labels_formatter(images_filenames, images_polygons, images_sizes,
                                           images_objects_categories_indices,
-                                          f'{output_dir}/{split}/segmentation/')
+                                          f'{output_dir}/{split}')
         #
 
 
