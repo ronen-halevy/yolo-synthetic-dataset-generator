@@ -32,9 +32,10 @@ def segmentation_labels_formatter(images_paths, images_polygons, images_sizes, i
 
         head, filename = os.path.split(image_path)
         labels_filename = f"{output_dir}{filename.rsplit('.', 1)[0]}.txt"
+        image_polygons=np.array(image_polygons)/images_size
         with open(labels_filename, 'w') as f:
             for image_polygon, category_id in zip(image_polygons, categories_indices):
-                entry = f"{category_id} {' '.join(str(vertix) for vertix in list(np.array(image_polygon).reshape(-1)))}\n"
+                entry = f"{category_id} {' '.join(str(vertix) for vertix in list(image_polygon.reshape(-1)))}\n"
 
 
                 f.write(entry)
