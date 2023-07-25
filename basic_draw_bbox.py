@@ -70,10 +70,9 @@ category_names_file = '/home/ronen/devel/PycharmProjects/shapes-dataset/class.na
 with open(category_names_file) as f:
     category_names_table = f.readlines()
 
-label_file_format = 'yolov5_pytorch_format'  # 'yolov5_tf_format' # ['yolov5_pytorch_format', 'yolov5_tf_format']
+label_file_format = 'yolov5_detection_format' # ['yolov5_detection_format', 'single_label_file_format', 'yolov5_segmentation_format']
 
-if label_file_format == 'yolov5_pytorch_format':
-
+if label_file_format == 'yolov5_detection_format':
     image_path = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/images/img_000001.jpg'
     lb_file = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/labels/img_000001.txt'
     if os.path.isfile(lb_file):
@@ -87,7 +86,7 @@ if label_file_format == 'yolov5_pytorch_format':
     # convert to x_Center, y_center to cmin, ymin
     bboxes[:, 0] = bboxes[:, 0] - bboxes[:, 2] / 2
     bboxes[:, 1] = bboxes[:, 1] - bboxes[:, 3] / 2
-elif label_file_format == 'yolov5_tf_format':
+elif label_file_format == 'single_label_file_format':
     lb_file = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/all_entries.txt'
     with open(lb_file, 'r') as f:
         annotations = [line.strip() for line in f.readlines() if len(line.strip().split()[1:]) != 0]
@@ -98,7 +97,7 @@ elif label_file_format == 'yolov5_tf_format':
         category_ids = np.array([list(map(float, box.split(',')[0: 5])) for box in example[1:]])[:, 4].astype(int)
         bboxes[:, 2] = bboxes[:, 2] - bboxes[:, 0]
         bboxes[:, 3] = bboxes[:, 3] - bboxes[:, 1]
-else:
+elif label_file_format =='yolov5_segmentation_format':
     image_path = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/images/img_000001.jpg'
     lb_file = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/labels-seg/img_000001.txt'
     if os.path.isfile(lb_file):
