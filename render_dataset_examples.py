@@ -112,7 +112,6 @@ def main(images_dir, annotations_path):
         annotated_bbox_image = draw_bounding_box(image, bboxes, color, thickness=1)
         category_ids = [annotation_record['category_id'] for annotation_record in annotation_records]
         # fetch category names entry from category table, which match selected category_ids:
-        category_names = [category['name'] for category in annotations['categories'] if category['id'] in category_ids]
         category_names = [ category ['name']  for category_id in category_ids for category in annotations['categories'] if category['id'] ==category_id]
 
         annotated_text_image = draw_text_on_bounding_box(annotated_bbox_image, bboxes[..., 1], bboxes[..., 0], color,
