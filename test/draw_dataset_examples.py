@@ -5,23 +5,27 @@ import numpy as np
 import yaml
 import os
 import cv2
+import random
 
 from utils import draw_dataset_entry
 
 
-def read_yolov5_detection_dataset(image_path, label_path):
+def read_detection_dataset_entry(image_path, label_path):
     """
-    Description: Reads and image and label file. Label file format matches Ultralytics yolov5 detection dataset, i.e.:
-    A dedicated label file per an image. Label's file name corresponds to image filename with .txr extension  .
+    Description:
+    This method demonstrates the reading and rendering of a detection dataset entry, where the dataset labels are
+    arranged as a text file per image arrangement.
+    Label's file name corresponds to image filename with .txt extension. Label file format matches Ultralytics
+    yolov5 detection dataset, i.e.  5 words per object rows, each holds category_id and bbox  x_center, y_center, w, h
     :param image_path: image file path
     :type image_path: str
     :param label_path: label file path. row's format: category_id, x_center, y_center, w, h
     :type label_path: str
     :return:
     image: image read from file
+    :type: PIL
     bboxes: a list of per-image-object bboxes. format:  xmin, ymin, w, h
     category_ids:  a list of per-image-object category id
-    :rtype:
     """
     if os.path.isfile(label_path):
         with open(label_path) as f:
@@ -37,9 +41,24 @@ def read_yolov5_detection_dataset(image_path, label_path):
 
 
 def read_single_file_detection_dataset(label_path):
+    """
+    Description:
+    This method demonstrates the reading and rendering of a detection dataset entry, where the dataset labels are
+    arranged in a single text file, common to all dataset examples, a row per an image example. row's format:
+     category_id, x_center, y_center, w, h. his method chooses randomly a file row, which holds an image path, and a
+     set of bbox & category id per each object. Method returns the read image, a list of bboxes and ids.
+
+    :param label_path: label file path.
+    :type label_path: str
+    :return:
+    image , bboxes, category ids
+
+    :rtype:
+
+    """
     with open(label_path, 'r') as f:
         annotations = [line.strip() for line in f.readlines() if len(line.strip().split()[1:]) != 0]
-        example = annotations[0].split()
+        example= random.choice(annotations).split()
         image_path = example[0]
         image = Image.open(image_path)
         bboxes = np.array([list(map(float, box.split(',')[0: 5])) for box in example[1:]])[:, 0:4]
@@ -49,7 +68,25 @@ def read_single_file_detection_dataset(label_path):
     return image, bboxes, category_ids
 
 
-def read_yolov5_segmentation_dataset(image_path, label_path):
+def read_segmentation_dataset_entry(image_path, label_path):
+
+    """
+    Description:
+    This method demonstrates the reading and rendering of a segmentation dataset entry, where the dataset labels are
+    arranged as a text file per image arrangement.
+    Label's file name corresponds to image filename with .txt extension. Label file format matches Ultralytics
+    yolov5 detection dataset, i.e. per object rows, each holds ategory_id and polygon's coordinates
+    :param image_path: image file path
+    :type image_path: str
+    :param label_path: label file path. row's format: category_id, polygon's coordinates
+    :type label_path: str
+    :return:
+    image: image read from file
+    :type: PIL
+    bboxes: a list of per-image-object bboxes. format:  xmin, ymin, w, h
+    category_ids:  a list of per-image-object category id
+    """
+
     if os.path.isfile(label_path):
         with open(label_path) as f:
             polygons = [x.split() for x in f.read().strip().splitlines() if len(x)]
@@ -86,7 +123,7 @@ def main():
 
     if 'yolov5_detection_format' in config['label_file_formats'].keys():
         for params in config['label_file_formats']['yolov5_detection_format']:
-            [image, bboxes, category_ids] = read_yolov5_detection_dataset(params['image_path'], params['label_path'])
+            [image, bboxes, category_ids] = read_detection_dataset_entry(params['image_path'], params['label_path'])
             category_names = [category_names_table[category_id] for category_id in category_ids]
             title = f'yolov5_detection_format {params["image_path"]}'
             draw_dataset_entry(image, bboxes, category_names, title)
@@ -100,7 +137,7 @@ def main():
 
     if 'yolov5_segmentation_format' in config['label_file_formats'].keys():
         for params in config['label_file_formats']['yolov5_segmentation_format']:
-            [image, bboxes, category_ids] = read_yolov5_segmentation_dataset(params['image_path'], params['label_path'])
+            [image, bboxes, category_ids] = read_segmentation_dataset_entry(params['image_path'], params['label_path'])
             category_names = [category_names_table[category_id] for category_id in category_ids]
             title = f'yolov5_segmentation_format {params["image_path"]}'
             draw_dataset_entry(image, bboxes, category_names, title)

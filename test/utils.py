@@ -9,6 +9,10 @@ import numpy as np
 # from test
 
 def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), font_size=30):
+    """
+    Description: Draws a text which starts at xmin,ymin bbox corner
+
+    """
     draw = ImageDraw.Draw(image)
     try:
         font = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSansNarrow-Regular.ttf",
@@ -48,7 +52,6 @@ def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), fon
 def draw_bounding_box(image, boxes, thickness=1):
     colors = list(ImageColor.colormap.values())
     color = colors[0]
-    thickness = 1
     draw = ImageDraw.Draw(image)
     for box in boxes:
         xmin, ymin, w, h = box
