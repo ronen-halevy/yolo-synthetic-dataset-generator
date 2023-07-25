@@ -70,13 +70,12 @@ def main():
         raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
                                         , f'{output_dir}/{split}/')
-        # #
         # #  4. Ultralitics like segmentation
 
-        Path(f'{output_dir}/{split}/labels').mkdir(parents=True, exist_ok=True)
+        Path(f'{output_dir}/{split}/labels-seg').mkdir(parents=True, exist_ok=True)
         segmentation_labels_formatter(images_filenames, images_polygons, images_sizes,
                                           images_objects_categories_indices,
-                                          f'{output_dir}/{split}')
+                                          f'{output_dir}/{split}/labels-seg')
         #
 
 

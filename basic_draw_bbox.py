@@ -70,7 +70,7 @@ category_names_file = '/home/ronen/devel/PycharmProjects/shapes-dataset/class.na
 with open(category_names_file) as f:
     category_names_table = f.readlines()
 
-label_file_format = 'yolov5_pytorch_formatxxxxx'  # 'yolov5_tf_format' # ['yolov5_pytorch_format', 'yolov5_tf_format']
+label_file_format = 'yolov5_pytorch_format'  # 'yolov5_tf_format' # ['yolov5_pytorch_format', 'yolov5_tf_format']
 
 if label_file_format == 'yolov5_pytorch_format':
 
@@ -79,9 +79,11 @@ if label_file_format == 'yolov5_pytorch_format':
     if os.path.isfile(lb_file):
         nf = 1  # label found
         with open(lb_file) as f:
-            bboxes = [x.split() for x in f.read().strip().splitlines() if len(x)]
+            lables = [x.split() for x in f.read().strip().splitlines() if len(x)]
     image = Image.open(image_path)
-    bboxes = np.array(bboxes, dtype=float)[:, 1:5] * [image.width, image.height, image.width, image.height]
+    category_ids =np.array(lables)[:, 0].astype(int)
+    bboxes = np.array(lables, dtype=float)[:, 1:5] * [image.width, image.height, image.width, image.height]
+
     # convert to x_Center, y_center to cmin, ymin
     bboxes[:, 0] = bboxes[:, 0] - bboxes[:, 2] / 2
     bboxes[:, 1] = bboxes[:, 1] - bboxes[:, 3] / 2
@@ -93,14 +95,12 @@ elif label_file_format == 'yolov5_tf_format':
         image_path = example[0]
         image = Image.open(image_path)
         bboxes = np.array([list(map(float, box.split(',')[0: 5])) for box in example[1:]])[:, 0:4]
-        # from xmin ymin xmax yamx to xmin yamin, w,h
-
+        category_ids = np.array([list(map(float, box.split(',')[0: 5])) for box in example[1:]])[:, 4].astype(int)
         bboxes[:, 2] = bboxes[:, 2] - bboxes[:, 0]
         bboxes[:, 3] = bboxes[:, 3] - bboxes[:, 1]
-
 else:
-    image_path = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/segmentation/train/images/img_000001.jpg'
-    lb_file = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/segmentation/train/labels/img_000001.txt'
+    image_path = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/images/img_000001.jpg'
+    lb_file = '/home/ronen/devel/PycharmProjects/shapes-dataset/dataset/train/labels-seg/img_000001.txt'
     if os.path.isfile(lb_file):
         nf = 1  # label found
         with open(lb_file) as f:
@@ -116,24 +116,24 @@ else:
     size = np.array([image.height, image.width]).reshape(1, 1, -1)
     polygons = (polygons * size).astype(int)
     bboxes = []
-    category_names = []
     for polygon, category_id in zip(polygons, category_ids):
         color = np.random.randint(low=0, high=255, size=3).tolist()
         cv2.fillPoly(array_image, np.expand_dims(polygon, 0), color=color)
         x, y = polygon[:, 0], polygon[:, 1]
         bbox = [x.min(), y.min(), x.max() - x.min(), y.max() - y.min()]
         bboxes.append(bbox)
-        category_names.append(category_names_table[category_id])
 
     image = im.fromarray(array_image)
     draw = ImageDraw.Draw(image)
 
 annotated_bbox_image = draw_bounding_box(image, bboxes)
+category_names = [category_names_table[category_id] for category_id in category_ids]
 
+text_box_color=[255,255,255]
 annotated_text_image = draw_text_on_bounding_box(annotated_bbox_image, np.array(bboxes)[..., 1],
-                                                 np.array(bboxes)[..., 0], color,
+                                                 np.array(bboxes)[..., 0], text_box_color,
                                                  category_names, font_size=15)
 
-# figure(figsize=(10, 10))
+figure(figsize=(10, 10))
 plt.imshow(image)
 plt.show()
