@@ -6,12 +6,12 @@ category_names_file: class.names
 label_file_formats:
   yolov5_detection_format:
     - image_path: ./dataset/train/images/img_000001.jpg
-      label_file: ./dataset/train/labels/img_000001.txt
+      label_path: ./dataset/train/labels/img_000001.txt
   single_label_file_format:
-    - label_file: ./dataset/train/all_entries.txt
+    - label_path: ./dataset/train/all_entries.txt
 
   yolov5_segmentation_format:
   - image_path: ./dataset/train/images/img_000001.jpg
-    label_file: ./dataset/train/labels-seg/img_000001.txt
+    label_path: ./dataset/train/labels-seg/img_000001.txt
 
 
