@@ -22,8 +22,6 @@ from src.labels_coco_formatter import coco_formatter
 from src.lables_per_image_text_file_formatter import raw_text_files_labels_formatter
 from src.segmentation_lables_formatter import segmentation_labels_formatter
 
-
-
 from src.shapes_dataset import ShapesDataset
 
 
@@ -49,10 +47,10 @@ def main():
         split_output_dir = Path(f'{output_dir}/{split}/labels')
         split_output_dir.mkdir(parents=True, exist_ok=True)
 
-        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons= \
+        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons = \
             shapes_dataset.create_dataset(
-            nentries,
-            f'{output_dir}/{split}')
+                nentries,
+                f'{output_dir}/{split}')
 
         annotations_output_path = f'{output_dir}/{split}/images/annotations.json'
         images_filenames = [f'dataset/{split}/images/{images_filename}' for images_filename in images_filenames]
@@ -60,7 +58,7 @@ def main():
         # coco format
         coco_formatter(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                        category_names, category_ids,
-                        annotations_output_path)
+                       annotations_output_path)
 
         # 2. single text file:
         create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
@@ -74,8 +72,8 @@ def main():
 
         Path(f'{output_dir}/{split}/labels-seg').mkdir(parents=True, exist_ok=True)
         segmentation_labels_formatter(images_filenames, images_polygons, images_sizes,
-                                          images_objects_categories_indices,
-                                          f'{output_dir}/{split}/labels-seg')
+                                      images_objects_categories_indices,
+                                      f'{output_dir}/{split}/labels-seg')
         #
 
 
