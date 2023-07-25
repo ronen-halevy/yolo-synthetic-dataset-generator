@@ -2,8 +2,6 @@
 
 category_names_file: class.names
 
-output_dir: dataset
-
 # output types selection:
 label_file_formats:
   yolov5_detection_format:

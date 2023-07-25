@@ -69,7 +69,7 @@ if __name__ == "__main__":
         config = yaml.safe_load(stream)
 
     label_file_formats = config['label_file_formats']
-    category_names_file = 'class.names'
+    category_names_file = config['category_names_file']
     with open(category_names_file) as f:
         category_names_table = f.readlines()
 
