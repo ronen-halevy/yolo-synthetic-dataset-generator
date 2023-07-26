@@ -13,6 +13,7 @@
 #   3. Envokes formatters to save dataset labels in various formats e.g. coco, multi text file (yolov5 ultralics like),
 #   single text file
 # ================================================================
+import os
 
 import yaml
 import argparse
@@ -23,7 +24,6 @@ from src.lables_per_image_text_file_formatter import raw_text_files_labels_forma
 from src.segmentation_lables_formatter import segmentation_labels_formatter
 
 from src.shapes_dataset import ShapesDataset
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -39,13 +39,14 @@ def main():
     output_dir = config["output_dir"]
     splits = config["splits"]
     shapes_dataset = ShapesDataset()
+
     for split in splits:
         nentries = int(splits[split])
         # create dirs for output if missing:
-        split_output_dir = Path(f'{output_dir}/{split}/images')
-        split_output_dir.mkdir(parents=True, exist_ok=True)
-        split_output_dir = Path(f'{output_dir}/{split}/labels')
-        split_output_dir.mkdir(parents=True, exist_ok=True)
+        images_out_dir = Path(f'{output_dir}/{split}/images')
+        images_out_dir.mkdir(parents=True, exist_ok=True)
+        labels_out_dir = Path(f'{output_dir}/{split}/labels')
+        labels_out_dir.mkdir(parents=True, exist_ok=True)
 
         images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons = \
             shapes_dataset.create_dataset(
@@ -68,13 +69,12 @@ def main():
         raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
                                         , f'{output_dir}/{split}/')
-        # #  4. Ultralitics like segmentation
+     #  4. Ultralitics like segmentation
 
         Path(f'{output_dir}/{split}/labels-seg').mkdir(parents=True, exist_ok=True)
         segmentation_labels_formatter(images_filenames, images_polygons, images_sizes,
                                       images_objects_categories_indices,
                                       f'{output_dir}/{split}/labels-seg')
-        #
 
 
 if __name__ == '__main__':
