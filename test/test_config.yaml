@@ -6,13 +6,13 @@ output_dir: ./runs
 # output types selection:
 label_file_formats:
   yolov5_detection_format:
-    - image_path: ./dataset/train/images/img_000001.jpg
-      label_path: ./dataset/train/labels/img_000001.txt
+    - image_dir: ./dataset/train/images
+      label_dir: ./dataset/train/labels
   single_label_file_format:
     - label_path: ./dataset/train/all_entries.txt
 
   yolov5_segmentation_format:
-  - image_path: ./dataset/train/images/img_000001.jpg
-    label_path: ./dataset/train/labels-seg/img_000001.txt
+  - image_dir: ./dataset/train/images
+    label_dir: ./dataset/train/labels-seg
 
 

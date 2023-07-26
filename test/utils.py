@@ -72,6 +72,6 @@ def draw_dataset_entry(image, bboxes, category_names, title, output_path):
                                                      np.array(bboxes)[..., 0], text_box_color,
                                                      category_names, font_size=15)
 
-    figure(figsize=(10, 10))
+    print(f'saving test results to {output_path}')
     image.save(output_path)
 

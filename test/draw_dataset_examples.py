@@ -124,13 +124,17 @@ def main():
 
     if 'yolov5_detection_format' in config['label_file_formats'].keys():
         for params in config['label_file_formats']['yolov5_detection_format']:
-            [image, bboxes, category_ids] = read_detection_dataset_entry(params['image_path'], params['label_path'])
+            sel_fname = random.choice(os.listdir(params['image_dir']))
+            image_path = f'{ params["image_dir"]}/{sel_fname}'
+            label_path = f'{ params["label_dir"]}/{Path(sel_fname).stem}.txt'
+
+            [image, bboxes, category_ids] = read_detection_dataset_entry(image_path, label_path)
             category_names = [category_names_table[category_id] for category_id in category_ids]
-            title = f'yolov5_detection_format {params["image_path"]}'
+            title = f'yolov5_detection_format {image_path}'
 
             dest_dir = f'{output_dir}/det1'
             Path(dest_dir).mkdir(parents=True, exist_ok=True)
-            fname = Path(params['image_path'])
+            fname = Path(image_path)
             output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
             draw_dataset_entry(image, bboxes, category_names, title, output_path)
 
@@ -147,10 +151,14 @@ def main():
 
     if 'yolov5_segmentation_format' in config['label_file_formats'].keys():
         for params in config['label_file_formats']['yolov5_segmentation_format']:
-            [image, bboxes, category_ids] = read_segmentation_dataset_entry(params['image_path'], params['label_path'])
+            sel_fname = random.choice(os.listdir(params['image_dir']))
+            image_path = f'{ params["image_dir"]}/{sel_fname}'
+            label_path = f'{ params["label_dir"]}/{Path(sel_fname).stem}.txt'
+
+            [image, bboxes, category_ids] = read_segmentation_dataset_entry(image_path,label_path)
             category_names = [category_names_table[category_id] for category_id in category_ids]
-            title = f'yolov5_segmentation_format {params["image_path"]}'
-            fname = Path(params['image_path'])
+            title = f'yolov5_segmentation_format {image_path}'
+            fname = Path(image_path)
             dest_dir = f'{output_dir}/seg'
             Path(dest_dir).mkdir(parents=True, exist_ok=True)
             output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
