@@ -43,8 +43,9 @@ class ShapesDataset:
         self.category_ids = [shape['id'] for shape in self.shapes]
 
         with open(shapes_config['class_names_file'], 'w') as f:
-            for category_name in self.category_names:
-                f.write(f'{category_name}\n')
+            cnames=np.unique(self.category_names)
+            for cname in cnames:
+                f.write(f'{cname}\n')
 
     def __compute_iou(self, box1, box2):
         """
