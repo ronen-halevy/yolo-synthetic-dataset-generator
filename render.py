@@ -2,7 +2,7 @@ import yaml
 import os
 from pathlib import Path
 
-from test_dataset.draw_dataset_examples import draw_detection_dataset_example, draw_detection_single_file_dataset_example, draw_segmentation_dataset_example,draw_coco_detection_dataset_example
+from render_dataset.draw_dataset_examples import draw_detection_dataset_example, draw_detection_single_file_dataset_example, draw_segmentation_dataset_example,draw_coco_detection_dataset_example
 
 def increment_path(path, exist_ok=False, sep='', mkdir=False):
     # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
@@ -23,7 +23,7 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
     return path
 
 def main():
-    config_file = './test_dataset/test_config.yaml'
+    config_file = './render_dataset/test_config.yaml'
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
 

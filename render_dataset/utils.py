@@ -52,7 +52,6 @@ def draw_bounding_box(image, boxes, color, thickness=1):
     draw = ImageDraw.Draw(image)
     for box in boxes:
         xmin, ymin, w, h = box
-        print((xmin, ymin), (xmin, ymin+h), (xmin+w, ymin+h), (xmin+w, ymin))
         draw.line([(xmin, ymin), (xmin, ymin+h), (xmin+w, ymin+h), (xmin+w, ymin),
                    (xmin, ymin)],
                   width=thickness,
@@ -67,7 +66,6 @@ def draw_bounding_box(image, boxes, thickness=1):
         xmin, ymin, w, h = box
         # xmin = xc-w/2
         # ymin = yc-h/2
-        print((xmin, ymin), (xmin, ymin + h), (xmin + w, ymin + h), (xmin + w, ymin))
         draw.line([(xmin, ymin), (xmin, ymin + h), (xmin + w, ymin + h), (xmin + w, ymin),
                    (xmin, ymin)],
                   width=thickness,

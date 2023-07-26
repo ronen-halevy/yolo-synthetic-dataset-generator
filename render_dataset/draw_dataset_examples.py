@@ -125,7 +125,7 @@ def draw_detection_dataset_example(image_dir, label_dir, category_names_table, o
     dest_dir = f'{output_dir}/det1'
     Path(dest_dir).mkdir(parents=True, exist_ok=True)
     fname = Path(image_path)
-    output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
+    output_path = f'{dest_dir}/{fname.stem}_annotated"{fname.suffix}'
     draw_dataset_entry(image, bboxes, category_names, output_path)
 
 
@@ -152,7 +152,7 @@ def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table
     fname = Path(image_path)
     dest_dir = f'{output_dir}/seg'
     Path(dest_dir).mkdir(parents=True, exist_ok=True)
-    output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
+    output_path = f'{dest_dir}/{fname.stem}_annotated"{fname.suffix}'
 
     draw_dataset_entry(image, bboxes, category_names, output_path)
 
