@@ -7,7 +7,6 @@ from matplotlib.pyplot import figure
 import numpy as np
 
 
-# from test
 
 def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), font_size=30):
     """
@@ -65,7 +64,7 @@ def draw_bounding_box(image, boxes, thickness=1):
                   fill=color)
     return image
 
-def draw_dataset_entry(image, bboxes, category_names, title, output_path):
+def draw_dataset_entry(image, bboxes, category_names, output_path):
     annotated_bbox_image = draw_bounding_box(image, bboxes)
     text_box_color = [255, 255, 255]
     draw_text_on_bounding_box(annotated_bbox_image, np.array(bboxes)[..., 1],
