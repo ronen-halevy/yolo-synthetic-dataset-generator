@@ -22,7 +22,7 @@ rotate_shapes: true # boolean
 # supported shapes: circle, triangle, ellipse, square, trapezoid, rectangle, hexagon rhombus
 # color field is used for class labeling in 'color' or 'color' and 'shape' mode.
 
-class_names_file:  class.names
+class_names_file:  ./dataset/class.names
 
 dataset_selector:
   [

@@ -2,7 +2,7 @@ import yaml
 import os
 from pathlib import Path
 
-from test_dataset.draw_dataset_examples import draw_detection_dataset_example, draw_detection_single_file_dataset_example, draw_segmentation_dataset_example
+from test_dataset.draw_dataset_examples import draw_detection_dataset_example, draw_detection_single_file_dataset_example, draw_segmentation_dataset_example,draw_coco_detection_dataset_example
 
 def increment_path(path, exist_ok=False, sep='', mkdir=False):
     # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
@@ -32,6 +32,9 @@ def main():
     category_names_file = config['category_names_file']
     with open(category_names_file) as f:
         category_names_table = f.readlines()
+
+    if 'coco_detection_datase' in config['label_file_formats'].keys():
+        draw_coco_detection_dataset_example(config['label_file_formats']['coco_detection_datase']['annotations_path'], category_names_table, output_dir)
 
     if 'yolov5_detection_format' in config['label_file_formats'].keys():
         image_dir = config['label_file_formats']['yolov5_detection_format']['image_dir']

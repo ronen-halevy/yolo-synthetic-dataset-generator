@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import yaml
 from PIL import Image
 from PIL import ImageDraw
 from PIL import Image as im
@@ -9,9 +10,6 @@ import cv2
 import random
 
 from .utils import draw_dataset_entry
-
-
-
 
 
 def read_detection_dataset_entry(image_path, label_path):
@@ -114,7 +112,8 @@ def read_segmentation_dataset_entry(image_path, label_path):
 
 
 def draw_detection_dataset_example(image_dir, label_dir, category_names_table, output_dir):
-    listdir = [filename  for filename in os.listdir(image_dir) if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
+    listdir = [filename for filename in os.listdir(image_dir) if
+               filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
     sel_fname = random.choice(listdir
                               )
     image_path = f'{image_dir}/{sel_fname}'
@@ -128,6 +127,8 @@ def draw_detection_dataset_example(image_dir, label_dir, category_names_table, o
     fname = Path(image_path)
     output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
     draw_dataset_entry(image, bboxes, category_names, output_path)
+
+
 def draw_detection_single_file_dataset_example(label_path, category_names_table, output_dir):
     [image, bboxes, category_ids, image_path] = read_single_file_detection_dataset(label_path)
     category_names = [category_names_table[category_id] for category_id in category_ids]
@@ -138,13 +139,15 @@ def draw_detection_single_file_dataset_example(label_path, category_names_table,
     draw_dataset_entry(image, bboxes, category_names, output_path)
 
 
-def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table,output_dir ):
-    listdir = [filename  for filename in os.listdir(image_dir) if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
+def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, output_dir):
+    listdir = [filename for filename in os.listdir(image_dir) if
+               filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
     sel_fname = random.choice(listdir)
     image_path = f'{image_dir}/{sel_fname}'
     label_path = f'{label_dir}/{Path(sel_fname).stem}.txt'
-
+    # arrange output elements:
     [image, bboxes, category_ids] = read_segmentation_dataset_entry(image_path, label_path)
+    # draw:
     category_names = [category_names_table[category_id] for category_id in category_ids]
     fname = Path(image_path)
     dest_dir = f'{output_dir}/seg'
@@ -153,3 +156,29 @@ def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table
 
     draw_dataset_entry(image, bboxes, category_names, output_path)
 
+
+def draw_coco_detection_dataset_example(annotations_path, category_names_table, output_dir):
+    with open(annotations_path) as file:
+        annotations = yaml.safe_load(file)
+
+    # randomy select an image index from dataset:
+    image_index = np.random.randint(0, len(annotations))
+    # take records by index
+    image_record = annotations['images'][image_index]
+    annotation_records = [annotation for annotation in annotations['annotations'] if
+                          annotation['image_id'] == image_record['id']]
+    image_path = f'{image_record["file_name"]}'
+    image = Image.open(image_path)
+
+    bboxes = [annotation_record['bbox'] for annotation_record in annotation_records]
+    bboxes = np.array(bboxes)
+    category_ids = [annotation_record['category_id'] for annotation_record in annotation_records]
+
+    # draw:
+    category_names = [category_names_table[category_id] for category_id in category_ids]
+    fname = Path(image_path)
+    dest_dir = f'{output_dir}/coco'
+    Path(dest_dir).mkdir(parents=True, exist_ok=True)
+    output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
+
+    draw_dataset_entry(image, bboxes, category_names, output_path)

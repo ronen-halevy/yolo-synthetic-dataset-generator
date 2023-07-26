@@ -1,10 +1,12 @@
 ---
 
-category_names_file: class.names
+category_names_file: ./dataset/class.names
 output_dir: ./runs/exp
 
 # output types selection:
 label_file_formats:
+  coco_detection_datase:
+    annotations_path: ./dataset/train/images/annotations.json
   yolov5_detection_format:
       image_dir: ./dataset/train/images
       label_dir: ./dataset/train/labels
