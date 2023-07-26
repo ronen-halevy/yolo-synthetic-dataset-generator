@@ -1,18 +1,18 @@
 ---
 
 category_names_file: class.names
-output_dir: ./runs
+output_dir: ./runs/exp
 
 # output types selection:
 label_file_formats:
   yolov5_detection_format:
-    - image_dir: ./dataset/train/images
+      image_dir: ./dataset/train/images
       label_dir: ./dataset/train/labels
   single_label_file_format:
-    - label_path: ./dataset/train/all_entries.txt
+      label_path: ./dataset/train/all_entries.txt
 
   yolov5_segmentation_format:
-  - image_dir: ./dataset/train/images
+    image_dir: ./dataset/train/images
     label_dir: ./dataset/train/labels-seg
 
 

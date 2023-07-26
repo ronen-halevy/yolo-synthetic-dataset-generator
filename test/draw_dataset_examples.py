@@ -11,6 +11,33 @@ import random
 
 from utils import draw_dataset_entry
 
+def increment_path(path, exist_ok=False, sep='', mkdir=False):
+    # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
+    path = Path(path)  # os-agnostic
+    if path.exists() and not exist_ok:
+        path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
+
+        # Method 1
+        for n in range(2, 9999):
+            p = f'{path}{sep}{n}{suffix}'  # increment path
+            if not os.path.exists(p):  #
+                break
+        path = Path(p)
+
+        # Method 2 (deprecated)
+        # dirs = glob.glob(f"{path}{sep}*")  # similar paths
+        # matches = [re.search(rf"{path.stem}{sep}(\d+)", d) for d in dirs]
+        # i = [int(m.groups()[0]) for m in matches if m]  # indices
+        # n = max(i) + 1 if i else 2  # increment number
+        # path = Path(f"{path}{sep}{n}{suffix}")  # increment path
+
+    if mkdir:
+        path.mkdir(parents=True, exist_ok=True)  # make directory
+
+    return path
+
+
+
 
 def read_detection_dataset_entry(image_path, label_path):
     """
@@ -118,52 +145,56 @@ def main():
         config = yaml.safe_load(stream)
 
     output_dir = config['output_dir']
+    output_dir=increment_path(output_dir)
     category_names_file = config['category_names_file']
     with open(category_names_file) as f:
         category_names_table = f.readlines()
 
     if 'yolov5_detection_format' in config['label_file_formats'].keys():
-        for params in config['label_file_formats']['yolov5_detection_format']:
-            sel_fname = random.choice(os.listdir(params['image_dir']))
-            image_path = f'{ params["image_dir"]}/{sel_fname}'
-            label_path = f'{ params["label_dir"]}/{Path(sel_fname).stem}.txt'
+        image_dir = config['label_file_formats']['yolov5_detection_format']['image_dir']
+        label_dir = config['label_file_formats']['yolov5_detection_format']['label_dir']
+        sel_fname = random.choice(os.listdir(image_dir))
+        image_path = f'{ image_dir}/{sel_fname}'
+        label_path = f'{ label_dir}/{Path(sel_fname).stem}.txt'
 
-            [image, bboxes, category_ids] = read_detection_dataset_entry(image_path, label_path)
-            category_names = [category_names_table[category_id] for category_id in category_ids]
-            title = f'yolov5_detection_format {image_path}'
+        [image, bboxes, category_ids] = read_detection_dataset_entry(image_path, label_path)
+        category_names = [category_names_table[category_id] for category_id in category_ids]
+        title = f'yolov5_detection_format {image_path}'
 
-            dest_dir = f'{output_dir}/det1'
-            Path(dest_dir).mkdir(parents=True, exist_ok=True)
-            fname = Path(image_path)
-            output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
-            draw_dataset_entry(image, bboxes, category_names, title, output_path)
+        dest_dir = f'{output_dir}/det1'
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        fname = Path(image_path)
+        output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
+        draw_dataset_entry(image, bboxes, category_names, title, output_path)
 
     if 'single_label_file_format' in config['label_file_formats'].keys():
-        for params in config['label_file_formats']['single_label_file_format']:
-            [image, bboxes, category_ids, image_path] = read_single_file_detection_dataset(params['label_path'])
-            category_names = [category_names_table[category_id] for category_id in category_ids]
-            title = f'single_label_file_format {params["label_path"]}'
-            dest_dir = f'{output_dir}/det2'
-            Path(dest_dir).mkdir(parents=True, exist_ok=True)
-            fname = Path(image_path)
-            output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
-            draw_dataset_entry(image, bboxes, category_names, title, output_path)
+        label_path=config['label_file_formats']['single_label_file_format']['label_path']
+        [image, bboxes, category_ids, image_path] = read_single_file_detection_dataset(label_path)
+        category_names = [category_names_table[category_id] for category_id in category_ids]
+        title = f'single_label_file_format {label_path}'
+        dest_dir = f'{output_dir}/det2'
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        fname = Path(image_path)
+        output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
+        draw_dataset_entry(image, bboxes, category_names, title, output_path)
 
     if 'yolov5_segmentation_format' in config['label_file_formats'].keys():
-        for params in config['label_file_formats']['yolov5_segmentation_format']:
-            sel_fname = random.choice(os.listdir(params['image_dir']))
-            image_path = f'{ params["image_dir"]}/{sel_fname}'
-            label_path = f'{ params["label_dir"]}/{Path(sel_fname).stem}.txt'
+        image_dir = config['label_file_formats']['yolov5_segmentation_format']['image_dir']
+        label_dir = config['label_file_formats']['yolov5_segmentation_format']['label_dir']
 
-            [image, bboxes, category_ids] = read_segmentation_dataset_entry(image_path,label_path)
-            category_names = [category_names_table[category_id] for category_id in category_ids]
-            title = f'yolov5_segmentation_format {image_path}'
-            fname = Path(image_path)
-            dest_dir = f'{output_dir}/seg'
-            Path(dest_dir).mkdir(parents=True, exist_ok=True)
-            output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
+        sel_fname = random.choice(os.listdir(image_dir))
+        image_path = f'{ image_dir}/{sel_fname}'
+        label_path = f'{ label_dir}/{Path(sel_fname).stem}.txt'
 
-            draw_dataset_entry(image, bboxes, category_names, title, output_path)
+        [image, bboxes, category_ids] = read_segmentation_dataset_entry(image_path,label_path)
+        category_names = [category_names_table[category_id] for category_id in category_ids]
+        title = f'yolov5_segmentation_format {image_path}'
+        fname = Path(image_path)
+        dest_dir = f'{output_dir}/seg'
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
+
+        draw_dataset_entry(image, bboxes, category_names, title, output_path)
 
 
 if __name__ == "__main__":
