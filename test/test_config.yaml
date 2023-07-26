@@ -1,6 +1,7 @@
 ---
 
 category_names_file: class.names
+output_dir: ./runs
 
 # output types selection:
 label_file_formats:

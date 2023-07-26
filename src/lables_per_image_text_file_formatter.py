@@ -35,8 +35,12 @@ def raw_text_files_labels_formatter(images_paths, images_bboxes, images_sizes, i
         with open(labels_filename, 'w') as f:
             for bbox, category_id in zip(bboxes, categories_indices):
                 bbox_arr = np.array(bbox, dtype=float)
-                xcycwh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2) / im_width, (bbox_arr[1] + bbox_arr[3] / 2) / im_height,
-                               bbox_arr[2] / im_width, bbox_arr[3] / im_height]
+                # [xmin, ymin, w,h] to [x_c, y_c, w, h]
+                xcycwh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2) , (bbox_arr[1] + bbox_arr[3] / 2) ,
+                               bbox_arr[2], bbox_arr[3] ]
+                # normalize size:
+                xcycwh_bbox = [xcycwh_bbox[0] / im_width,xcycwh_bbox[1] / im_height,
+                               xcycwh_bbox[2] / im_width, xcycwh_bbox[3] / im_height]
                 entry = f"{category_id} {' '.join(str(e) for e in xcycwh_bbox)}\n"
                 f.write(entry)
 

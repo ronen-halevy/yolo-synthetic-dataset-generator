@@ -1,6 +1,7 @@
 from PIL import ImageColor
 from PIL import ImageDraw
 from PIL import ImageFont
+from PIL.Image import Image
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import figure
 import numpy as np
@@ -64,7 +65,7 @@ def draw_bounding_box(image, boxes, thickness=1):
                   fill=color)
     return image
 
-def draw_dataset_entry(image, bboxes, category_names, title):
+def draw_dataset_entry(image, bboxes, category_names, title, output_path):
     annotated_bbox_image = draw_bounding_box(image, bboxes)
     text_box_color = [255, 255, 255]
     draw_text_on_bounding_box(annotated_bbox_image, np.array(bboxes)[..., 1],
@@ -72,6 +73,5 @@ def draw_dataset_entry(image, bboxes, category_names, title):
                                                      category_names, font_size=15)
 
     figure(figsize=(10, 10))
-    plt.imshow(image)
-    plt.title(title)
-    plt.show()
+    image.save(output_path)
+
