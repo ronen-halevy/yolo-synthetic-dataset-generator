@@ -6,7 +6,6 @@ splits:
  test: 10
 
 output_dir: dataset
-runs_output_dir: ./runs /exp
 
 
 
