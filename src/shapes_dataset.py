@@ -25,7 +25,7 @@ class ShapesDataset:
         # load shape yaml files.
         self.shapes = []
 
-        for shape in shapes_config['dataset_selector']:
+        for shape in shapes_config['shapes_categories']:
             self.shapes.append(shape)
 
         self.image_size = tuple(shapes_config['image_size'])
@@ -43,7 +43,9 @@ class ShapesDataset:
         self.category_ids = [shape['id'] for shape in self.shapes]
 
         with open(shapes_config['class_names_file'], 'w') as f:
-            cnames=np.unique(self.category_names)
+            indexes = np.unique(self.category_names, return_index=True)[1]
+            cnames= [self.category_names[index] for index in sorted(indexes)]
+
             for cname in cnames:
                 f.write(f'{cname}\n')
 

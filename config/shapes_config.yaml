@@ -24,7 +24,7 @@ rotate_shapes: true # boolean
 
 class_names_file:  ./dataset/class.names
 
-dataset_selector:
+shapes_categories:
   [
 { id: 0, nvertices: 4, shape_aspect_ratio: 1, theta0: 0, cname: square, color: red, shape_width_choices: [60, 120]},
 { id: 1, nvertices: 3, shape_aspect_ratio: 1, theta0: 0, cname: triangle, color: red, shape_width_choices: [60, 120] },
