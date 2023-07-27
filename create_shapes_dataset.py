@@ -18,10 +18,10 @@ import os
 import yaml
 import argparse
 from pathlib import Path
-from src.labels_text_file_formatter import create_row_text_labels_file
-from src.labels_coco_formatter import coco_formatter
-from src.lables_per_image_text_file_formatter import raw_text_files_labels_formatter
-from src.segmentation_lables_formatter import segmentation_labels_formatter
+from src.output_formatters.labels_text_file_formatter import create_row_text_labels_file
+from src.output_formatters.labels_coco_formatter import coco_formatter
+from src.output_formatters.labels_per_image_text_file_formatter import raw_text_files_labels_formatter
+from src.output_formatters.segmentation_labels_formatter import segmentation_labels_formatter
 
 from src.shapes_dataset import ShapesDataset
 
