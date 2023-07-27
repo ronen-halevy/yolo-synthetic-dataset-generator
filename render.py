@@ -23,7 +23,7 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
     return path
 
 def main():
-    config_file = './render_dataset/test_config.yaml'
+    config_file = './config/render_config.yaml'
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
 
