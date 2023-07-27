@@ -1,9 +1,10 @@
 ---
-
+# render test configurations:
+# input ctegory names file:
 category_names_file: ./dataset/class.names
-output_dir: ./runs/exp
+test_output_dir: ./runs/exp
 
-# output types selection:
+# various output formats selection:
 label_file_formats:
   coco_detection_datase:
     annotations_path: ./dataset/train/images/annotations.json
@@ -12,7 +13,6 @@ label_file_formats:
       label_dir: ./dataset/train/labels
   single_label_file_format:
       label_path: ./dataset/train/all_entries.txt
-
   yolov5_segmentation_format:
     image_dir: ./dataset/train/images
     label_dir: ./dataset/train/labels-seg

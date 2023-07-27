@@ -27,7 +27,7 @@ def main():
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
 
-    output_dir = config['output_dir']
+    output_dir = config['test_output_dir']
     output_dir=increment_path(output_dir)
     category_names_file = config['category_names_file']
     with open(category_names_file) as f:
