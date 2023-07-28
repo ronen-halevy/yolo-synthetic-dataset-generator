@@ -1,8 +1,8 @@
 ---
 
 image_size:
- - 640
- - 640
+  - 640
+  - 640
 
 min_objects_in_image: 3
 max_objects_in_image: 3
@@ -17,34 +17,31 @@ size_fluctuation: 0.00
 # max permited objects overlap. iou=0 means no overlap
 iou_thresh: 0
 
-rotate_shapes: true # boolean
 # Notes:
 # supported shapes: circle, triangle, ellipse, square, trapezoid, rectangle, hexagon rhombus
 # color field is used for class labeling in 'color' or 'color' and 'shape' mode.
 
-class_names_file:  ./dataset/class.names
+class_names_file: ./dataset/class.names
 
-# note: cnameorder determines category id assignemt. In case of cname dups, first cname row is taken:
-
+# randomly rotate shapes by n*pi/4:
+rotate_shapes: true # boolean
+# note: cnam eorder determines category id assignemt. In case of cname dups, first cname row is taken:
 shapes_categories:
- """
- nvertices: nvertices of polygon. determines the actual shape
- shape_aspect_ratio: w/h. random selection from list. set 1 one for square &circle, otherwise-rectangle and ellipse
- theta0: angle of first vertice wrt shape center. e.g for rectangular theta0 must be 45, otherwise rhombus results
- cname: name label, but actual shape determined by nvertices
- color: color string value. random selection from choice list
- 
- 
- """
-  [
-{ nvertices: 4, shape_aspect_ratio: [1], theta0: 0, cname: square, color: [red], shape_width_choices: [60, 120]},
-{ nvertices: 3, shape_aspect_ratio: [1], theta0: 0, cname: triangle, color: [red], shape_width_choices: [60, 120] },
-{ nvertices: 80, shape_aspect_ratio: [1], theta0: 0, cname: circle, color: [red], shape_width_choices: [60, 120] },
-{ nvertices: 5, shape_aspect_ratio: [1], theta0: 0, cname: pentagon, color: [red], shape_width_choices: [60, 120] },
-{ nvertices: 80, shape_aspect_ratio: [0.5, 2], theta0: 0, cname: ellipse, color: [red], shape_width_choices: [60, 120] },
-{ nvertices: 6, shape_aspect_ratio: [1], theta0: 0, cname: hexagon, color: [red], shape_width_choices: [60, 120] },
-{ nvertices: 4, shape_aspect_ratio: [2, 0.5], theta0: 0, cname: rhombus, color: [red], shape_width_choices: [60, 120] },
-{ nvertices: 4, shape_aspect_ratio: [0.5,2], theta0: 45, cname: rectangular, color: [red], shape_width_choices: [60, 120] },
+  # nvertices: nvertices of polygon. determines the actual shape
+  # aspect_ratio: w/h. random selection from list. set 1 one for square &circle, otherwise-rectangle and ellipse
+  # theta0: angle of first vertice wrt shape center. e.g for rectangular theta0 must be 45, otherwise rhombus results
+  # cname: name label, but actual shape determined by nvertices
+  # color: str. random selection from list.
+  # shape_height: pixels. random selection from list. shape width = shape_height / aspect_ratio
 
+  [
+    { nvertices: 4, theta0: 0, cname: square, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ],},
+    { nvertices: 3, theta0: 0, cname: triangle, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ],},
+    { nvertices: 80, theta0: 0, cname: circle, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ],}   ,
+    { nvertices: 5, theta0: 0, cname: pentagon, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ],},
+    { nvertices: 80, theta0: 0, cname: ellipse, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 0.5, 2 ],},
+    { nvertices: 6, theta0: 0, cname: hexagon, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ], },
+    { nvertices: 4, theta0: 0, cname: rhombus, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ],},
+    { nvertices: 4, theta0: 45, cname: rectangular, color: [ red ], shape_height: [60, aspect_ratio:[ 0.5,2 ],120]},
   ]
 
