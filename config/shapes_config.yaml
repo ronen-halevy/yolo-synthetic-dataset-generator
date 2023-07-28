@@ -32,16 +32,17 @@ shapes_categories:
   # theta0: angle of first vertice wrt shape center. e.g for rectangular theta0 must be 45, otherwise rhombus results
   # cname: name label, but actual shape determined by nvertices
   # color: str. random selection from list.
-  # shape_height: pixels. random selection from list. shape width = shape_height / aspect_ratio
+  # height: shape height in pixels. random selection from list. shape width = height / aspect_ratio
+  # active: bool. determines row inclusion in dataset generation. Related cname is included class.names and id is assigned anyway.
 
   [
-    { nvertices: 4, theta0: 0, cname: square, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ],},
-    { nvertices: 3, theta0: 0, cname: triangle, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ],},
-    { nvertices: 80, theta0: 0, cname: circle, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ],}   ,
-    { nvertices: 5, theta0: 0, cname: pentagon, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ],},
-    { nvertices: 80, theta0: 0, cname: ellipse, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 0.5, 2 ],},
-    { nvertices: 6, theta0: 0, cname: hexagon, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 1 ], },
-    { nvertices: 4, theta0: 0, cname: rhombus, color: [ red ], shape_height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ],},
-    { nvertices: 4, theta0: 45, cname: rectangular, color: [ red ], shape_height: [60, aspect_ratio:[ 0.5,2 ],120]},
+    { nvertices: 4, theta0: 0, cname: square, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True},
+    { nvertices: 3, theta0: 0, cname: triangle, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True},
+    { nvertices: 80, theta0: 0, cname: circle, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True}   ,
+    { nvertices: 5, theta0: 0, cname: pentagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True},
+    { nvertices: 80, theta0: 0, cname: ellipse, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 0.5, 2 ], active: True},
+    { nvertices: 6, theta0: 0, cname: hexagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True },
+    { nvertices: 4, theta0: 0, cname: rhombus, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ], active: True},
+    { nvertices: 4, theta0: 45, cname: rectangular, color: [ red ], height: [60, 120], aspect_ratio:[ 0.5,2 ], active: True},
   ]
 

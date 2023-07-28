@@ -23,10 +23,7 @@ class ShapesDataset:
         with open(shapes_config_file, 'r') as stream:
             shapes_config = yaml.safe_load(stream)
         # load shape yaml files.
-        self.shapes = []
 
-        for shape in shapes_config['shapes_categories']:
-            self.shapes.append(shape)
 
         self.image_size = tuple(shapes_config['image_size'])
         self.min_objects_in_image = shapes_config['min_objects_in_image']
@@ -39,16 +36,20 @@ class ShapesDataset:
         self.rotate_shapes = shapes_config['rotate_shapes']
 
         # create a class names output file.
+        self.shapes = []
+        for shape in shapes_config['shapes_categories']:
+            self.shapes.append(shape)
+
         self.category_names = [shape['cname'] for shape in self.shapes]
         # reduce duplicated category names (config list may have dup rows for same category):
         indexes = np.unique(self.category_names, return_index=True)[1]
         self.category_names = [self.category_names[index] for index in sorted(indexes)]
-
-        self.category_ids = [self.category_names.index(shape['cname']) for shape in self.shapes]
-
         with open(shapes_config['class_names_file'], 'w') as f:
             for self.category_name in self.category_names:
                 f.write(f'{self.category_name}\n')
+
+        self.category_ids = [self.category_names.index(category_name) for category_name in self.category_names ]
+
 
     def __compute_iou(self, box1, box2):
         """
@@ -102,13 +103,13 @@ class ShapesDataset:
 
         return polygon
 
-    def __create_polygon(self, nvertices, theta0, shape_height, aspect_ratio, size_fluctuation, margin_from_edge, image_size):
+    def __create_polygon(self, nvertices, theta0, height, aspect_ratio, size_fluctuation, margin_from_edge, image_size):
 
         """
         Description: Creates a polygon given nvertices, and data on shape's dims
         :param nvertices: type: string name of a supported shape
-        :param shape_height: A list of widths choices for random selection.
-        :type shape_height: floats list
+        :param height: A list of widths choices for random selection.
+        :type height: floats list
         :param aspect_ratio: ratio between shapes height and width
         :type aspect_ratio:
         :param size_fluctuation: fluctuations of new bbox dims, each multiplied by (1-rand(0, size_fluctuation)) where
@@ -123,12 +124,12 @@ class ShapesDataset:
         polygon: type:float. a nvertices size list of tuple entries. tuples hold vertices x,y coords
         """
 
-        sel_shape_height = np.random.choice(shape_height)
+        sel_height = np.random.choice(height)
         sel_aspect_ratio = np.random.choice(aspect_ratio)
-        shape_width = sel_shape_height * sel_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
-        sel_shape_height = sel_shape_height * random.uniform(1 - size_fluctuation, 1)
+        shape_width = sel_height * sel_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
+        sel_height = sel_height * random.uniform(1 - size_fluctuation, 1)
 
-        radius = np.array([sel_shape_height / 2, shape_width / 2])
+        radius = np.array([sel_height / 2, shape_width / 2])
         center = np.random.randint(
             low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
 
@@ -157,7 +158,7 @@ class ShapesDataset:
         objects. THe latters a . Store created images in output_dir, and return dataset metadata.
 
         :param objects_attributes: a list of num_of_objects entries with attributes: category_id, nvertices, theta0,
-        category_name, aspect_ratio, shape_height, color
+        category_name, aspect_ratio, height, color
 
         :param image_size: type: 2 tuple of ints. required entry's image size.
         :param bg_color: type: str image's bg color
@@ -182,13 +183,13 @@ class ShapesDataset:
         objects_categories_names = []
         objects_categories_indices = []
 
-        for category_id, nvertices, theta0, category_name, aspect_ratio, shape_height, color in objects_attributes:
+        for category_id, nvertices, theta0, category_name, aspect_ratio, height, color in objects_attributes:
             max_count = 10000
             count = 0
             # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
             while True:
 
-                polygon = self.__create_polygon(nvertices,theta0, shape_height, aspect_ratio, size_fluctuation,
+                polygon = self.__create_polygon(nvertices,theta0, height, aspect_ratio, size_fluctuation,
                                                 margin_from_edge,
                                                 image_size)
                 bbox = self.__polygon_to_box(polygon)
@@ -201,7 +202,7 @@ class ShapesDataset:
                     max_iou = max(iou)
                     raise Exception(
                         f'Shape Objects Placement Failed after {count} placement itterations: max(iou)={max_iou}, '
-                        f'but required iou_thresh is {iou_thresh} shape_height: . \nHint: reduce objects size or'
+                        f'but required iou_thresh is {iou_thresh} height: . \nHint: reduce objects size or'
                         f' quantity of objects in an image')
             if len(bbox):
                 bboxes.append(bbox)
@@ -249,15 +250,19 @@ class ShapesDataset:
         images_objects_categories_indices = []
         images_objects_categories_names = []
         images_polygons = []
+        # loop to create nentries examples:
         for example_id in range(nentries):
+            # randomize num of objects in an image:
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
+            # take only active shapes for dataset creation:
+            active_shapes = [shape   for shape in self.shapes if shape['active']]
             # randomly select num_of_objects shapes:
-            sel_shape_entris = [np.random.choice(self.shapes) for idx in range(num_of_objects)]
+            sel_shape_entris = [np.random.choice(active_shapes) for idx in range(num_of_objects)]
             # arrange target objects attributes from selected shapes:
 
             objects_attributes = [
                 [self.category_names.index(shape_entry['cname']), shape_entry['nvertices'], shape_entry['theta0'], shape_entry['cname'], shape_entry['aspect_ratio'],
-                 shape_entry['shape_height'],
+                 shape_entry['height'],
                  shape_entry['color']] for shape_entry in sel_shape_entris]
             image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(
                     objects_attributes,
