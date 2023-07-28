@@ -31,7 +31,7 @@ def main():
     output_dir=increment_path(output_dir)
     category_names_file = config['category_names_file']
     with open(category_names_file) as f:
-        category_names_table = f.readlines()
+        category_names_table = f.read().splitlines()
 
     if 'coco_detection_datase' in config['label_file_formats'].keys():
         draw_coco_detection_dataset_example(config['label_file_formats']['coco_detection_datase']['annotations_path'], category_names_table, output_dir)

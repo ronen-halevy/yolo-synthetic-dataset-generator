@@ -38,16 +38,17 @@ class ShapesDataset:
         self.size_fluctuation = shapes_config['size_fluctuation']
         self.rotate_shapes = shapes_config['rotate_shapes']
 
-        # create a class names output file:
+        # create a class names output file.
         self.category_names = [shape['cname'] for shape in self.shapes]
-        self.category_ids = [shape['id'] for shape in self.shapes]
+        # reduce duplicated category names (config list may have dup rows for same category):
+        indexes = np.unique(self.category_names, return_index=True)[1]
+        self.category_names = [self.category_names[index] for index in sorted(indexes)]
+
+        self.category_ids = [self.category_names.index(shape['cname']) for shape in self.shapes]
 
         with open(shapes_config['class_names_file'], 'w') as f:
-            indexes = np.unique(self.category_names, return_index=True)[1]
-            cnames= [self.category_names[index] for index in sorted(indexes)]
-
-            for cname in cnames:
-                f.write(f'{cname}\n')
+            for self.category_name in self.category_names:
+                f.write(f'{self.category_name}\n')
 
     def __compute_iou(self, box1, box2):
         """
@@ -251,8 +252,9 @@ class ShapesDataset:
             # randomly select num_of_objects shapes:
             sel_shape_entris = [np.random.choice(self.shapes) for idx in range(num_of_objects)]
             # arrange target objects attributes from selected shapes:
+
             objects_attributes = [
-                [shape_entry['id'], shape_entry['nvertices'], shape_entry['theta0'], shape_entry['cname'], shape_entry['shape_aspect_ratio'],
+                [self.category_names.index(shape_entry['cname']), shape_entry['nvertices'], shape_entry['theta0'], shape_entry['cname'], shape_entry['shape_aspect_ratio'],
                  shape_entry['shape_width_choices'],
                  shape_entry['color']] for shape_entry in sel_shape_entris]
             image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(

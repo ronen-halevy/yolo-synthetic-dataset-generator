@@ -26,17 +26,17 @@ class_names_file:  ./dataset/class.names
 
 shapes_categories:
   [
-{ id: 0, nvertices: 4, shape_aspect_ratio: 1, theta0: 0, cname: square, color: red, shape_width_choices: [60, 120]},
-{ id: 1, nvertices: 3, shape_aspect_ratio: 1, theta0: 0, cname: triangle, color: red, shape_width_choices: [60, 120] },
-{ id: 2, nvertices: 80, shape_aspect_ratio: 1, theta0: 0, cname: circle, color: red, shape_width_choices: [60, 120] },
-{ id: 3, nvertices: 5, shape_aspect_ratio: 1, theta0: 0, cname: pentagon, color: red, shape_width_choices: [60, 120] },
-{ id: 4, nvertices: 80, shape_aspect_ratio: 2, theta0: 0, cname: ellipse, color: red, shape_width_choices: [60, 120] },
-{ id: 4, nvertices: 80, shape_aspect_ratio: 0.5, theta0: 0, cname: ellipse, color: red, shape_width_choices: [60, 120] },
-{ id: 5, nvertices: 6, shape_aspect_ratio: 1, theta0: 0, cname: hexagon, color: red, shape_width_choices: [60, 120] },
-{ id: 6, nvertices: 4, shape_aspect_ratio: 2, theta0: 0, cname: rhombus, color: red, shape_width_choices: [60, 120] },
-{ id: 6, nvertices: 4, shape_aspect_ratio: 0.5, theta0: 0, cname: rhombus, color: red, shape_width_choices: [60, 120] },
-{ id: 7, nvertices: 4, shape_aspect_ratio: 2, theta0: 45, cname: rectangular, color: red, shape_width_choices: [60, 120] },
-{ id: 7, nvertices: 4, shape_aspect_ratio: 0.5, theta0: 45, cname: rectangular, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 4, shape_aspect_ratio: 1, theta0: 0, cname: square, color: red, shape_width_choices: [60, 120]},
+{ nvertices: 3, shape_aspect_ratio: 1, theta0: 0, cname: triangle, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 80, shape_aspect_ratio: 1, theta0: 0, cname: circle, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 5, shape_aspect_ratio: 1, theta0: 0, cname: pentagon, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 80, shape_aspect_ratio: 2, theta0: 0, cname: ellipse, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 80, shape_aspect_ratio: 0.5, theta0: 0, cname: ellipse, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 6, shape_aspect_ratio: 1, theta0: 0, cname: hexagon, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 4, shape_aspect_ratio: 2, theta0: 0, cname: rhombus, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 4, shape_aspect_ratio: 0.5, theta0: 0, cname: rhombus, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 4, shape_aspect_ratio: 2, theta0: 45, cname: rectangular, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 4, shape_aspect_ratio: 0.5, theta0: 45, cname: rectangular, color: red, shape_width_choices: [60, 120] },
 
   ]
 
