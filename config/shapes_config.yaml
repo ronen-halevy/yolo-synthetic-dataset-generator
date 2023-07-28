@@ -25,20 +25,26 @@ rotate_shapes: true # boolean
 class_names_file:  ./dataset/class.names
 
 # note: cnameorder determines category id assignemt. In case of cname dups, first cname row is taken:
+
 shapes_categories:
+ """
+ nvertices: nvertices of polygon. determines the actual shape
+ shape_aspect_ratio: w/h. random selection from list. set 1 one for square &circle, otherwise-rectangle and ellipse
+ theta0: angle of first vertice wrt shape center. e.g for rectangular theta0 must be 45, otherwise rhombus results
+ cname: name label, but actual shape determined by nvertices
+ color: color string value. random selection from choice list
+ 
+ 
+ """
   [
-{ nvertices: 4, shape_aspect_ratio: 1, theta0: 0, cname: square, color: red, shape_width_choices: [60, 120]},
-{ nvertices: 3, shape_aspect_ratio: 1, theta0: 0, cname: triangle, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 80, shape_aspect_ratio: 1, theta0: 0, cname: circle, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 5, shape_aspect_ratio: 1, theta0: 0, cname: pentagon, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 80, shape_aspect_ratio: 2, theta0: 0, cname: ellipse, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 80, shape_aspect_ratio: 0.5, theta0: 0, cname: ellipse, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 6, shape_aspect_ratio: 1, theta0: 0, cname: hexagon, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 4, shape_aspect_ratio: 2, theta0: 0, cname: rhombus, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 4, shape_aspect_ratio: 0.5, theta0: 0, cname: rhombus, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 4, shape_aspect_ratio: 2, theta0: 45, cname: rectangular, color: red, shape_width_choices: [60, 120] },
-{ nvertices: 4, shape_aspect_ratio: 0.5, theta0: 45, cname: rectangular, color: red, shape_width_choices: [60, 120] },
+{ nvertices: 4, shape_aspect_ratio: [1], theta0: 0, cname: square, color: [red], shape_width_choices: [60, 120]},
+{ nvertices: 3, shape_aspect_ratio: [1], theta0: 0, cname: triangle, color: [red], shape_width_choices: [60, 120] },
+{ nvertices: 80, shape_aspect_ratio: [1], theta0: 0, cname: circle, color: [red], shape_width_choices: [60, 120] },
+{ nvertices: 5, shape_aspect_ratio: [1], theta0: 0, cname: pentagon, color: [red], shape_width_choices: [60, 120] },
+{ nvertices: 80, shape_aspect_ratio: [0.5, 2], theta0: 0, cname: ellipse, color: [red], shape_width_choices: [60, 120] },
+{ nvertices: 6, shape_aspect_ratio: [1], theta0: 0, cname: hexagon, color: [red], shape_width_choices: [60, 120] },
+{ nvertices: 4, shape_aspect_ratio: [2, 0.5], theta0: 0, cname: rhombus, color: [red], shape_width_choices: [60, 120] },
+{ nvertices: 4, shape_aspect_ratio: [0.5,2], theta0: 45, cname: rectangular, color: [red], shape_width_choices: [60, 120] },
 
   ]
-
 

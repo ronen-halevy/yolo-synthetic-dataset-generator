@@ -123,11 +123,12 @@ class ShapesDataset:
         polygon: type:float. a nvertices size list of tuple entries. tuples hold vertices x,y coords
         """
 
-        shape_width = np.random.choice(shape_width_choices)
-        shape_height = shape_width * shape_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
-        shape_width = shape_width * random.uniform(1 - size_fluctuation, 1)
+        sel_shape_width = np.random.choice(shape_width_choices)
+        aspect_ratio = np.random.choice(shape_aspect_ratio)
+        shape_height = sel_shape_width * aspect_ratio * random.uniform(1 - size_fluctuation, 1)
+        sel_shape_width = sel_shape_width * random.uniform(1 - size_fluctuation, 1)
 
-        radius = np.array([shape_width / 2, shape_height / 2])
+        radius = np.array([sel_shape_width / 2, shape_height / 2])
         center = np.random.randint(
             low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
 
@@ -206,7 +207,8 @@ class ShapesDataset:
                 bboxes.append(bbox)
 
             # draw shape on image:
-            draw.polygon(polygon, fill=ImageColor.getrgb(color) )
+            sel_color = np.random.choice(color)
+            draw.polygon(polygon, fill=ImageColor.getrgb(sel_color) )
 
             polygons.append(polygon)
             objects_categories_names.append(category_name)
