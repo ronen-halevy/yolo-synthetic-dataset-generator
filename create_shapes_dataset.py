@@ -37,6 +37,9 @@ def main():
         config = yaml.safe_load(stream)
 
     output_dir = config["output_dir"]
+    labels_seg_dir=config['labels_seg_dir']
+    labels_det_dir=config['labels_det_dir']
+
     splits = config["splits"]
     shapes_dataset = ShapesDataset()
 
@@ -45,8 +48,6 @@ def main():
         # create dirs for output if missing:
         images_out_dir = Path(f'{output_dir}/{split}/images')
         images_out_dir.mkdir(parents=True, exist_ok=True)
-        labels_out_dir = Path(f'{output_dir}/{split}/labels')
-        labels_out_dir.mkdir(parents=True, exist_ok=True)
 
         images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons = \
             shapes_dataset.create_dataset(
@@ -66,15 +67,18 @@ def main():
                                     f'{output_dir}/{split}')
 
         # 3. text file per image
+        labels_out_dir = Path(f'{output_dir}/{split}/{labels_det_dir}')
+        labels_out_dir.mkdir(parents=True, exist_ok=True)
+
         raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
-                                        , f'{output_dir}/{split}/')
+                                        , labels_out_dir)
      #  4. Ultralitics like segmentation
-
-        Path(f'{output_dir}/{split}/labels-seg').mkdir(parents=True, exist_ok=True)
+        labels_out_dir = f'{output_dir}/{split}/{labels_seg_dir}'
+        Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
         segmentation_labels_formatter(images_filenames, images_polygons, images_sizes,
                                       images_objects_categories_indices,
-                                      f'{output_dir}/{split}/labels-seg')
+                                      labels_out_dir)
 
 
 if __name__ == '__main__':

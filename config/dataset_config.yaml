@@ -7,5 +7,8 @@ splits:
 
 output_dir: dataset
 
+labels_seg_dir: labels
+labels_det_dir: labels_det
+
 
 

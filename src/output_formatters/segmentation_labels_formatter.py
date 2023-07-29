@@ -18,7 +18,7 @@ def segmentation_labels_formatter(images_paths, images_polygons, images_sizes, i
     :param output_dir: output dir of labels text files
     :return:
     """
-    print('segmentation_labels_formatter')
+    print(f'segmentation_labels_formatter. output_dir: {output_dir}')
     try:
         os.makedirs(output_dir)
     except FileExistsError:

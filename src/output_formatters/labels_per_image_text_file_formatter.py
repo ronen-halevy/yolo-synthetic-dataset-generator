@@ -18,8 +18,7 @@ def raw_text_files_labels_formatter(images_paths, images_bboxes, images_sizes, i
     :param output_dir: output dir of labels text files
     :return:
     """
-    print('create_per_image_labels_files')
-    output_dir = f'{output_dir}labels/'
+    print(f'create_per_image_labels_files. labels_output_dir: {output_dir}')
     try:
         os.makedirs(output_dir)
     except FileExistsError:
@@ -31,7 +30,7 @@ def raw_text_files_labels_formatter(images_paths, images_bboxes, images_sizes, i
         im_width = images_size[1]
 
         head, filename = os.path.split(image_path)
-        labels_filename = f"{output_dir}{filename.rsplit('.', 1)[0]}.txt"
+        labels_filename = f"{output_dir}/{filename.rsplit('.', 1)[0]}.txt"
         with open(labels_filename, 'w') as f:
             for bbox, category_id in zip(bboxes, categories_indices):
                 bbox_arr = np.array(bbox, dtype=float)

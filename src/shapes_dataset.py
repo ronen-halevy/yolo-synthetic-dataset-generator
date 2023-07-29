@@ -24,8 +24,7 @@ class ShapesDataset:
             shapes_config = yaml.safe_load(stream)
         # load shape yaml files.
 
-
-        self.image_size = tuple(shapes_config['image_size'])
+        self.image_size = shapes_config['image_size']
         self.min_objects_in_image = shapes_config['min_objects_in_image']
         self.max_objects_in_image = shapes_config['max_objects_in_image']
         self.bg_color = shapes_config['bg_color']
@@ -258,15 +257,17 @@ class ShapesDataset:
             active_shapes = [shape   for shape in self.shapes if shape['active']]
             # randomly select num_of_objects shapes:
             sel_shape_entris = [np.random.choice(active_shapes) for idx in range(num_of_objects)]
-            # arrange target objects attributes from selected shapes:
 
+            sel_index = random.randint(0, len(self.image_size)-1)
+            image_size=self.image_size[sel_index]
+            # arrange target objects attributes from selected shapes:
             objects_attributes = [
                 [self.category_names.index(shape_entry['cname']), shape_entry['nvertices'], shape_entry['theta0'], shape_entry['cname'], shape_entry['aspect_ratio'],
                  shape_entry['height'],
                  shape_entry['color']] for shape_entry in sel_shape_entris]
             image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(
                     objects_attributes,
-                    self.image_size,
+                    image_size,
                     self.bg_color,
                     self.iou_thresh,
                     self.margin_from_edge,
