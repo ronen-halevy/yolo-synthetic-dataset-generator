@@ -1,8 +1,5 @@
 ---
 
-image_size:
-  - 640
-  - 640
 
 min_objects_in_image: 3
 max_objects_in_image: 3
@@ -21,10 +18,12 @@ iou_thresh: 0
 # supported shapes: circle, triangle, ellipse, square, trapezoid, rectangle, hexagon rhombus
 # color field is used for class labeling in 'color' or 'color' and 'shape' mode.
 
-class_names_file: ./dataset/class.names
 
 # randomly rotate shapes by n*pi/4:
 rotate_shapes: true # boolean
+# image_size random selection:
+image_size: [[640, 640], [960, 800], [600, 800], [1000, 800]]
+
 # note: cnam eorder determines category id assignemt. In case of cname dups, first cname row is taken:
 shapes_categories:
   # nvertices: nvertices of polygon. determines the actual shape

@@ -43,10 +43,6 @@ class ShapesDataset:
         # reduce duplicated category names (config list may have dup rows for same category):
         indexes = np.unique(self.category_names, return_index=True)[1]
         self.category_names = [self.category_names[index] for index in sorted(indexes)]
-        with open(shapes_config['class_names_file'], 'w') as f:
-            for self.category_name in self.category_names:
-                f.write(f'{self.category_name}\n')
-
         self.category_ids = [self.category_names.index(category_name) for category_name in self.category_names ]
 
 

@@ -10,5 +10,20 @@ output_dir: dataset
 labels_seg_dir: labels
 labels_det_dir: labels_det
 
+category_names_file: ./dataset/class.names
+test_output_dir: ./runs/exp
 
+image_dir: ./dataset/{split}/images
+# various output formats selection:
+label_file_formats:
+  coco_detection_datase:
+    annotations_path: ./dataset/{split}/images/annotations.json
+  yolov5_detection_format:
+      label_dir: ./dataset/{split}/labels_det
+  single_label_file_format:
+      labels_path: ./dataset/{split}/all_entries.txt
+  yolov5_segmentation_format:
+    label_dir: ./dataset/{split}/labels
 
+# which split dir to render:
+render_split: train

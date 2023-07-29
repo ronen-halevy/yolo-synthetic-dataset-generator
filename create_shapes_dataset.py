@@ -53,28 +53,38 @@ def main():
             shapes_dataset.create_dataset(
                 nentries,
                 f'{output_dir}/{split}')
+        # write category names file:
+        print(f'Saving {config["category_names_file"]}')
+        with open(config['category_names_file'], 'w') as f:
+            for category_name in category_names:
+                f.write(f'{category_name}\n')
 
-        annotations_output_path = f'{output_dir}/{split}/images/annotations.json'
-        images_filenames = [f'dataset/{split}/images/{images_filename}' for images_filename in images_filenames]
+        outdirs_table = config['label_file_formats']
 
         # coco format
+        annotations_output_path = outdirs_table['coco_detection_datase']['annotations_path'].replace('{split}', split)
+        images_filenames = [f'{config["image_dir"].replace("{split}", split)}/{images_filename}' for images_filename in images_filenames]
+
         coco_formatter(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                        category_names, category_ids,
                        annotations_output_path)
 
         # 2. single text file:
+
+        labels_path = outdirs_table['single_label_file_format']['labels_path'].replace("{split}", split)
+
         create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
-                                    f'{output_dir}/{split}')
+                                    labels_path)
 
         # 3. text file per image
-        labels_out_dir = Path(f'{output_dir}/{split}/{labels_det_dir}')
+        labels_out_dir = Path(outdirs_table['yolov5_detection_format']['label_dir'].replace("{split}", split))
         labels_out_dir.mkdir(parents=True, exist_ok=True)
 
         raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
                                         , labels_out_dir)
      #  4. Ultralitics like segmentation
-        labels_out_dir = f'{output_dir}/{split}/{labels_seg_dir}'
+        labels_out_dir = Path(outdirs_table['yolov5_segmentation_format']['label_dir'].replace("{split}", split))
         Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
         segmentation_labels_formatter(images_filenames, images_polygons, images_sizes,
                                       images_objects_categories_indices,
