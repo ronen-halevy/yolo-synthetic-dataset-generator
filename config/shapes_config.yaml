@@ -38,10 +38,10 @@ shapes_categories:
   [
     { nvertices: 4, theta0: 0, cname: square, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False},
     { nvertices: 3, theta0: 0, cname: triangle, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False},
-    { nvertices: 80, theta0: 0, cname: circle, color: [ red ], height: [ 120 ], aspect_ratio: [ 1 ], active: True}   ,
+    { nvertices: 80, theta0: 0, cname: circle, color: [ red ], height: [ 120 ], aspect_ratio: [ 1 ], active: False}   ,
     { nvertices: 5, theta0: 0, cname: pentagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False},
     { nvertices: 80, theta0: 0, cname: ellipse, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 0.5, 2 ], active: False},
-    { nvertices: 6, theta0: 0, cname: hexagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
+    { nvertices: 6, theta0: 0, cname: hexagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True },
     { nvertices: 4, theta0: 0, cname: rhombus, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ], active: False},
     { nvertices: 4, theta0: 45, cname: rectangular, color: [ red ], height: [60, 120], aspect_ratio:[ 0.5,2 ], active: False},
   ]
