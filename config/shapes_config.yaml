@@ -1,8 +1,8 @@
 ---
 
 
-min_objects_in_image: 3
-max_objects_in_image: 3
+min_objects_in_image: 1
+max_objects_in_image: 1
 
 bg_color: black
 # min margin between objects and image edged in pixels:
@@ -22,7 +22,8 @@ iou_thresh: 0
 # randomly rotate shapes by n*pi/4:
 rotate_shapes: true # boolean
 # image_size random selection:
-image_size: [[640, 640], [960, 800], [600, 800], [1000, 800]]
+#image_size: [[640, 640], [960, 800], [600, 800], [1000, 800]]
+image_size: [[640, 640]]
 
 # note: cnam eorder determines category id assignemt. In case of cname dups, first cname row is taken:
 shapes_categories:
@@ -35,13 +36,13 @@ shapes_categories:
   # active: bool. determines row inclusion in dataset generation. Related cname is included class.names and id is assigned anyway.
 
   [
-    { nvertices: 4, theta0: 0, cname: square, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True},
-    { nvertices: 3, theta0: 0, cname: triangle, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True},
-    { nvertices: 80, theta0: 0, cname: circle, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True}   ,
-    { nvertices: 5, theta0: 0, cname: pentagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True},
-    { nvertices: 80, theta0: 0, cname: ellipse, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 0.5, 2 ], active: True},
-    { nvertices: 6, theta0: 0, cname: hexagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True },
-    { nvertices: 4, theta0: 0, cname: rhombus, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ], active: True},
-    { nvertices: 4, theta0: 45, cname: rectangular, color: [ red ], height: [60, 120], aspect_ratio:[ 0.5,2 ], active: True},
+    { nvertices: 4, theta0: 0, cname: square, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False},
+    { nvertices: 3, theta0: 0, cname: triangle, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False},
+    { nvertices: 80, theta0: 0, cname: circle, color: [ red ], height: [ 120 ], aspect_ratio: [ 1 ], active: True}   ,
+    { nvertices: 5, theta0: 0, cname: pentagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False},
+    { nvertices: 80, theta0: 0, cname: ellipse, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 0.5, 2 ], active: False},
+    { nvertices: 6, theta0: 0, cname: hexagon, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
+    { nvertices: 4, theta0: 0, cname: rhombus, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ], active: False},
+    { nvertices: 4, theta0: 45, cname: rectangular, color: [ red ], height: [60, 120], aspect_ratio:[ 0.5,2 ], active: False},
   ]
 
