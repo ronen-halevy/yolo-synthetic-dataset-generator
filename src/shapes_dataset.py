@@ -8,8 +8,6 @@ import os
 from PIL import Image, ImageColor
 import sys
 
-shapes_config_file = 'config/shapes_config.yaml'
-
 
 class ShapesDataset:
     """
@@ -19,7 +17,7 @@ class ShapesDataset:
 
     """
 
-    def __init__(self):
+    def __init__(self, shapes_config_file):
         with open(shapes_config_file, 'r') as stream:
             shapes_config = yaml.safe_load(stream)
         # load shape yaml files.

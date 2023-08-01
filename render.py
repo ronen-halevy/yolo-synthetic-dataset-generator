@@ -34,7 +34,7 @@ def main():
         category_names_table = f.read().splitlines()
     splits=config['splits']
     # loop on configured splits e.g. [train, val, test]. replace various paths strings accordingly:
-    for idx in range(4):
+    for idx in range(config['nrender_examples']+1):
         for split in splits.keys():
             if splits[split] > 0:
                 if 'coco_detection_dataset_labels_path' in config:

@@ -23,3 +23,8 @@ detection_label_text_files_path: ./dataset/{split}/labels_det
 detection_label_unified_file_path: ./dataset/{split}/all_entries.txt
 # 4. segmentation label text file per an image, a row for object
 segmentation_label_files_path: ./dataset/{split}/labels
+
+shapes_config_file: ./config/shapes_config.yaml
+
+# number of radomly selected images examples to render - per a split:
+nrender_examples: 1

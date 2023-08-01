@@ -44,7 +44,8 @@ def create_shapes_dataset():
     output_dir = config["output_dir"]
 
     splits = config["splits"]
-    shapes_dataset = ShapesDataset()
+    shapes_config_file = config['shapes_config_file']
+    shapes_dataset = ShapesDataset(shapes_config_file)
 
     for split in splits:
         print(f'create {split} files:')
