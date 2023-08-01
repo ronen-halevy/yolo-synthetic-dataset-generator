@@ -10,7 +10,6 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
     if path.exists() and not exist_ok:
         path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
 
-        # Method 1
         for n in range(2, 9999):
             p = f'{path}{sep}{n}{suffix}'  # increment path
             if not os.path.exists(p):  #
@@ -29,29 +28,32 @@ def main():
         config = yaml.safe_load(stream)
 
     output_dir = config['test_output_dir']
-    render_split = config['render_split']
     output_dir=increment_path(output_dir)
     category_names_file = config['category_names_file']
     with open(category_names_file) as f:
         category_names_table = f.read().splitlines()
-    out_formats_table = config['label_file_formats']
-    if 'coco_detection_datase' in out_formats_table.keys():
-        annotations_path = out_formats_table['coco_detection_datase']['annotations_path'].replace("{split}", render_split)
-        draw_coco_detection_dataset_example(annotations_path, category_names_table, output_dir)
+    splits=config['splits']
+    # loop on configured splits e.g. [train, val, test]. replace various paths strings accordingly:
+    for idx in range(4):
+        for split in splits.keys():
+            if splits[split] > 0:
+                if 'coco_detection_dataset_labels_path' in config:
+                    annotations_path = config['coco_detection_dataset_labels_path'].replace("{split}", split)
+                    draw_coco_detection_dataset_example(annotations_path, category_names_table, f'{output_dir}/{split}')
 
-    if 'yolov5_detection_format' in out_formats_table.keys():
-        image_dir = config['image_dir'].replace('{split}', 'train')
-        label_dir = out_formats_table['yolov5_detection_format']['label_dir'].replace('{split}',  render_split)
-        draw_detection_dataset_example(image_dir, label_dir, category_names_table, output_dir)
+                if 'detection_label_text_files_path' in config:
+                    image_dir = config['image_dir'].replace('{split}', 'train')
+                    label_dir = config['detection_label_text_files_path'].replace('{split}',  split)
+                    draw_detection_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/{split}')
 
-    if 'single_label_file_format' in out_formats_table.keys():
-        label_path=out_formats_table['single_label_file_format']['labels_path'].replace('{split}', render_split)
-        draw_detection_single_file_dataset_example(label_path, category_names_table, output_dir)
+                if 'detection_label_unified_file_path' in config:
+                    label_path=config['detection_label_unified_file_path'].replace('{split}', split)
+                    draw_detection_single_file_dataset_example(label_path, category_names_table, f'{output_dir}/{split}')
 
-    if 'yolov5_segmentation_format' in out_formats_table.keys():
-        image_dir = config['image_dir'].replace('{split}',  render_split)
-        label_dir = out_formats_table['yolov5_segmentation_format']['label_dir'].replace('{split}',  render_split)
-        draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, output_dir)
+                if 'segmentation_label_files_path' in config:
+                    image_dir = config['image_dir'].replace('{split}',  split)
+                    label_dir = config['segmentation_label_files_path'].replace('{split}',  split)
+                    draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/{split}')
 
 
 if __name__ == "__main__":

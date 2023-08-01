@@ -18,14 +18,19 @@ import os
 import yaml
 import argparse
 from pathlib import Path
-from src.output_formatters.labels_text_file_formatter import create_row_text_labels_file
-from src.output_formatters.labels_coco_formatter import coco_formatter
-from src.output_formatters.labels_per_image_text_file_formatter import raw_text_files_labels_formatter
-from src.output_formatters.segmentation_labels_formatter import segmentation_labels_formatter
 
+from src.create_label_files import (create_coco_json_lable_files,
+                                    create_detection_lable_files,create_segmentation_label_files,
+                                    create_detection_labels_unified_file)
 from src.shapes_dataset import ShapesDataset
 
-def main():
+def create_shapes_dataset():
+    """
+    Creates image detection and segmentation datasets in various formats, according to config files defitions
+
+    :return:
+    :rtype:
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_file", type=str, default='config/dataset_config.yaml',
                         help='yaml config file')
@@ -37,13 +42,12 @@ def main():
         config = yaml.safe_load(stream)
 
     output_dir = config["output_dir"]
-    labels_seg_dir=config['labels_seg_dir']
-    labels_det_dir=config['labels_det_dir']
 
     splits = config["splits"]
     shapes_dataset = ShapesDataset()
 
     for split in splits:
+        print(f'create {split} files:')
         nentries = int(splits[split])
         # create dirs for output if missing:
         images_out_dir = Path(f'{output_dir}/{split}/images')
@@ -53,43 +57,43 @@ def main():
             shapes_dataset.create_dataset(
                 nentries,
                 f'{output_dir}/{split}')
-        # write category names file:
-        print(f'Saving {config["category_names_file"]}')
-        with open(config['category_names_file'], 'w') as f:
-            for category_name in category_names:
-                f.write(f'{category_name}\n')
 
-        outdirs_table = config['label_file_formats']
 
-        # coco format
-        annotations_output_path = outdirs_table['coco_detection_datase']['annotations_path'].replace('{split}', split)
-        images_filenames = [f'{config["image_dir"].replace("{split}", split)}/{images_filename}' for images_filename in images_filenames]
-
-        coco_formatter(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
-                       category_names, category_ids,
-                       annotations_output_path)
+        # 1. coco format (i.e. dataset entries defined by a json file)
+        if config.get('coco_detection_dataset_labels_path'):
+            annotations_output_path = config['coco_detection_dataset_labels_path'].replace('{split}', split)
+            images_filenames = [f'{config["image_dir"].replace("{split}", split)}/{images_filename}' for images_filename in images_filenames]
+            create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
+                           category_names, category_ids,
+                           annotations_output_path)
 
         # 2. single text file:
-
-        labels_path = outdirs_table['single_label_file_format']['labels_path'].replace("{split}", split)
-
-        create_row_text_labels_file(images_filenames, images_bboxes, images_objects_categories_indices,
+        if config.get('detection_label_unified_file_path'):
+            labels_path = config['detection_label_unified_file_path'].replace("{split}", split)
+            create_detection_labels_unified_file(images_filenames, images_bboxes, images_objects_categories_indices,
                                     labels_path)
 
         # 3. text file per image
-        labels_out_dir = Path(outdirs_table['yolov5_detection_format']['label_dir'].replace("{split}", split))
-        labels_out_dir.mkdir(parents=True, exist_ok=True)
-
-        raw_text_files_labels_formatter(images_filenames, images_bboxes, images_sizes,
+        if config.get('detection_label_text_files_path'):
+            labels_out_dir = Path(config['detection_label_text_files_path'].replace("{split}", split))
+            labels_out_dir.mkdir(parents=True, exist_ok=True)
+            create_detection_lable_files(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
                                         , labels_out_dir)
-     #  4. Ultralitics like segmentation
-        labels_out_dir = Path(outdirs_table['yolov5_segmentation_format']['label_dir'].replace("{split}", split))
-        Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
-        segmentation_labels_formatter(images_filenames, images_polygons, images_sizes,
-                                      images_objects_categories_indices,
-                                      labels_out_dir)
+        #  4. Ultralitics like segmentation
+        if config.get('segmentation_label_files_path'):
+            labels_out_dir = Path(config['segmentation_label_files_path'].replace("{split}", split))
+            Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
+            create_segmentation_label_files(images_filenames, images_polygons, images_sizes,
+                                          images_objects_categories_indices,
+                                          labels_out_dir)
 
+
+    # write category names file:
+    print(f'Saving {config["category_names_file"]}')
+    with open(config['category_names_file'], 'w') as f:
+        for category_name in category_names:
+            f.write(f'{category_name}\n')
 
 if __name__ == '__main__':
-    main()
+    create_shapes_dataset()

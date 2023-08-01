@@ -15,15 +15,11 @@ test_output_dir: ./runs/exp
 
 image_dir: ./dataset/{split}/images
 # various output formats selection:
-label_file_formats:
-  coco_detection_datase:
-    annotations_path: ./dataset/{split}/images/annotations.json
-  yolov5_detection_format:
-      label_dir: ./dataset/{split}/labels_det
-  single_label_file_format:
-      labels_path: ./dataset/{split}/all_entries.txt
-  yolov5_segmentation_format:
-    label_dir: ./dataset/{split}/labels
-
-# which split dir to render:
-render_split: train
+#  1. coco like labels format. Dataset entries are defined by a json file:
+coco_detection_dataset_labels_path: ./dataset/{split}/images/annotations.json
+# 2. detection label text file per an image, a row for object
+detection_label_text_files_path: ./dataset/{split}/labels_det
+# 3. detection label text file per all images, a row per image:
+detection_label_unified_file_path: ./dataset/{split}/all_entries.txt
+# 4. segmentation label text file per an image, a row for object
+segmentation_label_files_path: ./dataset/{split}/labels

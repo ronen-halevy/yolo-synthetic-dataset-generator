@@ -29,6 +29,7 @@ def read_detection_dataset_entry(image_path, label_path):
     bboxes: a list of per-image-object bboxes. format:  xmin, ymin, w, h
     category_ids:  a list of per-image-object category id
     """
+
     if os.path.isfile(label_path):
         with open(label_path) as f:
             lables = [x.split() for x in f.read().strip().splitlines() if len(x)]
@@ -118,15 +119,15 @@ def draw_detection_dataset_example(image_dir, label_dir, category_names_table, o
                               )
     image_path = f'{image_dir}/{sel_fname}'
     label_path = f'{label_dir}/{Path(sel_fname).stem}.txt'
+    if (os.path.isfile(label_path)):
+        [image, bboxes, category_ids] = read_detection_dataset_entry(image_path, label_path)
+        category_names = [category_names_table[category_id] for category_id in category_ids]
 
-    [image, bboxes, category_ids] = read_detection_dataset_entry(image_path, label_path)
-    category_names = [category_names_table[category_id] for category_id in category_ids]
-
-    dest_dir = f'{output_dir}/det1'
-    Path(dest_dir).mkdir(parents=True, exist_ok=True)
-    fname = Path(image_path)
-    output_path = f'{dest_dir}/{fname.stem}_annotated"{fname.suffix}'
-    draw_dataset_entry(image, bboxes, category_names, output_path)
+        dest_dir = f'{output_dir}/det1'
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        fname = Path(image_path)
+        output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
+        draw_dataset_entry(image, bboxes, category_names, output_path)
 
 
 def draw_detection_single_file_dataset_example(label_path, category_names_table, output_dir):
@@ -135,11 +136,26 @@ def draw_detection_single_file_dataset_example(label_path, category_names_table,
     dest_dir = f'{output_dir}/det2'
     Path(dest_dir).mkdir(parents=True, exist_ok=True)
     fname = Path(image_path)
-    output_path = f'{dest_dir}/{fname.stem}_annotated"{fname.suffix}'
+    output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
     draw_dataset_entry(image, bboxes, category_names, output_path)
 
 
 def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, output_dir):
+    """
+    Draw a randomly selected image with segmentation, bbox and class labels overlays
+
+    :param image_dir: images directory for a random image selection
+    :type image_dir: str
+    :param label_dir: segmentation labels directory, a label file per an image, with same filename but .txt ext
+    :type label_dir: str
+    :param category_names_table: list of dataset's category - to annotate image with a label
+    :type category_names_table: list of str
+    :param output_dir:
+    :type output_dir:
+    :return:
+    :rtype:
+    """
+
     listdir = [filename for filename in os.listdir(image_dir) if
                filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
     sel_fname = random.choice(listdir)
@@ -152,33 +168,46 @@ def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table
     fname = Path(image_path)
     dest_dir = f'{output_dir}/seg'
     Path(dest_dir).mkdir(parents=True, exist_ok=True)
-    output_path = f'{dest_dir}/{fname.stem}_annotated"{fname.suffix}'
+    output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
 
     draw_dataset_entry(image, bboxes, category_names, output_path)
 
 
 def draw_coco_detection_dataset_example(annotations_path, category_names_table, output_dir):
+    """
+    Draw a randomly selected image with bboxes and class labels overlays according to COCO format label files
+
+    :param annotations_path: coco format annotations json file path
+    :type annotations_path: str
+    :param category_names_table: list of dataset's category - to annotate image with a label
+    :type category_names_table: list of str
+    :param output_dir: dest dir for output image
+    :type output_dir: str
+    :return:
+    :rtype:
+    """
     with open(annotations_path) as file:
         annotations = yaml.safe_load(file)
 
     # randomy select an image index from dataset:
-    image_index = np.random.randint(0, len(annotations))
-    # take records by index
-    image_record = annotations['images'][image_index]
-    annotation_records = [annotation for annotation in annotations['annotations'] if
-                          annotation['image_id'] == image_record['id']]
-    image_path = f'{image_record["file_name"]}'
-    image = Image.open(image_path)
+    if len(annotations['images']):
+        image_index = np.random.randint(0, len(annotations['images']))
+        # take records by index
+        image_record = annotations['images'][image_index]
+        annotation_records = [annotation for annotation in annotations['annotations'] if
+                              annotation['image_id'] == image_record['id']]
+        image_path = f'{image_record["file_name"]}'
+        image = Image.open(image_path)
 
-    bboxes = [annotation_record['bbox'] for annotation_record in annotation_records]
-    bboxes = np.array(bboxes)
-    category_ids = [annotation_record['category_id'] for annotation_record in annotation_records]
+        bboxes = [annotation_record['bbox'] for annotation_record in annotation_records]
+        bboxes = np.array(bboxes)
+        category_ids = [annotation_record['category_id'] for annotation_record in annotation_records]
 
-    # draw:
-    category_names = [category_names_table[category_id] for category_id in category_ids]
-    fname = Path(image_path)
-    dest_dir = f'{output_dir}/coco'
-    Path(dest_dir).mkdir(parents=True, exist_ok=True)
-    output_path = f'{dest_dir}/{fname.stem}"_annotated"{fname.suffix}'
+        # draw:
+        category_names = [category_names_table[category_id] for category_id in category_ids]
+        fname = Path(image_path)
+        dest_dir = f'{output_dir}/coco'
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
 
-    draw_dataset_entry(image, bboxes, category_names, output_path)
+        draw_dataset_entry(image, bboxes, category_names, output_path)
