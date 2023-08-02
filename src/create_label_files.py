@@ -3,15 +3,15 @@ from datetime import date, datetime
 import numpy as np
 import os
 
-# create a row labels text file per image. format:
-# x0l,y0l,x0h,y0h,c, ......
-# .
-# xnl,ynl,xnh,ynh,c
+
 
 def create_segmentation_label_files(images_paths, images_polygons, images_sizes, images_objects_categories_indices,
-
                                   output_dir):
     """
+    Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
+    normalized coordinates [0 to 1].
+    zero-indexed class numbers - start from 0
+
 
     :param images_paths: list of dataset image filenames
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
@@ -42,10 +42,6 @@ def create_segmentation_label_files(images_paths, images_polygons, images_sizes,
 
 
 
-# create a row labels text file. format:
-# imag1_path x0l,y0l,x0h,y0h,c, ......xnl,ynl,xnh,ynh,c
-# imagm_path x0l,y0l,x0h,y0h,c, ......xnl,ynl,xnh,ynh,c
-
 def create_detection_labels_unified_file(images_paths, images_bboxes, images_objects_categories_indices,
                                 labels_file_path):
     """
@@ -74,16 +70,13 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, images_obj
         file.close()
 
 
-
-# create a row labels text file per image. format:
-# x0l,y0l,x0h,y0h,c, ......
-# .
-# xnl,ynl,xnh,ynh,c
-
 def create_detection_lable_files(images_paths, images_bboxes, images_sizes, images_objects_categories_indices,
 
                                   output_dir):
     """
+    Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
+    normalized coordinates [0 to 1].
+    zero-indexed class numbers - start from 0
 
     :param images_paths: list of dataset image filenames
     :param images_bboxes: list of per image bboxes arrays in xyxy format.

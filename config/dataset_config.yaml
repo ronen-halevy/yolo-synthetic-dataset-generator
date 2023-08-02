@@ -14,16 +14,25 @@ category_names_file: ./dataset/class.names
 test_output_dir: ./runs/exp
 
 image_dir: ./dataset/{split}/images
+###########################################################################
 # various output formats selection:
 #  1. coco like labels format. Dataset entries are defined by a json file:
 coco_detection_dataset_labels_path: ./dataset/{split}/images/annotations.json
-# 2. detection label text file per an image, a row for object
+# 2. detection label text files. Format: one *.txt file per image, one row per object,
+ #  row format:  class x_center y_center width height., normalized coordinates [0 to 1].
+ # zero-indexed class numbers - start from 0
+ per an image, a row for object
 detection_label_text_files_path: ./dataset/{split}/labels_det
+
 # 3. detection label text file per all images, a row per image:
 detection_label_unified_file_path: ./dataset/{split}/all_entries.txt
-# 4. segmentation label text file per an image, a row for object
-segmentation_label_files_path: ./dataset/{split}/labels
 
+# 4. segmentation. Format:  one *.txt file per image, one row per object,
+#    row format: class polygon vertices (x0, y0.....xn,yn), normalized coordinates [0 to 1].
+# zero-indexed class numbers - start from 0
+segmentation_label_files_path: ./dataset/{split}/labels
+###########################################################################
+# shape dataset definitions:
 shapes_config_file: ./config/shapes_config.yaml
 
 # number of radomly selected images examples to render - per a split:
