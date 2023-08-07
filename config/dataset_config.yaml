@@ -1,9 +1,9 @@
 ---
 
 splits:
- train: 100
- valid: 10
- test: 10
+ train: 10
+ valid: 1
+ test: 1
 
 output_dir: dataset
 
