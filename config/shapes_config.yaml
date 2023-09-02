@@ -36,14 +36,14 @@ shapes_categories:
   # active: bool. determines row inclusion in dataset generation. Related cname is included class.names and id is assigned anyway.
 
   [
-    { cname: red_square ,nvertices: 4, theta0: 0,  color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
-    { cname: blue_square ,nvertices: 4, theta0: 0,  color: [ blue ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
+    { cname: red_square ,nvertices: 4, theta0: 0,  color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True },
+    { cname: blue_square ,nvertices: 4, theta0: 0,  color: [ blue ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True },
     { cname: triangle, nvertices: 3, theta0: 0,color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: circle, nvertices: 80, theta0: 0, color: [ red ], height: [ 120 ], aspect_ratio: [ 1 ], active: False }   ,
     { cname: pentagon, nvertices: 5, theta0: 0, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: ellipse, nvertices: 80, theta0: 0, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 0.5, 2 ], active: False },
-    { cname: hexagon, nvertices: 6, theta0: 0, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: True },
-    { cname: rhombus, nvertices: 4, theta0: 0, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ], active: True },
+    { cname: hexagon, nvertices: 6, theta0: 0, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
+    { cname: rhombus, nvertices: 4, theta0: 0, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ], active: False },
     { cname: rectangular, nvertices: 4, theta0: 45, color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 0.5,2 ], active: False },
   ]
 
