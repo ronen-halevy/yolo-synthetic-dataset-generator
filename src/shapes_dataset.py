@@ -249,6 +249,7 @@ class ShapesDataset:
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
             # take only active shapes for dataset creation:
             active_shapes = [shape   for shape in self.shapes if shape['active']]
+            bg_color = np.random.choice(self.bg_color)
             # randomly select num_of_objects shapes:
             sel_shape_entris = [np.random.choice(active_shapes) for idx in range(num_of_objects)]
 
@@ -262,14 +263,14 @@ class ShapesDataset:
             image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(
                     objects_attributes,
                     image_size,
-                    self.bg_color,
+                    bg_color,
                     self.iou_thresh,
                     self.margin_from_edge,
                     self.bbox_margin,
                     self.size_fluctuation)
 
             image_filename = f'img_{example_id:06d}.jpg'
-            file_path = f'{output_dir}/images/{image_filename}'
+            file_path = f'{output_dir}/{image_filename}'
             image.save(file_path)
             if len(bboxes) == 0:
                 continue
