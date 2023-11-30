@@ -71,6 +71,9 @@ def create_shapes_dataset():
         # 2. single text file:
         if config.get('detection_label_unified_file_path'):
             labels_path = config['detection_label_unified_file_path'].replace("{split}", split)
+            labels_dir = os.path.dirname(labels_path)
+            labels_dir = Path(labels_dir)
+            labels_dir.mkdir(parents=True, exist_ok=True)
             create_detection_labels_unified_file(images_filenames, images_bboxes, images_objects_categories_indices,
                                     labels_path)
 
