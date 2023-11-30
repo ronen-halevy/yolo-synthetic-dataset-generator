@@ -41,8 +41,8 @@ def create_shapes_dataset():
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
 
-    output_dir = config["output_dir"]
-
+    image_dir = config["image_dir"]
+    # train val test split sizes:
     splits = config["splits"]
     shapes_config_file = config['shapes_config_file']
     shapes_dataset = ShapesDataset(shapes_config_file)
@@ -51,13 +51,13 @@ def create_shapes_dataset():
         print(f'create {split} files:')
         nentries = int(splits[split])
         # create dirs for output if missing:
-        images_out_dir = Path(f'{output_dir}/{split}/images')
+        images_out_dir = Path(f'{image_dir.replace("{split}", split)}')
         images_out_dir.mkdir(parents=True, exist_ok=True)
 
         images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons = \
             shapes_dataset.create_dataset(
                 nentries,
-                f'{output_dir}/{split}')
+                f'{images_out_dir}')
 
 
         # 1. coco format (i.e. dataset entries defined by a json file)

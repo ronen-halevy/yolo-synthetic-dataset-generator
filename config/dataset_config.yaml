@@ -1,36 +1,37 @@
 ---
 
 splits:
- train: 10
+ train: 4
  valid: 1
  test: 1
 
 output_dir: dataset
 
-labels_seg_dir: labels
-labels_det_dir: labels_det
+labels_seg_dir: labels # dummy string for code substitution
+labels_det_dir: labels_det # dummy string for code substitution
 
 category_names_file: ./dataset/class.names
 test_output_dir: ./runs/exp
 
-image_dir: ./dataset/{split}/images
+image_dir: ./dataset/images/{split}/
 ###########################################################################
 # various output formats selection:
 #  1. coco like labels format. Dataset entries are defined by a json file:
-coco_detection_dataset_labels_path: ./dataset/{split}/images/annotations.json
+coco_detection_dataset_labels_path: ./dataset/images/{split}/annotations.json
 
-# 2. detection label text files. Format: one *.txt file per image, one row per object, row format:
-# class x_center y_center width height., normalized coordinates [0 to 1]. zero-indexed class numbers - start from 0
+# 2. class-bbox labels. Format: a .txt file per image, one row per object
+# row format:
+# [classid, x_center, y_center, width, height]. Mormalized coordinates [0 to 1]. zero-based indexed class numbers.
+#
+detection_label_text_files_path: ./dataset/detection_labels/{split}
 
-detection_label_text_files_path: ./dataset/{split}/labels_det
-
-# 3. detection label text file per all images, a row per image:
+# 3. class-bbox labels text file per all images, a row per image:
 detection_label_unified_file_path: ./dataset/{split}/all_entries.txt
 
-# 4. segmentation. Format:  one *.txt file per image, one row per object,
+# 4. class-polygon labels  Format:  a .txt file per image, one row per object,
 #    row format: class polygon vertices (x0, y0.....xn,yn), normalized coordinates [0 to 1].
 # zero-indexed class numbers - start from 0
-segmentation_label_files_path: ./dataset/{split}/labels
+segmentation_label_files_path: ./dataset/labels/{split}
 ###########################################################################
 # shape dataset definitions:
 shapes_config_file: ./config/shapes_config.yaml
