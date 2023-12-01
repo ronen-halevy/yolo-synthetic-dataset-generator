@@ -28,6 +28,7 @@ def main():
         config = yaml.safe_load(stream)
 
     output_dir = config['test_output_dir']
+    print('\nrendering dataset images with bbox and mask overlays\n')
     output_dir=increment_path(output_dir)
     category_names_file = config['category_names_file']
     with open(category_names_file) as f:

@@ -24,6 +24,8 @@ from src.create_label_files import (create_coco_json_lable_files,
                                     create_detection_labels_unified_file)
 from src.shapes_dataset import ShapesDataset
 
+import render # renders dataset images with bbox and mask overlays
+
 def create_shapes_dataset():
     """
     Creates image detection and segmentation datasets in various formats, according to config files defitions
@@ -98,6 +100,7 @@ def create_shapes_dataset():
     with open(config['category_names_file'], 'w') as f:
         for category_name in category_names:
             f.write(f'{category_name}\n')
-
+    # render dataset for demo and verification:
+    render.main()
 if __name__ == '__main__':
     create_shapes_dataset()
