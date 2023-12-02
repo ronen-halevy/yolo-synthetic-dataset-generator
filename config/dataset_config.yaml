@@ -1,7 +1,7 @@
 ---
-
+# number of images per split:
 splits:
- train: 4
+ train: 1
  valid: 1
  test: 1
 
@@ -36,5 +36,5 @@ segmentation_label_files_path: ./dataset/labels/{split}
 # shape dataset definitions:
 shapes_config_file: ./config/shapes_config.yaml
 
-# number of radomly selected images examples to render - per a split:
+# validate dataset by rendering : number of radomly selected images examples to render - per a split:
 nrender_examples: 1
