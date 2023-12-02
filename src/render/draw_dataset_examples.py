@@ -74,18 +74,17 @@ def read_single_file_detection_dataset(label_path):
 def read_segmentation_dataset_entry(image_path, label_path):
     """
     Description:
-    This method demonstrates the reading and rendering of a segmentation dataset entry, where the dataset labels are
-    arranged as a text file per image arrangement.
-    Label's file name corresponds to image filename with .txt extension. Label file format matches Ultralytics
-    yolov5 detection dataset, i.e. per object rows, each holds ategory_id and polygon's coordinates
+    This method reads segmentation dataset entry. Following Ultralytics yolo convention,a dataset entry is defined
+    by an image file and a label file with same name but latter extention is .txt. Label files formatted with a row per
+    object, with a category_id and polygon's coordinates within.
     :param image_path: image file path
     :type image_path: str
     :param label_path: label file path. row's format: category_id, polygon's coordinates
     :type label_path: str
     :return:
-    image: image read from file
-    :type: PIL
-    bboxes: a list of per-image-object bboxes. format:  xmin, ymin, w, h
+    image: image read from file. type: PIL
+    polygons: list[nt], of nt polygons format: [[[xj,j],j=0:nv_i], i=0:nt], where nv_i nof vertices, nt: nof objects
+    bboxes: list[nt]. entry format:  [[xmin,ymin,w,h], i=0:nt]
     category_ids:  a list of per-image-object category id
     """
     if os.path.isfile(label_path):
@@ -96,20 +95,14 @@ def read_segmentation_dataset_entry(image_path, label_path):
     category_ids = [np.array(entry)[0].astype(int) for entry in entries]
 
     image = Image.open(image_path)
-    array_image = np.array(image)
     size = np.array([image.height, image.width]).reshape(1, -1)
     polygons = [(polygon * size).astype(int) for polygon in polygons]
     bboxes = []
     for polygon, category_id in zip(polygons, category_ids):
-        color = np.random.randint(low=0, high=255, size=3).tolist()
-        cv2.fillPoly(array_image, np.expand_dims(polygon, 0), color=color)
         x, y = polygon[:, 0], polygon[:, 1]
         bbox = [x.min(), y.min(), x.max() - x.min(), y.max() - y.min()]
         bboxes.append(bbox)
-
-    image = im.fromarray(array_image)
-    ImageDraw.Draw(image)
-    return image, bboxes, category_ids
+    return image, polygons, bboxes, category_ids
 
 
 def draw_detection_dataset_example(image_dir, label_dir, category_names_table, output_dir):
@@ -123,21 +116,25 @@ def draw_detection_dataset_example(image_dir, label_dir, category_names_table, o
         [image, bboxes, category_ids] = read_detection_dataset_entry(image_path, label_path)
         category_names = [category_names_table[category_id] for category_id in category_ids]
 
-        dest_dir = f'{output_dir}/det1'
+        dest_dir = f'{output_dir}'
         Path(dest_dir).mkdir(parents=True, exist_ok=True)
         fname = Path(image_path)
         output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
         draw_dataset_entry(image, bboxes, category_names, output_path)
+        print(f'saving test results to {output_path}')
+        image.save(output_path)
 
 
 def draw_detection_single_file_dataset_example(label_path, category_names_table, output_dir):
     [image, bboxes, category_ids, image_path] = read_single_file_detection_dataset(label_path)
     category_names = [category_names_table[category_id] for category_id in category_ids]
-    dest_dir = f'{output_dir}/det2'
+    dest_dir = f'{output_dir}'
     Path(dest_dir).mkdir(parents=True, exist_ok=True)
     fname = Path(image_path)
     output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
     draw_dataset_entry(image, bboxes, category_names, output_path)
+    print(f'saving test results to {output_path}')
+    image.save(output_path)
 
 
 def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, output_dir):
@@ -162,15 +159,26 @@ def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table
     image_path = f'{image_dir}/{sel_fname}'
     label_path = f'{label_dir}/{Path(sel_fname).stem}.txt'
     # arrange output elements:
-    [image, bboxes, category_ids] = read_segmentation_dataset_entry(image_path, label_path)
-    # draw:
+    [image, polygons, bboxes, category_ids] = read_segmentation_dataset_entry(image_path, label_path)
+    # fill objects with  masks by polygons:
+    array_image = np.array(image)
+    for polygon, category_id in zip(polygons, category_ids):
+        color = np.random.randint(low=0, high=255, size=3).tolist()
+        cv2.fillPoly(array_image, np.expand_dims(polygon, 0), color=color)
+    image = im.fromarray(array_image)
+    ImageDraw.Draw(image)
+
+    # extract category names by ids:
     category_names = [category_names_table[category_id] for category_id in category_ids]
+    # construct outpath:
     fname = Path(image_path)
-    dest_dir = f'{output_dir}/seg'
+    dest_dir = f'{output_dir}'
     Path(dest_dir).mkdir(parents=True, exist_ok=True)
     output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
 
     draw_dataset_entry(image, bboxes, category_names, output_path)
+    print(f'saving test results to {output_path}')
+    image.save(output_path)
 
 
 def draw_coco_detection_dataset_example(annotations_path, category_names_table, output_dir):
@@ -206,8 +214,10 @@ def draw_coco_detection_dataset_example(annotations_path, category_names_table, 
         # draw:
         category_names = [category_names_table[category_id] for category_id in category_ids]
         fname = Path(image_path)
-        dest_dir = f'{output_dir}/coco'
+        dest_dir = f'{output_dir}'
         Path(dest_dir).mkdir(parents=True, exist_ok=True)
         output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
 
         draw_dataset_entry(image, bboxes, category_names, output_path)
+        print(f'saving test results to {output_path}')
+        image.save(output_path)

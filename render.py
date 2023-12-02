@@ -40,21 +40,21 @@ def main():
             if splits[split] > 0:
                 if 'coco_detection_dataset_labels_path' in config:
                     annotations_path = config['coco_detection_dataset_labels_path'].replace("{split}", split)
-                    draw_coco_detection_dataset_example(annotations_path, category_names_table, f'{output_dir}/{split}')
+                    draw_coco_detection_dataset_example(annotations_path, category_names_table, f'{output_dir}/{split}/coco')
 
                 if 'detection_label_text_files_path' in config:
                     image_dir = config['image_dir'].replace('{split}', 'train')
                     label_dir = config['detection_label_text_files_path'].replace('{split}',  split)
-                    draw_detection_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/{split}')
+                    draw_detection_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/{split}/det1')
 
                 if 'detection_label_unified_file_path' in config:
                     label_path=config['detection_label_unified_file_path'].replace('{split}', split)
-                    draw_detection_single_file_dataset_example(label_path, category_names_table, f'{output_dir}/{split}')
+                    draw_detection_single_file_dataset_example(label_path, category_names_table, f'{output_dir}/{split}/det2')
 
                 if 'segmentation_label_files_path' in config:
                     image_dir = config['image_dir'].replace('{split}',  split)
                     label_dir = config['segmentation_label_files_path'].replace('{split}',  split)
-                    draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/{split}')
+                    draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/{split}/seg')
 
 
 if __name__ == "__main__":
