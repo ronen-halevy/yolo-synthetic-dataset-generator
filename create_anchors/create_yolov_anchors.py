@@ -25,29 +25,20 @@ import matplotlib.pyplot as plt
 
 
 def plot_scatter_graph(w_h, kmeans):
-    image_width = 2 * max(w_h[..., 0])
-    image_height = 2 * max(w_h[..., 1])
-
+    """
+    Plot kmeans ponts
+    """
     plt.scatter(w_h[..., 0], w_h[..., 1], c=kmeans.labels_, alpha=0.5)
     plt.xlabel("width")
     plt.ylabel("height")
     plt.title('K-means Clustering of Boxes Widths and Heights')
     plt.figure(figsize=(10, 10))
     plt.show()
-    plt.savefig('books_read.png')
 def sort_anchors(anchors):
     anchors_sorted = anchors[(anchors[:, 0] * anchors[:, 1]).argsort()]
     return anchors_sorted
 
 
-def arrange_wh_array(labels):
-    w_h_tuples = (labels[..., 2] - labels[..., 0], labels[..., 3] - labels[..., 1])
-    widths = tf.expand_dims(w_h_tuples[0], axis=-1)
-    heights = tf.expand_dims(w_h_tuples[1], axis=-1)
-    w_h = tf.concat([widths, heights], axis=-1)
-    mask = tf.reduce_all(w_h != [0., 0.], axis=-1)
-    w_h = w_h[mask]
-    return w_h
 
 
 def creat_yolo_anchors(w_h, n_clusters):
@@ -64,6 +55,7 @@ def creat_yolo_anchors(w_h, n_clusters):
     kmeans.fit(w_h)
     anchors = kmeans.cluster_centers_  # coordinates of cluster' centers
     sorted_anchors = sort_anchors(anchors).astype(np.float32)
+    # plot_scatter_graph(w_h, kmeans)
     return sorted_anchors
 
 
@@ -123,7 +115,10 @@ def read_label_from_file(fname):
         lb = np.array(lb, dtype=np.float32)
     return lb
 
-
+def save_to_file(anchors_out_file, anchors):
+    base_dir, fname = os.path.split(anchors_out_file)
+    pathlib.Path(base_dir).mkdir(parents=True, exist_ok=True)
+    np.savetxt(anchors_out_file, anchors*640)
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default='create_anchors_config.yaml',
@@ -147,14 +142,10 @@ def main():
         label = read_label_from_file(label_file)
         labels=np.concatenate([labels, label], axis=0) # labels shape: [b*nt,5] where b nof label files
 
-    wh = arrange_wh_array(labels)
-
-
+    wh = labels[:,3:5]- labels[:,1:3]
     anchors = creat_yolo_anchors(wh, n_clusters)
-    base_dir, fname = os.path.split(anchors_out_file)
-    pathlib.Path(base_dir).mkdir(parents=True, exist_ok=True)
+    save_to_file(anchors_out_file, anchors)
 
-    np.savetxt(anchors_out_file, anchors, delimiter=',', fmt='%10.5f')
     print(f'result anchors:\n{anchors}')
     print(f'anchors_out_file: {anchors_out_file}')
 
