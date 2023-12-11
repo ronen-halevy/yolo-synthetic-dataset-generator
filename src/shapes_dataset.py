@@ -270,7 +270,7 @@ class ShapesDataset:
                     self.size_fluctuation)
 
             image_filename = f'img_{example_id:06d}.jpg'
-            file_path = f'{output_dir}/{image_filename}'
+            file_path = f'{output_dir}{image_filename}'
             image.save(file_path)
             if len(bboxes) == 0:
                 continue

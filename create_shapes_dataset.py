@@ -65,7 +65,7 @@ def create_shapes_dataset():
         # 1. coco format (i.e. dataset entries defined by a json file)
         if config.get('coco_detection_dataset_labels_path'):
             annotations_output_path = config['coco_detection_dataset_labels_path'].replace('{split}', split)
-            images_filenames = [f'{config["image_dir"].replace("{split}", split)}/{images_filename}' for images_filename in images_filenames]
+            images_filenames = [f'{config["image_dir"].replace("{split}", split)}{images_filename}' for images_filename in images_filenames]
             create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                            category_names, category_ids,
                            annotations_output_path)
