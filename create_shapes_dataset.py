@@ -26,7 +26,6 @@ from src.shapes_dataset import ShapesDataset
 
 import render # renders dataset images with bbox and mask overlays
 
-# todo - move to utils:
 def increment_path(path, exist_ok=False, sep='', mkdir=False):
     # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
     path = Path(path)  # os-agnostic
