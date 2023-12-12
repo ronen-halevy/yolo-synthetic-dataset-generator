@@ -21,40 +21,38 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
 
     return path
 
-def main():
+def main(image_dir, labels_path, output_dir, category_names_table):
     config_file = './config/dataset_config.yaml'
 
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
 
-    output_dir = config['test_output_dir']
-    print('\nrendering dataset images with bbox and mask overlays\n')
-    output_dir=increment_path(output_dir)
-    category_names_file = config['category_names_file']
-    with open(category_names_file) as f:
-        category_names_table = f.read().splitlines()
-    splits=config['splits']
+
+    # category_names_file = config['category_names_file']
+    # with open(category_names_file) as f:
+    #     category_names_table = f.read().splitlines()
+    # splits=config['splits']
     # loop on configured splits e.g. [train, val, test]. replace various paths strings accordingly:
     for idx in range(config['nrender_examples']+1):
-        for split in splits.keys():
-            if splits[split] > 0:
-                if 'coco_detection_dataset_labels_path' in config:
-                    annotations_path = config['coco_detection_dataset_labels_path'].replace("{split}", split)
-                    draw_coco_detection_dataset_example(annotations_path, category_names_table, f'{output_dir}/{split}/coco')
+        # for split in splits.keys():
+        #     if splits[split] > 0:
+                if config.get('output_format') == 'coco_detection_dataset_labels_path':
 
-                if 'detection_label_text_files_path' in config:
-                    image_dir = config['image_dir'].replace('{split}', 'train')
-                    label_dir = config['detection_label_text_files_path'].replace('{split}',  split)
-                    draw_detection_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/{split}/det1')
+                    annotations_path = labels_path
+                    draw_coco_detection_dataset_example(annotations_path, category_names_table, f'{output_dir}/coco')
 
-                if 'detection_label_unified_file_path' in config:
-                    label_path=config['detection_label_unified_file_path'].replace('{split}', split)
-                    draw_detection_single_file_dataset_example(label_path, category_names_table, f'{output_dir}/{split}/det2')
+                if config.get('output_format') == 'detection_label_text_files_path':
+                    image_dir = image_dir
+                    label_dir = labels_path
+                    draw_detection_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/det1')
 
-                if 'segmentation_label_files_path' in config:
-                    image_dir = config['image_dir'].replace('{split}',  split)
-                    label_dir = config['segmentation_label_files_path'].replace('{split}',  split)
-                    draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/{split}/seg')
+                if config.get('output_format') == 'detection_label_unified_file_path':
+                    label_path=labels_path
+                    draw_detection_single_file_dataset_example(label_path, category_names_table, f'{output_dir}/det2')
+                if config.get('output_format') == 'segmentation_label_files_path':
+                    image_dir = image_dir
+                    label_dir = labels_path
+                    draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/seg')
 
 
 if __name__ == "__main__":

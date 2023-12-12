@@ -21,11 +21,13 @@ def create_segmentation_label_files(images_paths, images_polygons, images_sizes,
     :return:
     """
     print(f'create_segmentation_label_files. output_dir: {output_dir}')
+    # create out dirs if needed - tbd never needed...
     try:
         os.makedirs(output_dir)
     except FileExistsError:
         # directory already exists
         pass
+    ## create label files
     for image_polygons, image_path, images_size, categories_indices in zip(images_polygons, images_paths, images_sizes,
                                                               images_objects_categories_indices):
         im_height = images_size[0]
@@ -38,7 +40,7 @@ def create_segmentation_label_files(images_paths, images_polygons, images_sizes,
         with open(labels_filename, 'w') as f:
             for image_polygon, category_id in zip(image_polygons, categories_indices):
                 entry = f"{category_id} {' '.join(str(vertix) for vertix in list(image_polygon.reshape(-1)))}\n"
-                f.write(entry)
+                f.write(entry) # fill label file with entries
 
 
 
@@ -67,7 +69,7 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, images_obj
         file = open(labels_file_path, 'w')
         for item in entries:
             file.write(item + "\n")
-        file.close()
+    file.close()
 
 
 def create_detection_lable_files(images_paths, images_bboxes, images_sizes, images_objects_categories_indices,
