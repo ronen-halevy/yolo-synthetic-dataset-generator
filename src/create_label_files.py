@@ -14,8 +14,7 @@ def create_segmentation_label_files(images_paths, images_polygons, images_sizes,
 
 
     :param images_paths: list of dataset image filenames
-    :param images_bboxes: list of per image bboxes arrays in xyxy format.
-    :param images_sizes:
+    :param images_polygons: list of per image polygons arrays
     :param images_objects_categories_indices:  list of per image categories_indices arrays
     :param output_dir: output dir of labels text files
     :return:

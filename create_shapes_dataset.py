@@ -111,7 +111,7 @@ def create_shapes_dataset():
                                         , labels_out_dir)
         #  4. Ultralitics like segmentation
         if config.get('labels_file_format')=='segmentation_yolov5':
-            labels_out_dir='./ dataset/labels/{split}'
+            labels_out_dir='./dataset/labels/{split}'
             labels_out_dir = Path(labels_out_dir.replace("{split}", split))
             Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
             create_segmentation_label_files(images_filenames, images_polygons, images_sizes,
