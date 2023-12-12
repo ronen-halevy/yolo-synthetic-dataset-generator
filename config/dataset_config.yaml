@@ -23,7 +23,7 @@ test_output_dir: ./runs/exp
 # 3. detection_unified_textfil: coco like labels format. Dataset entries are defined by a json file
 # 4. class-bbox labels text file per all images, a row per image.
 
-labels_file_format: detection_yolov5 # [segmentation_yolov5, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
+labels_file_format: segmentation_yolov5 # [segmentation_yolov5, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
 ###########################################################################
 # shape dataset definitions:
 shapes_config_file: ./config/shapes_config.yaml
