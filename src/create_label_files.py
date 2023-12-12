@@ -25,23 +25,24 @@ def create_segmentation_label_files(images_paths, images_polygons, images_sizes,
     try:
         os.makedirs(output_dir)
     except FileExistsError:
-        # directory already exists
+        # catch if directory already exists
         pass
     ## create label files
     for image_polygons, image_path, images_size, categories_indices in zip(images_polygons, images_paths, images_sizes,
                                                               images_objects_categories_indices):
         im_height = images_size[0]
         im_width = images_size[1]
-
+        # related label file has same name with .txt ext - split filename, replace ext to txt:
         head, filename = os.path.split(image_path)
         labels_filename = f"{output_dir}/{filename.rsplit('.', 1)[0]}.txt"
+        print(f'labels_filename: {labels_filename}')
+
         # normalize sizes:
         image_polygons=[image_polygon/np.array(images_size) for image_polygon in image_polygons]
         with open(labels_filename, 'w') as f:
             for image_polygon, category_id in zip(image_polygons, categories_indices):
                 entry = f"{category_id} {' '.join(str(vertix) for vertix in list(image_polygon.reshape(-1)))}\n"
                 f.write(entry) # fill label file with entries
-
 
 
 def create_detection_labels_unified_file(images_paths, images_bboxes, images_objects_categories_indices,
@@ -91,7 +92,7 @@ def create_detection_lable_files(images_paths, images_bboxes, images_sizes, imag
     try:
         os.makedirs(output_dir)
     except FileExistsError:
-        # directory already exists
+        # catch exception - directory already exists
         pass
     for bboxes, image_path, images_size, categories_indices in zip(images_bboxes, images_paths, images_sizes,
                                                               images_objects_categories_indices):
@@ -104,12 +105,12 @@ def create_detection_lable_files(images_paths, images_bboxes, images_sizes, imag
             for bbox, category_id in zip(bboxes, categories_indices):
                 bbox_arr = np.array(bbox, dtype=float)
                 # [xmin, ymin, w,h] to [x_c, y_c, w, h]
-                xcycwh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2) , (bbox_arr[1] + bbox_arr[3] / 2) ,
+                xywh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2) , (bbox_arr[1] + bbox_arr[3] / 2) ,
                                bbox_arr[2], bbox_arr[3] ]
                 # normalize size:
-                xcycwh_bbox = [xcycwh_bbox[0] / im_width,xcycwh_bbox[1] / im_height,
-                               xcycwh_bbox[2] / im_width, xcycwh_bbox[3] / im_height]
-                entry = f"{category_id} {' '.join(str(e) for e in xcycwh_bbox)}\n"
+                xywh_bbox = [xywh_bbox[0] / im_width,xywh_bbox[1] / im_height,
+                               xywh_bbox[2] / im_width, xywh_bbox[3] / im_height]
+                entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}\n"
                 f.write(entry)
 
 
