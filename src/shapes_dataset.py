@@ -222,7 +222,7 @@ class ShapesDataset:
 
     def create_dataset(self,  nentries, output_dir):
         """
-        Description: Create nentries dataset. Store created images in output_dir, and return dataset metadata.
+        Description: Create dataset entries. svae created images in output_dir, and return dataset metadata.
 
         :param nentries: type: int, number of entries to produce
         :param output_dir: type: str,  destination output dir for dataset's images
@@ -269,8 +269,9 @@ class ShapesDataset:
                     self.bbox_margin,
                     self.size_fluctuation)
 
+            # save image files
             image_filename = f'img_{example_id:06d}.jpg'
-            file_path = f'{output_dir}{image_filename}'
+            file_path = f'{output_dir}/{image_filename}'
             image.save(file_path)
             if len(bboxes) == 0:
                 continue
