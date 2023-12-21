@@ -77,9 +77,9 @@ def create_shapes_dataset():
         nentries = int(splits[split])
         # create dirs for output if missing:
         images_out_dir = f'{image_dir.replace("{split}", split)}'
-        images_out__path = Path(images_out_dir)
+        images_out_path = Path(images_out_dir)
         # create image dir for split - if needed
-        images_out__path.mkdir(parents=True, exist_ok=True)
+        images_out_path.mkdir(parents=True, exist_ok=True)
 
         images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons = \
             shapes_dataset.create_dataset(
