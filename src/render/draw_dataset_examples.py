@@ -43,7 +43,7 @@ def read_detection_dataset_entry(image_path, label_path):
     return image, bboxes, category_ids
 
 
-def read_single_file_detection_dataset(label_path):
+def read_single_file_detection_dataset(label_path, image_dir):
     """
     Description:
     This method demonstrates the reading and rendering of a detection dataset entry, where the dataset labels are
@@ -62,7 +62,7 @@ def read_single_file_detection_dataset(label_path):
     with open(label_path, 'r') as f:
         annotations = [line.strip() for line in f.readlines() if len(line.strip().split()[1:]) != 0]
         example = random.choice(annotations).split()
-        image_path = example[0]
+        image_path = f'{image_dir}/{example[0]}'
         image = Image.open(image_path)
         bboxes = np.array([list(map(float, box.split(',')[0: 5])) for box in example[1:]])[:, 0:4]
         category_ids = np.array([list(map(float, box.split(',')[0: 5])) for box in example[1:]])[:, 4].astype(int)
@@ -125,8 +125,8 @@ def draw_detection_dataset_example(image_dir, label_dir, category_names_table, o
         image.save(output_path)
 
 
-def draw_detection_single_file_dataset_example(label_path, category_names_table, output_dir):
-    [image, bboxes, category_ids, image_path] = read_single_file_detection_dataset(label_path)
+def draw_detection_single_file_dataset_example(label_path, image_dir, category_names_table, output_dir):
+    [image, bboxes, category_ids, image_path] = read_single_file_detection_dataset(label_path, image_dir)
     category_names = [category_names_table[category_id] for category_id in category_ids]
     dest_dir = f'{output_dir}'
     Path(dest_dir).mkdir(parents=True, exist_ok=True)

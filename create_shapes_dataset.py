@@ -60,7 +60,7 @@ def create_shapes_dataset():
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
 
-    image_dir = './dataset/images/{split}/'
+    image_dir = config['image_dir'] # './dataset/images/{split}/'
 
     # train val test split sizes:
     splits = config["splits"]
@@ -76,9 +76,10 @@ def create_shapes_dataset():
         print(f'create {split} files:')
         nentries = int(splits[split])
         # create dirs for output if missing:
-        images_out_dir = Path(f'{image_dir.replace("{split}", split)}')
+        images_out_dir = f'{image_dir.replace("{split}", split)}'
+        images_out__path = Path(images_out_dir)
         # create image dir for split - if needed
-        images_out_dir.mkdir(parents=True, exist_ok=True)
+        images_out__path.mkdir(parents=True, exist_ok=True)
 
         images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons = \
             shapes_dataset.create_dataset(
@@ -87,31 +88,34 @@ def create_shapes_dataset():
 
         # 1. coco format (i.e. dataset entries defined by a json file)
         if config.get('labels_file_format')=='detection_coco_json_format':
-            annotations_output_path = './dataset/images/{split}/annotations.json'.replace('{split}', split)
+            coco_json_labels_file_pth = config['coco_json_labels_file_pth']
+            annotations_output_path = coco_json_labels_file_pth.replace('{split}', split)
             images_filenames = [f'{config["image_dir"].replace("{split}", split)}{images_filename}' for images_filename in images_filenames]
             create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                            category_names, category_ids,
                            annotations_output_path)
-        if config.get('labels_file_format') == 'detection_label_unified_file_path':
-            labels_out_path = f'./{base_dir}/{split}/all_entries.txt'
-            labels_split__out_path = labels_out_path.replace("{split}", split)
-            labels_dir = os.path.dirname(labels_split__out_path)
+        if config.get('labels_file_format') == 'detection_unified_textfile':
+            labels_out_dir = config['labels_all_entries_file']
+            # labels_out_path = f'./{base_dir}/{split}/all_entries.txt'
+            labels_out_dir = labels_out_dir.replace("{split}", split)
+            labels_dir = os.path.dirname(labels_out_dir)
             labels_dir = Path(labels_dir)
             labels_dir.mkdir(parents=True, exist_ok=True)
             create_detection_labels_unified_file(images_filenames, images_bboxes, images_objects_categories_indices,
-                                    labels_split__out_path)
+                                    labels_out_dir)
 
         # 3. text file per image
         if config.get('labels_file_format')=='detection_yolov5':
-            labels_out_dir = Path('./dataset/labels/{split}'.replace("{split}", split))
+            labels_dir = config['labels_dir']
+            labels_out_dir = Path(labels_dir.replace("{split}", split))
             labels_out_dir.mkdir(parents=True, exist_ok=True)
             create_detection_lable_files(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
                                         , labels_out_dir)
         #  4. Ultralitics like segmentation
         if config.get('labels_file_format')=='segmentation_yolov5':
-            labels_out_dir='./dataset/labels/{split}'
-            labels_out_dir = Path(labels_out_dir.replace("{split}", split))
+            labels_dir = config['labels_dir']
+            labels_out_dir = Path(labels_dir.replace("{split}", split))
             Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
             create_segmentation_label_files(images_filenames, images_polygons, images_sizes,
                                           images_objects_categories_indices,

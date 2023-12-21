@@ -46,7 +46,7 @@ def render(image_dir, labels_path, output_dir, category_names_table):
 
                 if config.get('labels_file_format') == 'detection_unified_textfile':
                     label_path=labels_path
-                    draw_detection_single_file_dataset_example(label_path, category_names_table, f'{output_dir}/det2')
+                    draw_detection_single_file_dataset_example(label_path, image_dir, category_names_table, f'{output_dir}/det2')
                 if config.get('labels_file_format') == 'segmentation_yolov5':
                     image_dir = image_dir
                     label_dir = labels_path
@@ -54,4 +54,11 @@ def render(image_dir, labels_path, output_dir, category_names_table):
 
 
 if __name__ == "__main__":
-    main()
+    config_file = './config/dataset_config.yaml'
+    with open(config_file, 'r') as stream:
+        config = yaml.safe_load(stream)
+    image_dir =   config['image_dir'] # './dataset/images/{split}/'
+    labels_dir = config['labels_dir']
+
+    # render =
+    # render(image_dir, )
