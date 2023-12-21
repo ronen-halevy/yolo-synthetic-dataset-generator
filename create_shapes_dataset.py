@@ -95,9 +95,7 @@ def create_shapes_dataset():
                            category_names, category_ids,
                            labels_out_dir)
         elif config.get('labels_file_format') == 'detection_unified_textfile':
-            labels_out_dir = config['labels_all_entries_file']
-            # labels_out_path = f'./{base_dir}/{split}/all_entries.txt'
-            labels_out_dir = labels_out_dir.replace("{split}", split)
+            labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
             labels_dir = os.path.dirname(labels_out_dir)
             labels_dir = Path(labels_dir)
             labels_dir.mkdir(parents=True, exist_ok=True)
@@ -106,8 +104,8 @@ def create_shapes_dataset():
 
         # 3. text file per image
         elif config.get('labels_file_format')=='detection_yolov5':
-            labels_dir = config['labels_dir']
-            labels_out_dir = Path(labels_dir.replace("{split}", split))
+            labels_dir = config['labels_dir'].replace("{split}", split)
+            labels_out_dir = Path(labels_dir)
             labels_out_dir.mkdir(parents=True, exist_ok=True)
             create_detection_lable_files(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
@@ -121,7 +119,9 @@ def create_shapes_dataset():
                                           images_objects_categories_indices,
                                           labels_out_dir)
         print(f'rendering results image and labels overlays: {output_dir}/{split}\n')
-        render.render(images_out_dir, labels_out_dir, f'{output_dir}/{split}', category_names)
+        nexamples = config['nrender_examples'] + 1
+        labels_file_format=config.get('labels_file_format')
+        render.render(nexamples, labels_file_format,images_out_dir, labels_out_dir,f'{output_dir}/{split}', category_names, split)
 
 
     # write category names file:
@@ -129,9 +129,6 @@ def create_shapes_dataset():
     with open(config['category_names_file'], 'w') as f:
         for category_name in category_names:
             f.write(f'{category_name}\n')
-    # render dataset for demo and verification:
-
-
 
 
 if __name__ == '__main__':
