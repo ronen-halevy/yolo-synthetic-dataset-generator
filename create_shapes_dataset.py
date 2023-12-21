@@ -24,8 +24,6 @@ from src.create_label_files import (create_coco_json_lable_files,
                                     create_detection_labels_unified_file)
 from src.shapes_dataset import ShapesDataset
 
-import render # renders dataset images with bbox and mask overlays
-
 def increment_path(path, exist_ok=False, sep='', mkdir=False):
     # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
     path = Path(path)  # os-agnostic
@@ -88,7 +86,7 @@ def create_shapes_dataset():
 
         # 1. coco format (i.e. dataset entries defined by a json file)
         if config.get('labels_file_format')=='detection_coco_json_format':
-            labels_out_dir= config['coco_json_labels_file_pth']
+            labels_out_dir= config['coco_json_labels_file_path']
             labels_out_dir = labels_out_dir.replace('{split}', split)
             images_filenames = [f'{config["image_dir"].replace("{split}", split)}{images_filename}' for images_filename in images_filenames]
             create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
@@ -119,9 +117,9 @@ def create_shapes_dataset():
                                           images_objects_categories_indices,
                                           labels_out_dir)
         print(f'rendering results image and labels overlays: {output_dir}/{split}\n')
-        nexamples = config['nrender_examples'] + 1
-        labels_file_format=config.get('labels_file_format')
-        render.render(nexamples, labels_file_format,images_out_dir, labels_out_dir,f'{output_dir}/{split}', category_names, split)
+        # nexamples = config['nrender_examples'] + 1
+        # labels_file_format=config.get('labels_file_format')
+        # render.render(nexamples, labels_file_format,images_out_dir, labels_out_dir,f'{output_dir}/{split}', category_names, split)
 
 
     # write category names file:
