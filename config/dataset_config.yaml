@@ -10,9 +10,12 @@ output_dir: dataset
 image_dir: ./dataset/images/{split}/
 labels_dir: ./dataset/labels/{split}
 labels_all_entries_file: ./dataset/labels/{split}/all_entries.txt
-coco_json_labels_file_pth: ./dataset/images/{split}/annotations.json
+coco_json_labels_file_path: ./dataset/images/{split}/annotations.json
 
 category_names_file: ./dataset/class.names
+
+# verfication rendering of images and overlays:
+split_to_render: 'train' # 'train', 'valid'. 'test' (
 test_output_dir: ./runs/exp
 
 ###########################################################################
@@ -25,7 +28,7 @@ test_output_dir: ./runs/exp
 # 3. detection_unified_textfil: coco like labels format. Dataset entries are defined by a json file
 # 4. class-bbox labels text file per all images, a row per image.
 
-labels_file_format: detection_unified_textfile # [segmentation_yolov5, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
+labels_file_format: segmentation_yolov5 # [segmentation_yolov5, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
 ###########################################################################
 # shape dataset definitions:
 shapes_config_file: ./config/shapes_config.yaml
