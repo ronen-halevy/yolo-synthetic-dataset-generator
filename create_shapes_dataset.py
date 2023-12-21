@@ -88,13 +88,13 @@ def create_shapes_dataset():
 
         # 1. coco format (i.e. dataset entries defined by a json file)
         if config.get('labels_file_format')=='detection_coco_json_format':
-            coco_json_labels_file_pth = config['coco_json_labels_file_pth']
-            annotations_output_path = coco_json_labels_file_pth.replace('{split}', split)
+            labels_out_dir= config['coco_json_labels_file_pth']
+            labels_out_dir = labels_out_dir.replace('{split}', split)
             images_filenames = [f'{config["image_dir"].replace("{split}", split)}{images_filename}' for images_filename in images_filenames]
             create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                            category_names, category_ids,
-                           annotations_output_path)
-        if config.get('labels_file_format') == 'detection_unified_textfile':
+                           labels_out_dir)
+        elif config.get('labels_file_format') == 'detection_unified_textfile':
             labels_out_dir = config['labels_all_entries_file']
             # labels_out_path = f'./{base_dir}/{split}/all_entries.txt'
             labels_out_dir = labels_out_dir.replace("{split}", split)
@@ -105,7 +105,7 @@ def create_shapes_dataset():
                                     labels_out_dir)
 
         # 3. text file per image
-        if config.get('labels_file_format')=='detection_yolov5':
+        elif config.get('labels_file_format')=='detection_yolov5':
             labels_dir = config['labels_dir']
             labels_out_dir = Path(labels_dir.replace("{split}", split))
             labels_out_dir.mkdir(parents=True, exist_ok=True)
@@ -113,7 +113,7 @@ def create_shapes_dataset():
                                         images_objects_categories_indices
                                         , labels_out_dir)
         #  4. Ultralitics like segmentation
-        if config.get('labels_file_format')=='segmentation_yolov5':
+        elif config.get('labels_file_format')=='segmentation_yolov5':
             labels_dir = config['labels_dir']
             labels_out_dir = Path(labels_dir.replace("{split}", split))
             Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
