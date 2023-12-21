@@ -21,7 +21,7 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
 
     return path
 
-def main(image_dir, labels_path, output_dir, category_names_table):
+def render(image_dir, labels_path, output_dir, category_names_table):
     config_file = './config/dataset_config.yaml'
 
     with open(config_file, 'r') as stream:
@@ -36,20 +36,18 @@ def main(image_dir, labels_path, output_dir, category_names_table):
     for idx in range(config['nrender_examples']+1):
         # for split in splits.keys():
         #     if splits[split] > 0:
-                if config.get('output_format') == 'coco_detection_dataset_labels_path':
-
+                if config.get('labels_file_format') == 'detection_coco_json_format':
                     annotations_path = labels_path
                     draw_coco_detection_dataset_example(annotations_path, category_names_table, f'{output_dir}/coco')
-
-                if config.get('output_format') == 'detection_label_text_files_path':
+                if config.get('labels_file_format') == 'detection_yolov5':
                     image_dir = image_dir
                     label_dir = labels_path
                     draw_detection_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/det1')
 
-                if config.get('output_format') == 'detection_label_unified_file_path':
+                if config.get('labels_file_format') == 'detection_unified_textfile':
                     label_path=labels_path
                     draw_detection_single_file_dataset_example(label_path, category_names_table, f'{output_dir}/det2')
-                if config.get('output_format') == 'segmentation_label_files_path':
+                if config.get('labels_file_format') == 'segmentation_yolov5':
                     image_dir = image_dir
                     label_dir = labels_path
                     draw_segmentation_dataset_example(image_dir, label_dir, category_names_table, f'{output_dir}/seg')

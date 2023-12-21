@@ -94,8 +94,7 @@ def create_shapes_dataset():
                            annotations_output_path)
         if config.get('labels_file_format') == 'detection_label_unified_file_path':
             labels_out_path = f'./{base_dir}/{split}/all_entries.txt'
-
-            labels_split__out_path = labels_out_dir.replace("{split}", split)
+            labels_split__out_path = labels_out_path.replace("{split}", split)
             labels_dir = os.path.dirname(labels_split__out_path)
             labels_dir = Path(labels_dir)
             labels_dir.mkdir(parents=True, exist_ok=True)
@@ -118,7 +117,7 @@ def create_shapes_dataset():
                                           images_objects_categories_indices,
                                           labels_out_dir)
         print(f'rendering results image and labels overlays: {output_dir}/{split}\n')
-        render.main(images_out_dir, labels_out_dir, f'{output_dir}/{split}', category_names)
+        render.render(images_out_dir, labels_out_dir, f'{output_dir}/{split}', category_names)
 
 
     # write category names file:
