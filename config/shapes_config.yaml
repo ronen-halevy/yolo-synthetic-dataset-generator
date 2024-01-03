@@ -2,9 +2,10 @@
 
 
 min_objects_in_image: 1 #4
-max_objects_in_image: 1 #8
+max_objects_in_image: 3 #8
 
-bg_color: [black, white, yellow, magenta, cyan] # random choice between list entries
+# images background color: color is randomy selected from list
+bg_color: [white] # [black, white, yellow, magenta, cyan]
 # min margin between objects and image edged in pixels:
 margin_from_edge: 8
 # margin betweem bbox and shape - in pixels:
