@@ -253,7 +253,7 @@ class ShapesDataset:
             # randomly select num_of_objects shapes:
             sel_shape_entris = [np.random.choice(active_shapes) for idx in range(num_of_objects)]
 
-            sel_index = random.randint(0, len(self.image_size)-1)
+            sel_index = random.randint(0, len(self.image_size)-1) # randomly select img size index from config
             image_size=self.image_size[sel_index]
             # arrange target objects attributes from selected shapes:
             objects_attributes = [
@@ -278,7 +278,7 @@ class ShapesDataset:
                 continue
 
             images_filenames.append(image_filename)
-            images_sizes.append((image.height, image.width))
+            images_sizes.append((image.width, image.height))
             images_bboxes.append(bboxes)
             images_objects_categories_indices.append(objects_categories_indices)
             images_objects_categories_names.append(objects_categories_names)
