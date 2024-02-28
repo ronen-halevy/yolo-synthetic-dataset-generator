@@ -120,26 +120,27 @@ class ShapesDataset:
         sel_height = np.random.choice(height)
         sel_aspect_ratio = np.random.choice(aspect_ratio)
         shape_width = sel_height * sel_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
-        sel_height = sel_height * random.uniform(1 - size_fluctuation, 1)
+        shape_height = sel_height * random.uniform(1 - size_fluctuation, 1)
 
-        radius = np.array([sel_height / 2, shape_width / 2])
-        center = np.random.randint(
-            low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
+        xy = np.array([shape_width , shape_height])
+        # polygon center: randomy placed, such that shape is inside image with boundary distance from edged:
+        center_xy = np.random.randint(
+            low=xy/2 + margin_from_edge, high=np.floor(image_size - xy/2 - margin_from_edge), size=2)
 
-        polygon = [
-            (cos(th) * radius[0],
+        polygon_xy = [
+            (cos(th) * shape_width,
              sin(th
-                      ) * radius[1])
+                      ) * shape_height)
             for th in [i * (2 * math.pi) / nvertices + math.radians(theta0)for i in range(nvertices)]
         ]
         # rotate shape:
         if self.rotate_shapes:
-            polygon= self.rotate(polygon)
+            polygon_xy= self.rotate(polygon_xy)
 
         # translate to center:
-        polygon+=center
-        polygon=tuple(map(tuple, polygon))
-        return polygon
+        polygon_xy+=center_xy
+        polygon_xy=tuple(map(tuple, polygon_xy))
+        return polygon_xy
 
     def __create_ds_entry(self, objects_attributes, image_size, bg_color, iou_thresh,
                           margin_from_edge,
