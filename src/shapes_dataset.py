@@ -30,7 +30,7 @@ class ShapesDataset:
         self.margin_from_edge = shapes_config['margin_from_edge']
         self.bbox_margin = shapes_config['bbox_margin']
         self.size_fluctuation = shapes_config['size_fluctuation']
-        self.rotate_shapes = shapes_config['rotate_shapes']
+        self.rotate_shapes = shapes_config['rotate_shapes'] # rotated shape may be image boundaries exeeded
 
         # create a class names output file.
         self.shapes = []
@@ -120,27 +120,26 @@ class ShapesDataset:
         sel_height = np.random.choice(height)
         sel_aspect_ratio = np.random.choice(aspect_ratio)
         shape_width = sel_height * sel_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
-        shape_height = sel_height * random.uniform(1 - size_fluctuation, 1)
+        sel_height = sel_height * random.uniform(1 - size_fluctuation, 1)
 
-        xy = np.array([shape_width , shape_height])
-        # polygon center: randomy placed, such that shape is inside image with boundary distance from edged:
-        center_xy = np.random.randint(
-            low=xy/2 + margin_from_edge, high=np.floor(image_size - xy/2 - margin_from_edge), size=2)
+        radius = np.array([shape_width  / 2, sel_height / 2])
+        center = np.random.randint(
+            low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
 
-        polygon_xy = [
-            (cos(th) * shape_width,
+        polygon = [
+            (cos(th) * radius[0],
              sin(th
-                      ) * shape_height)
+                      ) * radius[1])
             for th in [i * (2 * math.pi) / nvertices + math.radians(theta0)for i in range(nvertices)]
         ]
         # rotate shape:
         if self.rotate_shapes:
-            polygon_xy= self.rotate(polygon_xy)
+            polygon= self.rotate(polygon)
 
         # translate to center:
-        polygon_xy+=center_xy
-        polygon_xy=tuple(map(tuple, polygon_xy))
-        return polygon_xy
+        polygon+=center
+        polygon=tuple(map(tuple, polygon))
+        return polygon
 
     def __create_ds_entry(self, objects_attributes, image_size, bg_color, iou_thresh,
                           margin_from_edge,
@@ -178,11 +177,10 @@ class ShapesDataset:
         objects_categories_indices = []
 
         for category_id, nvertices, theta0, category_name, aspect_ratio, height, color in objects_attributes:
-            max_count = 10000
+            max_count = 10
             count = 0
             # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
             while True:
-
                 polygon = self.__create_polygon(nvertices,theta0, height, aspect_ratio, size_fluctuation,
                                                 margin_from_edge,
                                                 image_size)
@@ -193,11 +191,13 @@ class ShapesDataset:
                 if len(iou) == 0 or max(iou) <= iou_thresh:
                     break
                 if count > max_count:
-                    max_iou = max(iou)
-                    raise Exception(
-                        f'Shape Objects Placement Failed after {count} placement itterations: max(iou)={max_iou}, '
+                    print(
+                        f'Shape Objects Placement Failed after {count} placement itterations: max(iou)={max(iou)}, '
                         f'but required iou_thresh is {iou_thresh} height: . \nHint: reduce objects size or'
                         f' quantity of objects in an image')
+                    exit(1)
+                count+=1
+
             if len(bbox):
                 bboxes.append(bbox)
 

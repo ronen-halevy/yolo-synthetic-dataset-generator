@@ -1,8 +1,8 @@
 ---
 # number of images per split:
 splits:
- train: 10
- valid: 1
+ train: 5
+ valid: 5
  test: 1
 
 output_dir: dataset
@@ -34,4 +34,4 @@ labels_file_format: segmentation_yolov5 # [segmentation_yolov5, detection_yolov5
 shapes_config_file: ./config/shapes_config.yaml
 
 # validate dataset by rendering : number of radomly selected images examples to render - per a split:
-nrender_examples: 1
+nrender_examples: 10

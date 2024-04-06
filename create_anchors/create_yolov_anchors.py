@@ -118,7 +118,10 @@ def read_label_from_file(fname):
 def save_to_file(anchors_out_file, anchors):
     base_dir, fname = os.path.split(anchors_out_file)
     pathlib.Path(base_dir).mkdir(parents=True, exist_ok=True)
-    np.savetxt(anchors_out_file, anchors*640)
+    data = {'anchors': anchors.tolist()}
+    with open(anchors_out_file, 'w') as outfile:
+        yaml.dump(data, outfile, default_flow_style=False)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default='create_anchors_config.yaml',
@@ -144,8 +147,8 @@ def main():
 
     wh = labels[:,3:5]- labels[:,1:3]
     anchors = creat_yolo_anchors(wh, n_clusters)
-    save_to_file(anchors_out_file, anchors)
-
+    im_size = 640
+    save_to_file(anchors_out_file, anchors * im_size)
     print(f'result anchors:\n{anchors}')
     print(f'anchors_out_file: {anchors_out_file}')
 

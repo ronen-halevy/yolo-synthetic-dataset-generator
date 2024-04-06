@@ -24,23 +24,6 @@ from src.create_label_files import (create_coco_json_lable_files,
                                     create_detection_labels_unified_file)
 from src.shapes_dataset import ShapesDataset
 
-def increment_path(path, exist_ok=False, sep='', mkdir=False):
-    # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
-    path = Path(path)  # os-agnostic
-    if path.exists() and not exist_ok:
-        path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
-
-        for n in range(2, 9999):
-            p = f'{path}{sep}{n}{suffix}'  # increment path
-            if not os.path.exists(p):  #
-                break
-        path = Path(p)
-
-    if mkdir:
-        path.mkdir(parents=True, exist_ok=True)  # make directory
-
-    return path
-
 def create_shapes_dataset():
     """
     Creates image detection and segmentation datasets in various formats, according to config files defitions
@@ -64,13 +47,8 @@ def create_shapes_dataset():
     splits = config["splits"]
     shapes_config_file = config['shapes_config_file']
     shapes_dataset = ShapesDataset(shapes_config_file)
-    # return # debug!!!
-    output_dir = config['test_output_dir']
-    print('\nrendering dataset images with bbox and mask overlays\n')
-    output_dir=increment_path(output_dir)
-    base_dir = config['output_dir']
 
-    for split in splits:
+    for split in splits: # loop: train, validation, test
         print(f'create {split} files:')
         nentries = int(splits[split])
         # create dirs for output if missing:
@@ -86,41 +64,32 @@ def create_shapes_dataset():
 
         # 1. coco format (i.e. dataset entries defined by a json file)
         if config.get('labels_file_format')=='detection_coco_json_format':
-            labels_out_dir= config['coco_json_labels_file_path']
-            labels_out_dir = labels_out_dir.replace('{split}', split)
+            labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
             images_filenames = [f'{config["image_dir"].replace("{split}", split)}{images_filename}' for images_filename in images_filenames]
             create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
                            category_names, category_ids,
                            labels_out_dir)
         elif config.get('labels_file_format') == 'detection_unified_textfile':
             labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
-            labels_dir = os.path.dirname(labels_out_dir)
-            labels_dir = Path(labels_dir)
+            labels_dir = Path(os.path.dirname(labels_out_dir))
             labels_dir.mkdir(parents=True, exist_ok=True)
             create_detection_labels_unified_file(images_filenames, images_bboxes, images_objects_categories_indices,
                                     labels_out_dir)
 
         # 3. text file per image
         elif config.get('labels_file_format')=='detection_yolov5':
-            labels_dir = config['labels_dir'].replace("{split}", split)
-            labels_out_dir = Path(labels_dir)
+            labels_out_dir = Path(config['labels_dir'].replace("{split}", split))
             labels_out_dir.mkdir(parents=True, exist_ok=True)
             create_detection_lable_files(images_filenames, images_bboxes, images_sizes,
                                         images_objects_categories_indices
                                         , labels_out_dir)
         #  4. Ultralitics like segmentation
         elif config.get('labels_file_format')=='segmentation_yolov5':
-            labels_dir = config['labels_dir']
-            labels_out_dir = Path(labels_dir.replace("{split}", split))
+            labels_out_dir = Path(config['labels_dir'].replace("{split}", split))
             Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
             create_segmentation_label_files(images_filenames, images_polygons, images_sizes,
                                           images_objects_categories_indices,
                                           labels_out_dir)
-        print(f'rendering results image and labels overlays: {output_dir}/{split}\n')
-        # nexamples = config['nrender_examples'] + 1
-        # labels_file_format=config.get('labels_file_format')
-        # render.render(nexamples, labels_file_format,images_out_dir, labels_out_dir,f'{output_dir}/{split}', category_names, split)
-
 
     # write category names file:
     print(f'Saving {config["category_names_file"]}')
