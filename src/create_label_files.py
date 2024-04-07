@@ -5,7 +5,7 @@ import os
 
 
 
-def create_segmentation_label_files(images_paths, images_polygons, images_sizes, images_objects_categories_indices,
+def create_segmentation_label_files(images_polygons, images_sizes, images_objects_categories_indices,labels_fnames,
                                   output_dir):
     """
     Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
@@ -27,13 +27,11 @@ def create_segmentation_label_files(images_paths, images_polygons, images_sizes,
         # catch if directory already exists
         pass
     ## create label files
-    for image_polygons, image_path, images_size, categories_indices in zip(images_polygons, images_paths, images_sizes,
+    for image_polygons, labels_fname, images_size, categories_indices in zip(images_polygons, labels_fnames, images_sizes,
                                                               images_objects_categories_indices):
         im_height = images_size[0]
         im_width = images_size[1]
-        # related label file has same name with .txt ext - split filename, replace ext to txt:
-        head, filename = os.path.split(image_path)
-        labels_filename = f"{output_dir}/{filename.rsplit('.', 1)[0]}.txt"
+        labels_filename = f"{output_dir}/{labels_fname}"
         print(f'labels_filename: {labels_filename}')
 
         # normalize sizes:
@@ -72,10 +70,9 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, images_obj
     file.close()
 
 
-def create_detection_lable_files(images_paths, images_bboxes, images_sizes, images_objects_categories_indices,
-
-                                  output_dir):
+def create_detection_lable_files(images_bboxes, images_sizes, images_objects_categories_indices, out_fnames, output_dir):
     """
+
     Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
     normalized coordinates [0 to 1].
     zero-indexed class numbers - start from 0
@@ -93,22 +90,22 @@ def create_detection_lable_files(images_paths, images_bboxes, images_sizes, imag
     except FileExistsError:
         # catch exception - directory already exists
         pass
-    for bboxes, image_path, images_size, categories_indices in zip(images_bboxes, images_paths, images_sizes,
-                                                              images_objects_categories_indices):
+    for bboxes, images_size, categories_indices, out_path in zip(images_bboxes, images_sizes,
+                                                                 images_objects_categories_indices, out_fnames):
         im_height = images_size[0]
         im_width = images_size[1]
 
-        head, filename = os.path.split(image_path)
-        labels_filename = f"{output_dir}/{filename.rsplit('.', 1)[0]}.txt"
-        with open(labels_filename, 'w') as f:
+        # head, filename = os.path.split(image_path)
+        out_fnames = f"{output_dir}/{out_fnames}"
+        with open(out_path, 'w') as f:
             for bbox, category_id in zip(bboxes, categories_indices):
                 bbox_arr = np.array(bbox, dtype=float)
                 # [xmin, ymin, w,h] to [x_c, y_c, w, h]
-                xywh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2) , (bbox_arr[1] + bbox_arr[3] / 2) ,
-                               bbox_arr[2], bbox_arr[3] ]
+                xywh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2), (bbox_arr[1] + bbox_arr[3] / 2),
+                             bbox_arr[2], bbox_arr[3]]
                 # normalize size:
-                xywh_bbox = [xywh_bbox[0] / im_width,xywh_bbox[1] / im_height,
-                               xywh_bbox[2] / im_width, xywh_bbox[3] / im_height]
+                xywh_bbox = [xywh_bbox[0] / im_width, xywh_bbox[1] / im_height,
+                             xywh_bbox[2] / im_width, xywh_bbox[3] / im_height]
                 entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}\n"
                 f.write(entry)
 

@@ -80,16 +80,19 @@ def create_shapes_dataset():
         elif config.get('labels_file_format')=='detection_yolov5':
             labels_out_dir = Path(config['labels_dir'].replace("{split}", split))
             labels_out_dir.mkdir(parents=True, exist_ok=True)
-            create_detection_lable_files(images_filenames, images_bboxes, images_sizes,
-                                        images_objects_categories_indices
-                                        , labels_out_dir)
+            # related label file has same name with .txt ext - split filename, replace ext to txt:
+            label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
+            create_detection_lable_files(images_bboxes, images_sizes,
+                                        images_objects_categories_indices, label_out_fnames, labels_out_dir)
+
         #  4. Ultralitics like segmentation
         elif config.get('labels_file_format')=='segmentation_yolov5':
             labels_out_dir = Path(config['labels_dir'].replace("{split}", split))
             Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
-            create_segmentation_label_files(images_filenames, images_polygons, images_sizes,
-                                          images_objects_categories_indices,
-                                          labels_out_dir)
+            # related label file has same name with .txt ext - split filename, replace ext to txt:
+            label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
+            create_segmentation_label_files(images_polygons, images_sizes,
+                                          images_objects_categories_indices, label_out_fnames, labels_out_dir)
 
     # write category names file:
     print(f'Saving {config["category_names_file"]}')
