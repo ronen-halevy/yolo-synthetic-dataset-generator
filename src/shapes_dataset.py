@@ -147,27 +147,22 @@ class ShapesDataset:
                           size_fluctuation
                           ):
         """
-        Description: Create a single dataset entry, consists of an of shape objects, along with bbox and polygons
-        objects. THe latters a . Store created images in output_dir, and return dataset metadata.
+        Create a single dataset entry, with nt bboxes and polygons.
 
-        :param objects_attributes: a list of num_of_objects entries with attributes: category_id, nvertices, theta0,
-        category_name, aspect_ratio, height, color
-
-        :param image_size: type: 2 tuple of ints. required entry's image size.
+        :param objects_attributes: list[nt], entry: [cls_id, nvertices, theta0, cls_name, [aspect_ratio], [height],
+        [color]] where aspect ratio, height and color(str) are lists for random selection,
+        :param image_size: image size, list[2] height and width
         :param bg_color: type: str image's bg color
         :param iou_thresh: type: float [0,1], maximal iou value for adjacent bboxes. iou=1 means complete overlap. iou=0 means no overlap
         :param margin_from_edge: type: int. minimal distance in pixels of bbox from image's edge.
         :param bbox_margin: type: int. distance in pixels between bbox and shape
         :param size_fluctuation: int float [0,1), images' width and height are multiplied by (1-rand(size_fluctuation))
         :return:
-
-        image: an RGB pillow image drawn with shapes
-        bboxes: type: float ndarray [nobjects,4]
-        tuple(objects_categories_indices): type in. tuple of nobjects category indices
-        objects_categories_names: type: str. list of nobjects category names
-        polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
-
-
+            image: an RGB pillow image drawn with shapes
+            bboxes: type: float ndarray [nobjects,4]
+            tuple(objects_categories_indices): type in. tuple of nobjects category indices
+            objects_categories_names: type: str. list of nobjects category names
+            polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
         """
         image = Image.new('RGB', image_size, bg_color)
         draw = ImageDraw.Draw(image)
@@ -210,9 +205,9 @@ class ShapesDataset:
             objects_categories_indices.append(category_id)
 
         bboxes = np.array(bboxes)
-        # transfer bbox coordinate to:  [xmin, ymin, w, h]: (bbox_margin is added distance between shape and bbox)
-        bboxes = [bboxes[:, 0] - bbox_margin,
-                  bboxes[:, 1] - bbox_margin,
+        # [x,y,x,y] to [xc, yc, w, h] (bbox_margin is added distance between shape and bbox):
+        bboxes = [(bboxes[:, 0] +  bboxes[:, 2])/2,
+                  (bboxes[:, 1] +  bboxes[:, 3])/2,
                   bboxes[:, 2] - bboxes[:, 0] + 2 * bbox_margin,
                   bboxes[:, 3] - bboxes[:, 1] + 2 * bbox_margin]
 
