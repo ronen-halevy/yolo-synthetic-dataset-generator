@@ -77,7 +77,6 @@ class ShapesDataset:
         """
         x,y = np.array(polygon)[:,0], np.array(polygon)[:,1]
         return  [x.min(), y.min(), x.max(), y.max()]
-        return new_bbox
 
 
     def rotate(self, polygon):

@@ -79,7 +79,7 @@ def create_detection_lable_files(images_bboxes, images_sizes, categories_lists, 
     zero-indexed class numbers - start from 0
 
     :param images_paths: list of dataset image filenames
-    :param images_bboxes: list of per image bboxes arrays in xyxy format.
+    :param images_bboxes: list of per image bboxes arrays in  [xc,yc,w,h] format.
     :param images_sizes:
     :param categories_lists:  list of per image categories_indices arrays
     :param output_dir: output dir of labels text files
@@ -91,22 +91,21 @@ def create_detection_lable_files(images_bboxes, images_sizes, categories_lists, 
     except FileExistsError:
         # catch exception - directory already exists
         pass
-    for bboxes, images_size, categories_indices, out_path in zip(images_bboxes, images_sizes,
+    for bboxes, images_size, categories_indices, out_fname in zip(images_bboxes, images_sizes,
                                                                  categories_lists, out_fnames):
         im_height = images_size[0]
         im_width = images_size[1]
 
         # head, filename = os.path.split(image_path)
-        out_fnames = f"{output_dir}/{out_fnames}"
+        out_path = f"{output_dir}/{out_fname}"
+        bboxes = np.array(bboxes, dtype=float)
+
         with open(out_path, 'w') as f:
             for bbox, category_id in zip(bboxes, categories_indices):
-                bbox_arr = np.array(bbox, dtype=float)
-                # [xmin, ymin, w,h] to [x_c, y_c, w, h]
-                xywh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2), (bbox_arr[1] + bbox_arr[3] / 2),
-                             bbox_arr[2], bbox_arr[3]]
-                # normalize size:
-                xywh_bbox = [xywh_bbox[0] / im_width, xywh_bbox[1] / im_height,
-                             xywh_bbox[2] / im_width, xywh_bbox[3] / im_height]
+                # normalize scale:
+                xywh_bbox = [bbox[0] / im_width, bbox[1] / im_height,
+                             bbox[2] / im_width, bbox[3] / im_height]
+
                 entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}\n"
                 f.write(entry)
 
