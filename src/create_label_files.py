@@ -5,7 +5,7 @@ import os
 
 
 
-def create_segmentation_label_files(images_polygons, images_sizes, categories_lists,labels_fnames,
+def create_segmentation_label_files(images_polygons, images_sizes, images_class_ids,labels_fnames,
                                   output_dir):
     """
     Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
@@ -15,7 +15,7 @@ def create_segmentation_label_files(images_polygons, images_sizes, categories_li
 
     :param images_paths: list of dataset image filenames
     :param images_polygons: list of per image polygons arrays
-    :param categories_lists:  list of per image categories_indices arrays
+    :param images_class_ids:  list of per image class_ids
     :param output_dir: output dir of labels text files
     :return:
     """
@@ -27,8 +27,8 @@ def create_segmentation_label_files(images_polygons, images_sizes, categories_li
         # catch if directory already exists
         pass
     ## create label files
-    for image_polygons, labels_fname, images_size, categories_indices in zip(images_polygons, labels_fnames, images_sizes,
-                                                              categories_lists):
+    for image_polygons, labels_fname, images_size, class_ids in zip(images_polygons, labels_fnames, images_sizes,
+                                                              images_class_ids):
         im_height = images_size[0]
         im_width = images_size[1]
         labels_filename = f"{output_dir}/{labels_fname}"
@@ -37,27 +37,27 @@ def create_segmentation_label_files(images_polygons, images_sizes, categories_li
         # normalize sizes:
         image_polygons=[image_polygon/np.array(images_size) for image_polygon in image_polygons]
         with open(labels_filename, 'w') as f:
-            for image_polygon, category_id in zip(image_polygons, categories_indices):
+            for image_polygon, category_id in zip(image_polygons, class_ids):
                 entry = f"{category_id} {' '.join(str(vertix) for vertix in list(image_polygon.reshape(-1)))}\n"
                 f.write(entry) # fill label file with entries
 
 
-def create_detection_labels_unified_file(images_paths, images_bboxes, categories_lists,
+def create_detection_labels_unified_file(images_paths, images_bboxes, images_class_ids,
                                 labels_file_path):
     """
     :param images_paths: list of dataset image filenames
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
-    :param categories_lists:  list of per image categories_indices arrays
+    :param images_class_ids:  list of per image class_ids arrays
     :param labels_file_path: path of output labels text files
     :return:
     """
     print('create_detection_labels_unified_file')
 
     entries = []
-    for image_path, categories_indices, bboxes in zip(images_paths, categories_lists, images_bboxes):
+    for image_path, class_ids, bboxes in zip(images_paths, images_class_ids, images_bboxes):
 
         entry = f'{image_path} '
-        for bbox, category_id in zip(bboxes, categories_indices):
+        for bbox, category_id in zip(bboxes, class_ids):
             bbox_arr = np.array(bbox, dtype=float)
             xyxy_bbox = [bbox_arr[0], bbox_arr[1], bbox_arr[0] + bbox_arr[2], bbox_arr[1] + bbox_arr[3]]
             for vertex in xyxy_bbox:
@@ -69,9 +69,7 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, categories
             file.write(item + "\n")
     file.close()
 
-
-
-def create_detection_lable_files(images_bboxes, images_sizes, categories_lists, out_fnames, output_dir):
+def create_keypoints(images_bboxes, images_sizes, images_class_ids, out_fnames, output_dir):
     """
 
     Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
@@ -79,9 +77,9 @@ def create_detection_lable_files(images_bboxes, images_sizes, categories_lists, 
     zero-indexed class numbers - start from 0
 
     :param images_paths: list of dataset image filenames
-    :param images_bboxes: list of per image bboxes arrays in  [xc,yc,w,h] format.
+    :param images_bboxes: list of per image bboxes arrays in xyxy format.
     :param images_sizes:
-    :param categories_lists:  list of per image categories_indices arrays
+    :param images_class_ids:  list of per image class_ids arrays
     :param output_dir: output dir of labels text files
     :return:
     """
@@ -91,8 +89,48 @@ def create_detection_lable_files(images_bboxes, images_sizes, categories_lists, 
     except FileExistsError:
         # catch exception - directory already exists
         pass
-    for bboxes, images_size, categories_indices, out_fname in zip(images_bboxes, images_sizes,
-                                                                 categories_lists, out_fnames):
+    for bboxes, images_size, class_ids, out_path in zip(images_bboxes, images_sizes,
+                                                                 images_class_ids, out_fnames):
+        im_height = images_size[0]
+        im_width = images_size[1]
+
+        # head, filename = os.path.split(image_path)
+        out_fnames = f"{output_dir}/{out_fnames}"
+        with open(out_path, 'w') as f:
+            for bbox, category_id in zip(bboxes, class_ids):
+                bbox_arr = np.array(bbox, dtype=float)
+                # [xmin, ymin, w,h] to [x_c, y_c, w, h]
+                xywh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2), (bbox_arr[1] + bbox_arr[3] / 2),
+                             bbox_arr[2], bbox_arr[3]]
+                # normalize size:
+                xywh_bbox = [xywh_bbox[0] / im_width, xywh_bbox[1] / im_height,
+                             xywh_bbox[2] / im_width, xywh_bbox[3] / im_height]
+                entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}\n"
+                f.write(entry)
+
+
+def create_detection_lable_files(images_bboxes, images_sizes, images_class_ids, out_fnames, output_dir):
+    """
+
+    Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
+    normalized coordinates [0 to 1].
+    zero-indexed class numbers - start from 0
+
+    :param images_paths: list of dataset image filenames
+    :param images_bboxes: list of per image bboxes arrays in  [xc,yc,w,h] format.
+    :param images_sizes:
+    :param images_class_ids:  list of per image class_ids arrays
+    :param output_dir: output dir of labels text files
+    :return:
+    """
+    print(f'create_per_image_labels_files. labels_output_dir: {output_dir}')
+    try:
+        os.makedirs(output_dir)
+    except FileExistsError:
+        # catch exception - directory already exists
+        pass
+    for bboxes, images_size, class_ids, out_fname in zip(images_bboxes, images_sizes,
+                                                                 images_class_ids, out_fnames):
         im_height = images_size[0]
         im_width = images_size[1]
 
@@ -101,7 +139,7 @@ def create_detection_lable_files(images_bboxes, images_sizes, categories_lists, 
         bboxes = np.array(bboxes, dtype=float)
 
         with open(out_path, 'w') as f:
-            for bbox, category_id in zip(bboxes, categories_indices):
+            for bbox, category_id in zip(bboxes, class_ids):
                 # normalize scale:
                 xywh_bbox = [bbox[0] / im_width, bbox[1] / im_height,
                              bbox[2] / im_width, bbox[3] / im_height]
@@ -119,13 +157,13 @@ def create_detection_lable_files(images_bboxes, images_sizes, categories_lists, 
 #     "images": images_records,
 #     "categories": categories_records,
 #     "annotations": annotatons_records
-def create_coco_json_lable_files(images_paths, images_sizes, images_bboxes, categories_lists,
+def create_coco_json_lable_files(images_paths, images_sizes, images_bboxes, images_class_ids,
                    category_names,  category_ids, annotations_output_path):
     """
      :param images_paths: list of dataset image filenames
     :param images_sizes: list of per image [im.height, im.width] tuples
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
-    :param categories_lists: list of per image categories_indices arrays
+    :param images_class_ids: list of per image class_ids arrays
     :param category_names: list of all dataset's category names
     :param category_ids:  list of all dataset's category ids
 
@@ -155,7 +193,7 @@ def create_coco_json_lable_files(images_paths, images_sizes, images_bboxes, cate
     images_records = []
     annotatons_records = []
     for example_id, (image_path, image_size, bboxes, categories_list) in enumerate(
-            zip(images_paths, images_sizes, images_bboxes, categories_lists)):
+            zip(images_paths, images_sizes, images_bboxes, images_class_ids)):
 
         # images records:
 
