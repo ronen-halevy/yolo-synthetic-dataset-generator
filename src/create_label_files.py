@@ -5,7 +5,7 @@ import os
 
 
 
-def create_segmentation_label_files(images_polygons, images_sizes, images_objects_categories_indices,labels_fnames,
+def create_segmentation_label_files(images_polygons, images_sizes, categories_lists,labels_fnames,
                                   output_dir):
     """
     Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
@@ -15,7 +15,7 @@ def create_segmentation_label_files(images_polygons, images_sizes, images_object
 
     :param images_paths: list of dataset image filenames
     :param images_polygons: list of per image polygons arrays
-    :param images_objects_categories_indices:  list of per image categories_indices arrays
+    :param categories_lists:  list of per image categories_indices arrays
     :param output_dir: output dir of labels text files
     :return:
     """
@@ -28,7 +28,7 @@ def create_segmentation_label_files(images_polygons, images_sizes, images_object
         pass
     ## create label files
     for image_polygons, labels_fname, images_size, categories_indices in zip(images_polygons, labels_fnames, images_sizes,
-                                                              images_objects_categories_indices):
+                                                              categories_lists):
         im_height = images_size[0]
         im_width = images_size[1]
         labels_filename = f"{output_dir}/{labels_fname}"
@@ -42,19 +42,19 @@ def create_segmentation_label_files(images_polygons, images_sizes, images_object
                 f.write(entry) # fill label file with entries
 
 
-def create_detection_labels_unified_file(images_paths, images_bboxes, images_objects_categories_indices,
+def create_detection_labels_unified_file(images_paths, images_bboxes, categories_lists,
                                 labels_file_path):
     """
     :param images_paths: list of dataset image filenames
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
-    :param images_objects_categories_indices:  list of per image categories_indices arrays
+    :param categories_lists:  list of per image categories_indices arrays
     :param labels_file_path: path of output labels text files
     :return:
     """
     print('create_detection_labels_unified_file')
 
     entries = []
-    for image_path, categories_indices, bboxes in zip(images_paths, images_objects_categories_indices, images_bboxes):
+    for image_path, categories_indices, bboxes in zip(images_paths, categories_lists, images_bboxes):
 
         entry = f'{image_path} '
         for bbox, category_id in zip(bboxes, categories_indices):
@@ -70,7 +70,8 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, images_obj
     file.close()
 
 
-def create_detection_lable_files(images_bboxes, images_sizes, images_objects_categories_indices, out_fnames, output_dir):
+
+def create_detection_lable_files(images_bboxes, images_sizes, categories_lists, out_fnames, output_dir):
     """
 
     Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
@@ -80,7 +81,7 @@ def create_detection_lable_files(images_bboxes, images_sizes, images_objects_cat
     :param images_paths: list of dataset image filenames
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
     :param images_sizes:
-    :param images_objects_categories_indices:  list of per image categories_indices arrays
+    :param categories_lists:  list of per image categories_indices arrays
     :param output_dir: output dir of labels text files
     :return:
     """
@@ -91,7 +92,7 @@ def create_detection_lable_files(images_bboxes, images_sizes, images_objects_cat
         # catch exception - directory already exists
         pass
     for bboxes, images_size, categories_indices, out_path in zip(images_bboxes, images_sizes,
-                                                                 images_objects_categories_indices, out_fnames):
+                                                                 categories_lists, out_fnames):
         im_height = images_size[0]
         im_width = images_size[1]
 
@@ -119,13 +120,13 @@ def create_detection_lable_files(images_bboxes, images_sizes, images_objects_cat
 #     "images": images_records,
 #     "categories": categories_records,
 #     "annotations": annotatons_records
-def create_coco_json_lable_files(images_paths, images_sizes, images_bboxes, images_objects_categories_indices,
+def create_coco_json_lable_files(images_paths, images_sizes, images_bboxes, categories_lists,
                    category_names,  category_ids, annotations_output_path):
     """
      :param images_paths: list of dataset image filenames
     :param images_sizes: list of per image [im.height, im.width] tuples
     :param images_bboxes: list of per image bboxes arrays in xyxy format.
-    :param images_objects_categories_indices: list of per image categories_indices arrays
+    :param categories_lists: list of per image categories_indices arrays
     :param category_names: list of all dataset's category names
     :param category_ids:  list of all dataset's category ids
 
@@ -154,8 +155,8 @@ def create_coco_json_lable_files(images_paths, images_sizes, images_bboxes, imag
 
     images_records = []
     annotatons_records = []
-    for example_id, (image_path, image_size, bboxes, objects_categories_indices) in enumerate(
-            zip(images_paths, images_sizes, images_bboxes, images_objects_categories_indices)):
+    for example_id, (image_path, image_size, bboxes, categories_list) in enumerate(
+            zip(images_paths, images_sizes, images_bboxes, categories_lists)):
 
         # images records:
 
@@ -171,7 +172,7 @@ def create_coco_json_lable_files(images_paths, images_sizes, images_bboxes, imag
         })
 
         # annotatons_records
-        for bbox, category_id in zip(bboxes, objects_categories_indices):
+        for bbox, category_id in zip(bboxes, categories_list):
             annotatons_records.append({
                 "segmentation": [],
                 "area": [],

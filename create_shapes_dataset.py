@@ -57,7 +57,7 @@ def create_shapes_dataset():
         # create image dir for split - if needed
         images_out_path.mkdir(parents=True, exist_ok=True)
 
-        images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, category_names, category_ids, images_polygons = \
+        images_filenames, images_sizes, images_bboxes, categories_lists, category_names, category_ids, images_polygons = \
             shapes_dataset.create_dataset(
                 nentries,
                 f'{images_out_dir}')
@@ -66,14 +66,14 @@ def create_shapes_dataset():
         if config.get('labels_file_format')=='detection_coco_json_format':
             labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
             images_filenames = [f'{config["image_dir"].replace("{split}", split)}{images_filename}' for images_filename in images_filenames]
-            create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, images_objects_categories_indices,
+            create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, categories_lists,
                            category_names, category_ids,
                            labels_out_dir)
         elif config.get('labels_file_format') == 'detection_unified_textfile':
             labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
             labels_dir = Path(os.path.dirname(labels_out_dir))
             labels_dir.mkdir(parents=True, exist_ok=True)
-            create_detection_labels_unified_file(images_filenames, images_bboxes, images_objects_categories_indices,
+            create_detection_labels_unified_file(images_filenames, images_bboxes, categories_lists,
                                     labels_out_dir)
 
         # 3. text file per image
@@ -83,7 +83,7 @@ def create_shapes_dataset():
             # related label file has same name with .txt ext - split filename, replace ext to txt:
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
             create_detection_lable_files(images_bboxes, images_sizes,
-                                        images_objects_categories_indices, label_out_fnames, labels_out_dir)
+                                        categories_lists, label_out_fnames, labels_out_dir)
 
         #  4. Ultralitics like segmentation
         elif config.get('labels_file_format')=='segmentation_yolov5':
@@ -92,7 +92,7 @@ def create_shapes_dataset():
             # related label file has same name with .txt ext - split filename, replace ext to txt:
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
             create_segmentation_label_files(images_polygons, images_sizes,
-                                          images_objects_categories_indices, label_out_fnames, labels_out_dir)
+                                          categories_lists, label_out_fnames, labels_out_dir)
 
     # write category names file:
     print(f'Saving {config["category_names_file"]}')
