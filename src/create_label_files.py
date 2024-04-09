@@ -69,44 +69,6 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, images_cla
             file.write(item + "\n")
     file.close()
 
-def create_keypoints(images_bboxes, images_sizes, images_class_ids, out_fnames, output_dir):
-    """
-
-    Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
-    normalized coordinates [0 to 1].
-    zero-indexed class numbers - start from 0
-
-    :param images_paths: list of dataset image filenames
-    :param images_bboxes: list of per image bboxes arrays in xyxy format.
-    :param images_sizes:
-    :param images_class_ids:  list of per image class_ids arrays
-    :param output_dir: output dir of labels text files
-    :return:
-    """
-    print(f'create_per_image_labels_files. labels_output_dir: {output_dir}')
-    try:
-        os.makedirs(output_dir)
-    except FileExistsError:
-        # catch exception - directory already exists
-        pass
-    for bboxes, images_size, class_ids, out_path in zip(images_bboxes, images_sizes,
-                                                                 images_class_ids, out_fnames):
-        im_height = images_size[0]
-        im_width = images_size[1]
-
-        # head, filename = os.path.split(image_path)
-        out_fnames = f"{output_dir}/{out_fnames}"
-        with open(out_path, 'w') as f:
-            for bbox, category_id in zip(bboxes, class_ids):
-                bbox_arr = np.array(bbox, dtype=float)
-                # [xmin, ymin, w,h] to [x_c, y_c, w, h]
-                xywh_bbox = [(bbox_arr[0] + bbox_arr[2] / 2), (bbox_arr[1] + bbox_arr[3] / 2),
-                             bbox_arr[2], bbox_arr[3]]
-                # normalize size:
-                xywh_bbox = [xywh_bbox[0] / im_width, xywh_bbox[1] / im_height,
-                             xywh_bbox[2] / im_width, xywh_bbox[3] / im_height]
-                entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}\n"
-                f.write(entry)
 
 
 def create_detection_lable_files(images_bboxes, images_sizes, images_class_ids, out_fnames, output_dir):
