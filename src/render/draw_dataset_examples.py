@@ -87,21 +87,27 @@ def read_segmentation_dataset_entry(image_path, label_path):
     bboxes: list[nt]. entry format:  [[xmin,ymin,w,h], i=0:nt]
     category_ids:  a list of per-image-object category id
     """
+    image = Image.open(image_path)
+    size = np.array([image.height, image.width]).reshape(1, -1)
     if os.path.isfile(label_path):
         with open(label_path) as f:
             entries = [x.split() for x in f.read().strip().splitlines() if len(x)]
+    if 'entries' in locals():
+        polygons = [np.array(entry)[1:].reshape(-1, 2).astype(float) for entry in entries]
+        category_ids = [np.array(entry)[0].astype(int) for entry in entries]
+        polygons = [(polygon * size).astype(int) for polygon in polygons]
+        bboxes = []
+        for polygon, category_id in zip(polygons, category_ids):
+            x, y = polygon[:, 0], polygon[:, 1]
+            bbox = [x.min(), y.min(), x.max() - x.min(), y.max() - y.min()]
+            bboxes.append(bbox)
+    else:
+        print(f'labels files {label_path} does not exist!')
+        bboxes=[]
+        category_ids=[]
+        polygons=[]
 
-    polygons = [np.array(entry)[1:].reshape(-1, 2).astype(float) for entry in entries]
-    category_ids = [np.array(entry)[0].astype(int) for entry in entries]
 
-    image = Image.open(image_path)
-    size = np.array([image.height, image.width]).reshape(1, -1)
-    polygons = [(polygon * size).astype(int) for polygon in polygons]
-    bboxes = []
-    for polygon, category_id in zip(polygons, category_ids):
-        x, y = polygon[:, 0], polygon[:, 1]
-        bbox = [x.min(), y.min(), x.max() - x.min(), y.max() - y.min()]
-        bboxes.append(bbox)
     return image, polygons, bboxes, category_ids
 
 
@@ -162,23 +168,24 @@ def draw_segmentation_dataset_example(image_dir, label_dir, category_names_table
     [image, polygons, bboxes, category_ids] = read_segmentation_dataset_entry(image_path, label_path)
     # fill objects with  masks by polygons:
     array_image = np.array(image)
-    for polygon, category_id in zip(polygons, category_ids):
-        color = np.random.randint(low=0, high=255, size=3).tolist()
-        cv2.fillPoly(array_image, np.expand_dims(polygon, 0), color=color)
-    image = im.fromarray(array_image)
-    ImageDraw.Draw(image)
+    if polygons:
+        for polygon, category_id in zip(polygons, category_ids):
+            color = np.random.randint(low=0, high=255, size=3).tolist()
+            cv2.fillPoly(array_image, np.expand_dims(polygon, 0), color=color)
+        image = im.fromarray(array_image)
+        ImageDraw.Draw(image)
 
-    # extract category names by ids:
-    category_names = [category_names_table[category_id] for category_id in category_ids]
-    # construct outpath:
-    fname = Path(image_path)
-    dest_dir = f'{output_dir}'
-    Path(dest_dir).mkdir(parents=True, exist_ok=True)
-    output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
+        # extract category names by ids:
+        category_names = [category_names_table[category_id] for category_id in category_ids]
+        # construct outpath:
+        fname = Path(image_path)
+        dest_dir = f'{output_dir}'
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
 
-    draw_dataset_entry(image, bboxes, category_names, output_path)
-    print(f'saving test results to {output_path}')
-    image.save(output_path)
+        draw_dataset_entry(image, bboxes, category_names, output_path)
+        print(f'saving test results to {output_path}')
+        image.save(output_path)
 
 
 def draw_coco_detection_dataset_example(annotations_path, category_names_table, output_dir):
