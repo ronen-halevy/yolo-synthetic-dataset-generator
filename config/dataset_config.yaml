@@ -1,7 +1,7 @@
 ---
 # number of images per split:
 splits:
- train: 5
+ train: 20
  valid: 5
  test: 1
 
