@@ -132,7 +132,9 @@ def main():
     with open(config_file, 'r') as stream:
         config_file = yaml.safe_load(stream)
 
-    n_clusters = config_file['n_clusters']
+    n_layers = config_file['n_layers']
+    n_anchors = config_file['n_anchors']
+    n_clusters = n_layers * n_anchors
     anchors_out_file = config_file['anchors_out_file']
 
     ext_list = 'txt'
@@ -148,7 +150,12 @@ def main():
     wh = labels[:,3:5]- labels[:,1:3]
     anchors = creat_yolo_anchors(wh, n_clusters)
     im_size = 640
-    save_to_file(anchors_out_file, anchors * im_size)
+    anchors = np.array(anchors*im_size).reshape([n_layers, n_anchors, 2]).tolist()
+
+    with open(anchors_out_file, 'w') as file:
+        yaml.dump(anchors, file)
+
+    # save_to_file(anchors_out_file, anchors * im_size)
     print(f'result anchors:\n{anchors}')
     print(f'anchors_out_file: {anchors_out_file}')
 
