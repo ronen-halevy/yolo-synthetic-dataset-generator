@@ -52,6 +52,10 @@ def creat_yolo_anchors(w_h, n_clusters):
     :rtype:
     """
     kmeans = KMeans(n_clusters=n_clusters)  # Construct with num of clusters (in yolo - 9 (3*3))
+
+    # for testing small dataset . n < n_clusters, duplicate entries:
+    while w_h.shape[0] < n_clusters:
+        w_h = np.tile(w_h, [2,1]) # dup rows
     kmeans.fit(w_h)
     anchors = kmeans.cluster_centers_  # coordinates of cluster' centers
     sorted_anchors = sort_anchors(anchors).astype(np.float32)
@@ -96,7 +100,7 @@ def _list_label_files(path, ext_list):
         raise Exception(f'Error loading data from {path}: {e}') from e
 
 
-def read_label_from_file(fname):
+def read_bboxes_from_label_file(fname, labels_file_format):
     """
     Reads segments label file, retrun class and bbox.
     Input File format-a row per object structured: class, sx1,sy1....sxn,syn
@@ -106,14 +110,25 @@ def read_label_from_file(fname):
     """
     with open(fname) as f:
         lb = [x.split() for x in f.read().strip().splitlines() if len(x)]
-        if any(len(x) > 6 for x in lb):  # is segment
+        if 'segment' in labels_file_format:  # is segment
             classes = np.array([x[0] for x in lb], dtype=np.float32)
             # img_index = tf.tile(tf.expand_dims(tf.constant([idx]), axis=-1), [classes.shape[0], 1])
             segments = [np.array(x[1:], dtype=np.float32).reshape(-1, 2) for x in lb]  # (cls, xy1...)
-            lb = np.concatenate((classes.reshape(-1, 1), segments2boxes(segments)),
-                                1)  # (cls, xywh)
-        lb = np.array(lb, dtype=np.float32)
-    return lb
+            # lb = np.concatenate((classes.reshape(-1, 1), segments2boxes(segments)),
+            #                     1)  # (cls, xywh)
+            bboxes =  np.array(segments2boxes(segments))
+            xy_c = (bboxes[:, :2] + bboxes[:,2:4])/2
+            wh = (bboxes[:, 2:4] - bboxes[:,:2])
+            bboxes = np.concatenate([xy_c, wh], axis=1)
+
+        elif 'kpts' in labels_file_format or 'keypoint' in labels_file_format or 'detect' in labels_file_format:
+            bboxes = np.array(lb)[:,1:5]
+        else:
+            print(f'{labels_file_format} labels file format not supported. Terminating')
+            exit(1)
+
+        bboxes = np.array(bboxes, dtype=np.float32)
+    return bboxes
 
 def save_to_file(anchors_out_file, anchors):
     base_dir, fname = os.path.split(anchors_out_file)
@@ -136,18 +151,23 @@ def main():
     n_anchors = config_file['n_anchors']
     n_clusters = n_layers * n_anchors
     anchors_out_file = config_file['anchors_out_file']
+    labels_file_format = config_file['labels_file_format']
 
     ext_list = 'txt'
     path = config_file['labels_dir']
     label_files = _list_label_files(path, ext_list)
 
-    labels=np.zeros([0,5])
+    # bboxes=np.zeros([0,11])
+    bboxes=np.zeros([0,4])
+
     for idx, label_file in enumerate(label_files):
         # extract class, bbox and segment from label file:
-        label = read_label_from_file(label_file)
-        labels=np.concatenate([labels, label], axis=0) # labels shape: [b*nt,5] where b nof label files
+        bboxes_i = read_bboxes_from_label_file(label_file, labels_file_format) # list[ni] of image boxes, bboxes_i shape:[4]
+        bboxes=np.concatenate([bboxes, bboxes_i], axis=0) # labels shape: [b*nt,5] where b nof label files
 
-    wh = labels[:,3:5]- labels[:,1:3]
+    # wh = bboxes[:,3:5]#- labels[:,1:3]
+    wh = bboxes[:,2:4]#- labels[:,1:3]
+
     anchors = creat_yolo_anchors(wh, n_clusters)
     im_size = 640
     anchors = np.array(anchors*im_size).reshape([n_layers, n_anchors, 2]).tolist()

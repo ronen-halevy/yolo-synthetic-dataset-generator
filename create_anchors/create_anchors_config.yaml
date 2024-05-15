@@ -1,7 +1,18 @@
-n_clusters: 12 # 6 # number of output clusters. Typically 9 (3x3) in  yolov3
-n_layers: 4
+#n_clusters: 9 # 6 # number of output clusters. Typically 9 (3x3) in  yolov3
+n_layers: 3
 n_anchors: 3
-labels_dir: ../dataset/labels/train
-anchors_out_file: ./output/anchors_4l.yaml
+
+labels_dir: /home/ronen/devel/PycharmProjects/shapes-dataset/dataset/labels/train
+labels_file_format: segmentation_yolov5 # [segmentation_yolov5, keypoints, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
+anchors_out_file: ./output/anchors.yaml
+
+#
+#n_layers: 4
+
+#labels_dir: /home/ronen/devel/PycharmProjects/datasets/bic_markers_resized/labels
+#labels_file_format: keypoints # segmentation_yolov5 # [segmentation_yolov5, keypoints, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
+
+#anchors_out_file: ./output/anchors4l.yaml
+
 
 
