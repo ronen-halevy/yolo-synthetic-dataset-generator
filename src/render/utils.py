@@ -48,15 +48,15 @@ def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), fon
                   font=font)
     return image
 
-def draw_bounding_box(image, boxes, color, thickness=1):
-    draw = ImageDraw.Draw(image)
-    for box in boxes:
-        xmin, ymin, w, h = box
-        draw.line([(xmin, ymin), (xmin, ymin+h), (xmin+w, ymin+h), (xmin+w, ymin),
-                   (xmin, ymin)],
-                  width=thickness,
-                  fill=color)
-    return image
+# def draw_bounding_box(image, boxes, color, thickness=1):
+#     draw = ImageDraw.Draw(image)
+#     for box in boxes:
+#         xmin, ymin, w, h = box
+#         draw.line([(xmin, ymin), (xmin, ymin+h), (xmin+w, ymin+h), (xmin+w, ymin),
+#                    (xmin, ymin)],
+#                   width=thickness,
+#                   fill=color)
+#     return image
 
 def draw_bounding_box(image, boxes, thickness=1):
     colors = list(ImageColor.colormap.values())

@@ -18,9 +18,10 @@ import os
 import yaml
 import argparse
 from pathlib import Path
+import numpy as np
 
 from src.create_label_files import (create_coco_json_lable_files,
-                                    create_detection_lable_files,create_segmentation_label_files,
+                                    create_detection_lable_files,create_segmentation_label_files, create_keypoints_label_files,
                                     create_detection_labels_unified_file)
 from src.shapes_dataset import ShapesDataset
 
@@ -84,6 +85,30 @@ def create_shapes_dataset():
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
             create_detection_lable_files(images_bboxes, images_sizes,
                                         categories_lists, label_out_fnames, labels_out_dir)
+
+
+        elif config.get('labels_file_format')=='kpts_detection_yolov5':
+
+            labels_out_dir = Path(config['labels_dir'].replace("{split}", split))
+            labels_out_dir.mkdir(parents=True, exist_ok=True)
+            # related label file has same name with .txt ext - split filename, replace ext to txt:
+            label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
+            create_keypoints_label_files(images_polygons, images_sizes,
+                                          categories_lists, label_out_fnames, labels_out_dir)
+            # create dataset yaml:
+            npkts = len(images_polygons[0][0])  # [nimg,nobj, nvertices, 2], assumed nvertices identical to all (same shapes)
+            output_dir=config['output_dir']
+            out_filename = f"{output_dir}/dataset.yaml"
+            dataset_yaml = {
+                'nc': 1,
+                'names': '0',
+                'kpt_shape': [npkts, 3],  # x,y,valid
+                'skeleton': []
+
+            }
+            with open(out_filename, 'w') as outfile:
+                yaml.dump(dataset_yaml, outfile, default_flow_style=False)
+
 
         #  4. Ultralitics like segmentation
         elif config.get('labels_file_format')=='segmentation_yolov5':

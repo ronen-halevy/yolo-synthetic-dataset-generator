@@ -2,8 +2,100 @@ import json
 from datetime import date, datetime
 import numpy as np
 import os
+import yaml
+
+def segments2bboxes_batch(segments, width=640, height=640):
+    """
+    Convert segment polygons to bounding boxes labels, applying inside-image constraint.
+
+    :param segments: shape: [nobjects, nvertices, 2]
+    :type segments:
+    :param width:
+    :type width:
+    :param height:
+    :type height:
+    :return:
+    :rtype:
+    """
+    # 1. Locate out of region entries, i.e. entries with negative or above image dimenssions coords.
+
+    ge = np.logical_or(np.less(segments[...,0:1], 0), np.less(segments[...,1:2], 0))
+    le = np.logical_or(np.greater(segments[...,0:1], width), np.greater(segments[...,1:2], height))
+    out_of_region = np.logical_or(ge, le).astype(np.float32) # values 0 or 1, shape: [nt, nvertices, 1]
+    # 2. Find bbox xmin,ymin coords
+    # 2.1 De-priorities selection of Negative out-of-region coords as xmin, ymin, by adding a large bias
+    bias = 10000
+    bias_vector = out_of_region*bias # bias is 0 for in region coords, and large otherwise.
+    segments_x = segments[..., 0] #+ bias_vector # Add large bias to out of range x coords.
+    segments_y = segments[..., 1] #+ bias_vector # Add large bias to out of range y coords.
+    # 2.2 find xmin, ymin
+
+    xmin= np.min(segments_x,axis=1)
+    ymin = np.min(segments_y, axis=1)
+    # 3. Find bbox max coords
+    # 3.1 De-priorities selection of positive out-of-region coords xmax, ymax, by substractinb a large bias:
+    # segments_x = segments[..., 1]# - 2*bias_vector # substact large bias to out of range x coords.
+    # segments_y = segments[..., 2] #- 2*bias_vector # substact large bias to out of range y coords.
+    # 3.2 find max coords:
+    xmax= np.max(segments_x,axis=1)
+    ymax = np.max(segments_y, axis=1)
+    # 4 concat bboxes:
+    bbox = np.concatenate([xmin[...,None], ymin[...,None], xmax[...,None], ymax[...,None]], axis=-1) # shape: [nt,4]
+    # 5 handle edge case of all segment's vertices out of region, which led to biased vertices selection. set 0s bbox:
+
+    ind = np.logical_and(np.greater(bbox, 0), np.less(bbox, bias/2)) # thresh at bias/2 should be good
+    bbox = np.where(ind, bbox, [0., 0., 0., 0.]) # if all segments are out of region, then set bbox to 0s
+    return bbox
+
+def create_keypoints_label_files(images_polygons, images_sizes, images_class_ids,labels_fnames,
+                                  output_dir):
+
+    """
+    Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
+    normalized coordinates [0 to 1].
+    zero-indexed class numbers - start from 0
 
 
+    :param images_paths: list of dataset image filenames
+    :param images_polygons: list of per image polygons arrays
+    :param images_class_ids:  list of per image class_ids
+    :param output_dir: output dir of labels text files
+    :return:
+    """
+    print(f'create_keypoints_label_files. output_dir: {output_dir}')
+    # create out dirs if needed - tbd never needed...
+    try:
+        os.makedirs(output_dir)
+    except FileExistsError:
+        # catch if directory already exists
+        pass
+    ## create label files
+
+    for image_polygons, labels_fname, images_size, class_ids in zip(images_polygons, labels_fnames, images_sizes,
+                                                              images_class_ids):
+        polygons=np.array(image_polygons)
+        bbpxes = segments2bboxes_batch(polygons, width=640, height=640)
+        im_height = images_size[0]
+        im_width = images_size[1]
+        # normalize:
+        bbpxes/=[im_width, im_height, im_width, im_height]
+        kpts = (polygons/np.array([im_width, im_height]))
+        # concat valid field:
+        kpts_valid = np.full( [kpts.shape[0], kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
+        kpts = np.concatenate([kpts, kpts_valid], axis=-1).reshape(kpts.shape[0], -1) # flatten kpts per object
+        entries = np.concatenate([bbpxes, kpts], axis=1)
+
+
+        labels_filename = f"{output_dir}/{labels_fname}"
+        print(f'labels_filename: {labels_filename}')
+
+        # normalize sizes:
+        # image_polygons=[image_polygon/np.array(images_size) for image_polygon in image_polygons]
+        with open(labels_filename, 'w') as f:
+            category_id=0 # assumed a single class in kpts mode
+            for entry  in entries:
+                entry = f"{category_id} {' '.join(str(vertix) for vertix in list(entry.reshape(-1)))}\n"
+                f.write(entry) # fill label file with entrie
 
 def create_segmentation_label_files(images_polygons, images_sizes, images_class_ids,labels_fnames,
                                   output_dir):
