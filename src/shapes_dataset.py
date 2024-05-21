@@ -180,7 +180,7 @@ class ShapesDataset:
                                                 image_size)
                 bbox = self.__polygon_to_box(polygon)
 
-                iou = list(map(lambda x: self.__compute_iou(bbox, x), bboxes))
+                iou = list(map(lambda x: self.__compute_iou(bbox, x), bboxes)) # check iou with other generated boxes, must be below thresh
 
                 if len(iou) == 0 or max(iou) <= iou_thresh:
                     break
