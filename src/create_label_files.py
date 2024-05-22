@@ -162,8 +162,42 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, images_cla
     file.close()
 
 
+def create_detection_entries(images_bboxes, images_sizes, images_class_ids):
+    """
 
-def create_detection_lable_files(images_bboxes, images_sizes, images_class_ids, out_fnames, output_dir):
+    Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
+    normalized coordinates [0 to 1].
+    zero-indexed class numbers - start from 0
+
+    :param images_paths: list of dataset image filenames
+    :param images_bboxes: list of per image bboxes arrays in  [xc,yc,w,h] format.
+    :param images_sizes:
+    :param images_class_ids:  list of per image class_ids arrays
+    :param output_dir: output dir of labels text files
+    :return:
+    """
+
+    entries = []
+    for bboxes, images_size, class_ids, in zip(images_bboxes, images_sizes,
+                                                                 images_class_ids): # images loop
+        im_height = images_size[0]
+        im_width = images_size[1]
+
+        # head, filename = os.path.split(image_path)
+        bboxes = np.array(bboxes, dtype=float)
+        img_entries = []
+
+        for bbox, category_id in zip(bboxes, class_ids): # labels in image loop
+                # normalize scale:
+            xywh_bbox = [bbox[0] / im_width, bbox[1] / im_height,
+                             bbox[2] / im_width, bbox[3] / im_height]
+
+            entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}\n"
+            img_entries.append(entry)
+        entries.append(img_entries)
+    return entries
+
+def entries_to_files(batch_entries, out_fnames, output_dir):
     """
 
     Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
@@ -183,25 +217,11 @@ def create_detection_lable_files(images_bboxes, images_sizes, images_class_ids, 
     except FileExistsError:
         # catch exception - directory already exists
         pass
-    for bboxes, images_size, class_ids, out_fname in zip(images_bboxes, images_sizes,
-                                                                 images_class_ids, out_fnames):
-        im_height = images_size[0]
-        im_width = images_size[1]
-
-        # head, filename = os.path.split(image_path)
+    for img_entries, out_fname in zip(batch_entries, out_fnames):
         out_path = f"{output_dir}/{out_fname}"
-        bboxes = np.array(bboxes, dtype=float)
-
         with open(out_path, 'w') as f:
-            for bbox, category_id in zip(bboxes, class_ids):
-                # normalize scale:
-                xywh_bbox = [bbox[0] / im_width, bbox[1] / im_height,
-                             bbox[2] / im_width, bbox[3] / im_height]
-
-                entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}\n"
+            for entry in img_entries:
                 f.write(entry)
-
-
 
 
 # Create a coco like format label file. format:

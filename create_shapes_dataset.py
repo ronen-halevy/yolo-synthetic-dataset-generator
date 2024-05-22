@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 
 from src.create_label_files import (create_coco_json_lable_files,
-                                    create_detection_lable_files,create_segmentation_label_files, create_keypoints_label_files,
+                                    create_detection_entries, entries_to_files, create_segmentation_label_files, create_keypoints_label_files,
                                     create_detection_labels_unified_file)
 from src.shapes_dataset import ShapesDataset
 
@@ -83,9 +83,8 @@ def create_shapes_dataset():
             labels_out_dir.mkdir(parents=True, exist_ok=True)
             # related label file has same name with .txt ext - split filename, replace ext to txt:
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
-            create_detection_lable_files(images_bboxes, images_sizes,
-                                        categories_lists, label_out_fnames, labels_out_dir)
-
+            bbox_entries = create_detection_entries(images_bboxes, images_sizes, categories_lists)
+            entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
 
         elif config.get('labels_file_format')=='kpts_detection_yolov5':
 
