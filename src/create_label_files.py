@@ -47,58 +47,6 @@ def segments2bboxes_batch(segments, width=640, height=640):
     bbox = np.where(ind, bbox, [0., 0., 0., 0.]) # if all segments are out of region, then set bbox to 0s
     return bbox
 
-def create_keypoints_label_files(images_polygons, images_sizes, images_class_ids,labels_fnames,
-                                  output_dir):
-
-    """
-    Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
-    normalized coordinates [0 to 1].
-    zero-indexed class numbers - start from 0
-
-
-    :param images_paths: list of dataset image filenames
-    :param images_polygons: list of per image polygons arrays
-    :param images_class_ids:  list of per image class_ids
-    :param output_dir: output dir of labels text files
-    :return:
-    """
-    print(f'create_keypoints_label_files. output_dir: {output_dir}')
-    # create out dirs if needed - tbd never needed...
-    try:
-        os.makedirs(output_dir)
-    except FileExistsError:
-        # catch if directory already exists
-        pass
-    ## create label files
-
-    for image_polygons, labels_fname, images_size, class_ids in zip(images_polygons, labels_fnames, images_sizes,
-                                                              images_class_ids):
-        polygons=np.array(image_polygons)
-        bbpxes = segments2bboxes_batch(polygons, width=640, height=640)
-        im_height = images_size[0]
-        im_width = images_size[1]
-        # normalize:
-        bbpxes/=[im_width, im_height, im_width, im_height]
-        xy_c = (bbpxes[:, 0:2] + bbpxes[:, 2:4]) / 2
-        wh = (bbpxes[:, 2:4] - bbpxes[:, 0:2])
-
-        kpts = (polygons/np.array([im_width, im_height]))
-        # concat valid field:
-        kpts_valid = np.full( [kpts.shape[0], kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
-        kpts = np.concatenate([kpts, kpts_valid], axis=-1).reshape(kpts.shape[0], -1) # flatten kpts per object
-        entries = np.concatenate([xy_c,wh, kpts], axis=1)
-
-
-        labels_filename = f"{output_dir}/{labels_fname}"
-        print(f'labels_filename: {labels_filename}')
-
-        # normalize sizes:
-        # image_polygons=[image_polygon/np.array(images_size) for image_polygon in image_polygons]
-        with open(labels_filename, 'w') as f:
-            category_id=0 # assumed a single class in kpts mode
-            for entry  in entries:
-                entry = f"{category_id} {' '.join(str(vertix) for vertix in list(entry.reshape(-1)))}\n"
-                f.write(entry) # fill label file with entrie
 
 def create_segmentation_label_files(images_polygons, images_sizes, images_class_ids,labels_fnames,
                                   output_dir):
@@ -165,6 +113,64 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, images_cla
     file.close()
 
 
+def create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, images_class_ids):
+
+    """
+    Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
+    normalized coordinates [0 to 1].
+    zero-indexed class numbers - start from 0
+
+
+    :param images_paths: list of dataset image filenames
+    :param images_polygons: list of per image polygons arrays
+    :param images_class_ids:  list of per image class_ids
+    :param output_dir: output dir of labels text files
+    :return:
+    """
+    # print(f'create_keypoints_label_files. output_dir: {output_dir}')
+    # create out dirs if needed - tbd never needed...
+    # try:
+    #     os.makedirs(output_dir)
+    # except FileExistsError:
+    #     # catch if directory already exists
+    #     pass
+    ## create label files
+    detection_entries = create_detection_entries(images_bboxes, images_sizes, images_class_ids)
+    entries=[]
+    for image_polygons, images_size, class_ids, image_detection_entries in zip(images_polygons, images_sizes,
+                                                              images_class_ids, detection_entries):
+        image_detection_entries=np.array(image_detection_entries)
+        image_polygons=np.array(image_polygons)
+        # bbpxes = segments2bboxes_batch(polygons, width=640, height=640)
+        im_height = images_size[0]
+        im_width = images_size[1]
+        # normalize:
+        # bbpxes/=[im_width, im_height, im_width, im_height]
+        # xy_c = (bbpxes[:, 0:2] + bbpxes[:, 2:4]) / 2
+        # wh = (bbpxes[:, 2:4] - bbpxes[:, 0:2])
+
+        img_kpts = (image_polygons/np.array([im_width, im_height]))
+        # concat valid field:
+        img_kpts_valid = np.full( [img_kpts.shape[0], img_kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
+        img_kpts = np.concatenate([img_kpts, img_kpts_valid], axis=-1).reshape(img_kpts.shape[0], -1) # flatten kpts per object
+        # entries = np.concatenate([image_detection_entries, kpts], axis=1)
+
+
+        # labels_filename = f"{output_dir}/{labels_fname}"
+        # print(f'labels_filename: {labels_filename}')
+
+        # normalize sizes:
+        # image_polygons=[image_polygon/np.array(images_size) for image_polygon in image_polygons]
+        img_entries=[]
+        # with open(labels_filename, 'w') as f:
+        category_id=0 # assumed a single class in kpts mode
+        for detection_entry, kpts   in zip(image_detection_entries, img_kpts):
+            entry = f"{detection_entry} {' '.join(str(kpt) for kpt in list(kpts.reshape(-1)))}"
+            img_entries.append(entry)
+        entries.append(img_entries)
+        return entries
+
+
 def create_detection_entries(images_bboxes, images_sizes, images_class_ids):
     """
 
@@ -195,7 +201,7 @@ def create_detection_entries(images_bboxes, images_sizes, images_class_ids):
             xywh_bbox = [bbox[0] / im_width, bbox[1] / im_height,
                              bbox[2] / im_width, bbox[3] / im_height]
 
-            entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}\n"
+            entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}"
             img_entries.append(entry)
         entries.append(img_entries)
     return entries
