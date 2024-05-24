@@ -79,11 +79,14 @@ def create_keypoints_label_files(images_polygons, images_sizes, images_class_ids
         im_width = images_size[1]
         # normalize:
         bbpxes/=[im_width, im_height, im_width, im_height]
+        xy_c = (bbpxes[:, 0:2] + bbpxes[:, 2:4]) / 2
+        wh = (bbpxes[:, 2:4] - bbpxes[:, 0:2])
+
         kpts = (polygons/np.array([im_width, im_height]))
         # concat valid field:
         kpts_valid = np.full( [kpts.shape[0], kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
         kpts = np.concatenate([kpts, kpts_valid], axis=-1).reshape(kpts.shape[0], -1) # flatten kpts per object
-        entries = np.concatenate([bbpxes, kpts], axis=1)
+        entries = np.concatenate([xy_c,wh, kpts], axis=1)
 
 
         labels_filename = f"{output_dir}/{labels_fname}"
