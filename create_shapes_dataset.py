@@ -103,8 +103,9 @@ def create_shapes_dataset():
                 'nc': 1,
                 'names': '0',
                 'kpt_shape': [npkts, 3],  # x,y,valid
-                'skeleton': []
-
+                'skeleton': [],
+                'train': '../shapes-dataset/dataset/images/train', #f"{config['base_dir']}/{config['labels_dir']}",
+                'val': '../shapes-dataset/dataset/images/train'
             }
             with open(out_filename, 'w') as outfile:
                 yaml.dump(dataset_yaml, outfile, default_flow_style=False)
