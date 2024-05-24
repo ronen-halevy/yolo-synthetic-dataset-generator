@@ -148,7 +148,7 @@ def create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, 
             entry = f"{detection_entry} {' '.join(str(kpt) for kpt in list(kpts.reshape(-1)))}"
             img_entries.append(entry)
         entries.append(img_entries)
-        return entries
+    return entries
 
 
 def create_detection_entries(images_bboxes, images_sizes, images_class_ids):
@@ -210,7 +210,7 @@ def entries_to_files(batch_entries, out_fnames, output_dir):
         out_path = f"{output_dir}/{out_fname}"
         with open(out_path, 'w') as f:
             for entry in img_entries:
-                f.write(entry)
+                f.write(f'{entry}\n')
 
 
 # Create a coco like format label file. format:

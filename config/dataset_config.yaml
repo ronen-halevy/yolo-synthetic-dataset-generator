@@ -7,8 +7,9 @@ splits:
 
 output_dir: dataset
 
-image_dir: ./dataset/images/{split}/
-labels_dir: ./dataset/labels/{split}
+base_dir: ../shapes-dataset
+image_dir: ./dataset/images
+labels_dir: ./dataset/labels
 labels_all_entries_file: ./dataset/labels/{split}/all_entries.txt
 coco_json_labels_file_path: ./dataset/images/{split}/annotations.json
 

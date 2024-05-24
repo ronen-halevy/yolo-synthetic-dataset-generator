@@ -53,7 +53,7 @@ def create_shapes_dataset():
         print(f'create {split} files:')
         nentries = int(splits[split])
         # create dirs for output if missing:
-        images_out_dir = f'{image_dir.replace("{split}", split)}'
+        images_out_dir = f'{image_dir}/{split}'
         images_out_path = Path(images_out_dir)
         # create image dir for split - if needed
         images_out_path.mkdir(parents=True, exist_ok=True)
@@ -66,7 +66,7 @@ def create_shapes_dataset():
         # 1. coco format (i.e. dataset entries defined by a json file)
         if config.get('labels_file_format')=='detection_coco_json_format':
             labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
-            images_filenames = [f'{config["image_dir"].replace("{split}", split)}{images_filename}' for images_filename in images_filenames]
+            images_filenames = [f'{config["image_dir"]}/{split}/{images_filename}' for images_filename in images_filenames]
             create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, categories_lists,
                            category_names, category_ids,
                            labels_out_dir)
@@ -79,7 +79,7 @@ def create_shapes_dataset():
 
         # 3. text file per image
         elif config.get('labels_file_format')=='detection_yolov5':
-            labels_out_dir = Path(config['labels_dir'].replace("{split}", split))
+            labels_out_dir = Path(f"{config[f'labels_dir']}/{split}")
             labels_out_dir.mkdir(parents=True, exist_ok=True)
             # related label file has same name with .txt ext - split filename, replace ext to txt:
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
@@ -88,7 +88,7 @@ def create_shapes_dataset():
 
         elif config.get('labels_file_format')=='kpts_detection_yolov5':
 
-            labels_out_dir = Path(config['labels_dir'].replace("{split}", split))
+            labels_out_dir = Path(f"{config['labels_dir']}/{split}")
             labels_out_dir.mkdir(parents=True, exist_ok=True)
             # related label file has same name with .txt ext - split filename, replace ext to txt:
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
@@ -101,11 +101,11 @@ def create_shapes_dataset():
             out_filename = f"{output_dir}/dataset.yaml"
             dataset_yaml = {
                 'nc': 1,
-                'names': '0',
+                'names': {0: 0},
                 'kpt_shape': [npkts, 3],  # x,y,valid
                 'skeleton': [],
-                'train': '../shapes-dataset/dataset/images/train', #f"{config['base_dir']}/{config['labels_dir']}",
-                'val': '../shapes-dataset/dataset/images/train'
+                'train': f"{config['base_dir']}/{config['image_dir']}/train",
+                'val': f"{config['base_dir']}/{config['image_dir']}/valid"
             }
             with open(out_filename, 'w') as outfile:
                 yaml.dump(dataset_yaml, outfile, default_flow_style=False)
