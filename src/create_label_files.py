@@ -127,43 +127,23 @@ def create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, 
     :param output_dir: output dir of labels text files
     :return:
     """
-    # print(f'create_keypoints_label_files. output_dir: {output_dir}')
-    # create out dirs if needed - tbd never needed...
-    # try:
-    #     os.makedirs(output_dir)
-    # except FileExistsError:
-    #     # catch if directory already exists
-    #     pass
-    ## create label files
+
     detection_entries = create_detection_entries(images_bboxes, images_sizes, images_class_ids)
     entries=[]
     for image_polygons, images_size, class_ids, image_detection_entries in zip(images_polygons, images_sizes,
                                                               images_class_ids, detection_entries):
         image_detection_entries=np.array(image_detection_entries)
         image_polygons=np.array(image_polygons)
-        # bbpxes = segments2bboxes_batch(polygons, width=640, height=640)
+
         im_height = images_size[0]
         im_width = images_size[1]
-        # normalize:
-        # bbpxes/=[im_width, im_height, im_width, im_height]
-        # xy_c = (bbpxes[:, 0:2] + bbpxes[:, 2:4]) / 2
-        # wh = (bbpxes[:, 2:4] - bbpxes[:, 0:2])
 
         img_kpts = (image_polygons/np.array([im_width, im_height]))
         # concat valid field:
         img_kpts_valid = np.full( [img_kpts.shape[0], img_kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
         img_kpts = np.concatenate([img_kpts, img_kpts_valid], axis=-1).reshape(img_kpts.shape[0], -1) # flatten kpts per object
-        # entries = np.concatenate([image_detection_entries, kpts], axis=1)
 
-
-        # labels_filename = f"{output_dir}/{labels_fname}"
-        # print(f'labels_filename: {labels_filename}')
-
-        # normalize sizes:
-        # image_polygons=[image_polygon/np.array(images_size) for image_polygon in image_polygons]
         img_entries=[]
-        # with open(labels_filename, 'w') as f:
-        category_id=0 # assumed a single class in kpts mode
         for detection_entry, kpts   in zip(image_detection_entries, img_kpts):
             entry = f"{detection_entry} {' '.join(str(kpt) for kpt in list(kpts.reshape(-1)))}"
             img_entries.append(entry)
