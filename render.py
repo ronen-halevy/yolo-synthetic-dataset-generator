@@ -32,8 +32,8 @@ if __name__ == "__main__":
     labels_file_format = config.get('labels_file_format')
 
     if labels_file_format in ['segmentation_yolov5', 'detection_yolov5']:
-        labels_dir = config['labels_dir'].replace("{split}", split)
-        images_dir = config["image_dir"].replace("{split}", split)
+        labels_dir = f'{config["labels_dir"]}/{split}'
+        images_dir = f'{config["image_dir"]}/{split}'
 
     elif labels_file_format == 'detection_coco_json_format':
         coco_json_labels_file_path = config['coco_json_labels_file_path']
