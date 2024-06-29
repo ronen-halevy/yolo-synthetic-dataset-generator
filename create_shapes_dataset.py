@@ -113,8 +113,8 @@ def create_shapes_dataset():
 
         #  4. Ultralitics like segmentation
         elif config.get('labels_file_format')=='segmentation_yolov5':
-            labels_out_dir = Path(config['labels_dir'].replace("{split}", split))
-            Path(labels_out_dir).mkdir(parents=True, exist_ok=True)
+            labels_out_dir = Path(f"{config['labels_dir']}/{split}")
+            labels_out_dir.mkdir(parents=True, exist_ok=True)
             # related label file has same name with .txt ext - split filename, replace ext to txt:
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
             create_segmentation_label_files(images_polygons, images_sizes,
