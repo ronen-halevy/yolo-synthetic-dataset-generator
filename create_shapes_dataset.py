@@ -63,6 +63,20 @@ def create_shapes_dataset():
                 nentries,
                 f'{images_out_dir}')
 
+        labels_out_dir = Path(f"{config[f'labels_dir']}/{split}")
+        labels_out_dir.mkdir(parents=True, exist_ok=True)
+        # related label file has same name with .txt ext - split filename, replace ext to txt:
+        label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
+        bbox_entries = create_detection_entries(images_bboxes, images_sizes, categories_lists)
+
+        import math
+        theta = 30/180*math.pi
+
+
+
+
+
+
         # 1. coco format (i.e. dataset entries defined by a json file)
         if config.get('labels_file_format')=='detection_coco_json_format':
             labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)

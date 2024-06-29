@@ -125,7 +125,7 @@ class ShapesDataset:
             (cos(th) * radius[0],
              sin(th
                       ) * radius[1])
-            for th in [i * (2 * math.pi) / nvertices + math.radians(theta0)for i in range(nvertices)]
+            for th in [i * (2 * math.pi) / nvertices for i in range(nvertices)]
         ]
 
         # rotate shape:
