@@ -79,12 +79,8 @@ class ShapesDataset:
         return  [x.min(), y.min(), x.max(), y.max()]
 
 
-    def rotate(self, polygon):
-        # patch - dirty image for circle and ellipse if rotated by pi/4 - TBD
-        rot_tick = math.pi/4 if len(polygon) < 10 else  math.pi/2
-        # random rotation angle:
-        rot_angle = rot_tick*np.random.randint(0, 8)
-
+    def rotate(self, polygon, theta0):
+        rot_angle = theta0 # rot_tick*np.random.randint(0, 8)
         rotate_x = lambda x, y: x * cos(rot_angle) + y * sin(rot_angle)
         rotate_y = lambda x, y: -x * sin(rot_angle) + y * cos(rot_angle)
         x, y = np.split(np.array(polygon), 2, axis=-1)
@@ -131,9 +127,10 @@ class ShapesDataset:
                       ) * radius[1])
             for th in [i * (2 * math.pi) / nvertices + math.radians(theta0)for i in range(nvertices)]
         ]
+
         # rotate shape:
         if self.rotate_shapes:
-            polygon= self.rotate(polygon)
+            polygon= self.rotate(polygon, theta0)
 
         # translate to center:
         polygon+=center
