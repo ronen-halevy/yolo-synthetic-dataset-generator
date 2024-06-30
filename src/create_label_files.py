@@ -213,6 +213,42 @@ def entries_to_files(batch_entries, out_fnames, output_dir):
                 f.write(f'{entry}\n')
 
 
+def dota_entries_to_files(batch_entries, category_names, out_fnames, output_dir):
+    """
+
+    Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
+    normalized coordinates [0 to 1].
+    zero-indexed class numbers - start from 0
+
+    :param images_paths: list of dataset image filenames
+    :param images_bboxes: list of per image bboxes arrays in  [xc,yc,w,h] format.
+    :param images_sizes:
+    :param images_class_ids:  list of per image class_ids arrays
+    :param output_dir: output dir of labels text files
+    :return:
+    """
+    print(f'create_per_image_labels_files. labels_output_dir: {output_dir}')
+    try:
+        os.makedirs(output_dir)
+    except FileExistsError:
+        # catch exception - directory already exists
+        pass
+    for img_entries, out_fname in zip(batch_entries, out_fnames):
+        out_path = f"{output_dir}/{out_fname}"
+        with open(out_path, 'w') as f:
+            for entry  in zip(img_entries):
+                for elem in entry[0][:-1]: # skip class - the last list entry
+
+                    # hh=*entry[0].tolist()) + '\n'
+                    f.write(str(elem)+' ')
+
+                f.write(str(category_names[int(entry[0][-1])]) + ' ')
+                difficulty = 0
+                f.write(str(difficulty))
+
+                f.write('\n')
+
+
 # Create a coco like format label file. format:
 # a single json file with 4 tables:
 #     "info":

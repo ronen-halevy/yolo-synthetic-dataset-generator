@@ -2,14 +2,14 @@
 # number of images per split:
 splits:
  train: 5
- valid: 5
+ valid: 1
  test: 1
 
-output_dir: dataset
+output_dir: dataset-obb
 
-base_dir: ../shapes-dataset
-image_dir: ./dataset/images
-labels_dir: ./dataset/labels
+base_dir: ../shapes-datase
+image_dir: ./images
+labels_dir: ./labels
 labels_all_entries_file: ./dataset/labels/{split}/all_entries.txt
 coco_json_labels_file_path: ./dataset/images/{split}/annotations.json
 
@@ -29,7 +29,7 @@ test_output_dir: ./runs/exp
 # 3. detection_unified_textfil: coco like labels format. Dataset entries are defined by a json file
 # 4. class-bbox labels text file per all images, a row per image.
 
-labels_file_format:  kpts_detection_yolov5 # [segmentation_yolov5, kpts_detection_yolov5, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
+labels_file_format:  dota_obb # [segmentation_yolov5, kpts_detection_yolov5, detection_yolov5, dota_obb, detection_coco_json_format, detection_unified_textfile]
 ###########################################################################
 # shape dataset definitions:
 shapes_config_file: ./config/shapes_config.yaml
