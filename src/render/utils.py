@@ -48,15 +48,6 @@ def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), fon
                   font=font)
     return image
 
-# def draw_bounding_box(image, boxes, color, thickness=1):
-#     draw = ImageDraw.Draw(image)
-#     for box in boxes:
-#         xmin, ymin, w, h = box
-#         draw.line([(xmin, ymin), (xmin, ymin+h), (xmin+w, ymin+h), (xmin+w, ymin),
-#                    (xmin, ymin)],
-#                   width=thickness,
-#                   fill=color)
-#     return image
 
 def draw_bounding_box(image, boxes, thickness=1):
     colors = list(ImageColor.colormap.values())
@@ -64,10 +55,19 @@ def draw_bounding_box(image, boxes, thickness=1):
     draw = ImageDraw.Draw(image)
     for box in boxes:
         xmin, ymin, w, h = box
-        # xmin = xc-w/2
-        # ymin = yc-h/2
         draw.line([(xmin, ymin), (xmin, ymin + h), (xmin + w, ymin + h), (xmin + w, ymin),
                    (xmin, ymin)],
+                  width=thickness,
+                  fill=color)
+    return image
+
+def draw_bounding_rotated_box(image, polygons, thickness=1):
+    colors = list(ImageColor.colormap.values())
+    color = colors[7]
+    draw = ImageDraw.Draw(image)
+    for polygon in polygons:
+        draw.line([(polygon[0], polygon[1]), (polygon[2], polygon[3]), (polygon[4], polygon[5]), (polygon[6], polygon[7]),
+                   (polygon[0], polygon[1])],
                   width=thickness,
                   fill=color)
     return image
