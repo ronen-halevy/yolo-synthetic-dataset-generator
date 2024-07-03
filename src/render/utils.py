@@ -49,35 +49,45 @@ def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), fon
     return image
 
 
-def draw_bounding_box(image, boxes, thickness=1):
+
+def draw_bbox_xywh(image, bboxes, category_names, thickness=1):
+    # annotated_bbox_image = draw_bounding_box(image, bboxes)
     colors = list(ImageColor.colormap.values())
-    color = colors[0]
+    color = colors[7]
     draw = ImageDraw.Draw(image)
-    for box in boxes:
-        xmin, ymin, w, h = box
+    for bbox in bboxes:
+        xmin, ymin, w, h = bbox
         draw.line([(xmin, ymin), (xmin, ymin + h), (xmin + w, ymin + h), (xmin + w, ymin),
                    (xmin, ymin)],
                   width=thickness,
                   fill=color)
-    return image
 
-def draw_bounding_rotated_box(image, polygons, thickness=1):
-    colors = list(ImageColor.colormap.values())
-    color = colors[7]
-    draw = ImageDraw.Draw(image)
-    for polygon in polygons:
-        draw.line([(polygon[0], polygon[1]), (polygon[2], polygon[3]), (polygon[4], polygon[5]), (polygon[6], polygon[7]),
-                   (polygon[0], polygon[1])],
-                  width=thickness,
-                  fill=color)
-    return image
 
-def draw_dataset_entry(image, bboxes, category_names, output_path):
-    annotated_bbox_image = draw_bounding_box(image, bboxes)
     text_box_color = [255, 255, 255]
-    draw_text_on_bounding_box(annotated_bbox_image, np.array(bboxes)[..., 1],
+    draw_text_on_bounding_box(image, np.array(bboxes)[..., 1],
                                                      np.array(bboxes)[..., 0], text_box_color,
                                                      category_names, font_size=15)
 
     return image
 
+
+def draw_bbox_xyxy(image, bboxes, category_names, thickness=1):
+    # annotated_bbox_image = draw_bbox_xyxy(image, bboxes)
+    colors = list(ImageColor.colormap.values())
+    color = colors[7]
+    draw = ImageDraw.Draw(image)
+    for bbox_xyxy in bboxes:
+        draw.line([(bbox_xyxy[0], bbox_xyxy[1]), (bbox_xyxy[2], bbox_xyxy[3]), (bbox_xyxy[4], bbox_xyxy[5]), (bbox_xyxy[6], bbox_xyxy[7]),
+                   (bbox_xyxy[0], bbox_xyxy[1])],
+                  width=thickness,
+                  fill=color)
+
+
+
+
+    text_box_color = [255, 255, 255]
+    draw_text_on_bounding_box(image, np.array(bboxes)[..., 1],
+                                                     np.array(bboxes)[..., 0], text_box_color,
+                                                     category_names, font_size=15)
+
+    return image

@@ -25,7 +25,7 @@ from src.create_label_files import (create_coco_json_lable_files,
                                     create_detection_labels_unified_file)
 from src.shapes_dataset import ShapesDataset
 
-def rbox2poly(obboxes, theta):
+def xywh2xyxy(obboxes, theta):
     """
     Trans rbox format to poly format.
     Args:
@@ -37,17 +37,13 @@ def rbox2poly(obboxes, theta):
 
     cls,  center, w, h = np.split(obboxes, (1, 3, 4), axis=-1)
 
-    Cos, Sin = np.cos(theta), np.sin(theta)
 
-    vector1 = np.concatenate(
-            [w/2 * Cos, -w/2 * Sin], axis=-1)
-    vector2 = np.concatenate(
-            [-h/2 * Sin, -h/2 * Cos], axis=-1)
 
-    point1 = center + vector1 + vector2
-    point2 = center + vector1 - vector2
-    point3 = center - vector1 - vector2
-    point4 = center - vector1 + vector2
+
+    point1 = center + np.concatenate([-w/2,-h/2], axis=1)
+    point2 = center + np.concatenate([w/2,-h/2], axis=1)
+    point3 = center + np.concatenate([w/2,h/2], axis=1)
+    point4 = center + np.concatenate([-w/2,h/2], axis=1)
 
     # order = obboxes.shape[:-1]
     return np.concatenate(
@@ -125,23 +121,47 @@ def create_shapes_dataset():
             bbox_entries = create_detection_entries(images_bboxes, images_sizes, categories_lists)
             entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
         elif config.get('labels_file_format') == 'dota_obb':
-            polygons = []
-            for bbox_entry in bbox_entries:  # loop on images
-                im_bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry]
-                im_bbox_entries = np.array(im_bbox_entries)
-                im_poly = rbox2poly(im_bbox_entries, theta)
-                polygons.append(im_poly)
+            rbboxes = []
+            for idx, bbox_entry in enumerate(bbox_entries):  # loop on images
+                bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry]
+                bbox_entries = np.array(bbox_entries)
+                theta=45 # todo ronen debug
+
+                # todo new
+                def rotate(hbboxes, theta0):
+                    rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
+                    # rot_angle = 0  # !!!todo debug ronen!!!!!!
+                    # oo=sin(rot_angle)
+                    rotate_x = lambda x, y: x * math.cos(rot_angle) + y * math.sin(rot_angle)
+                    rotate_y = lambda x, y: -x * math.sin(rot_angle) + y * math.cos(rot_angle)
+                    x_offset = (np.max(hbboxes[:,[0,2,4,6]]) + np.min(hbboxes[:,[0,2,4,6]]))/2
+                    y_offset = (np.max(hbboxes[:,[1,3,5,7]]) + np.min(hbboxes[:,[1,3,5,7]]))/2
+                    x_ = hbboxes[:,[0,2,4,6]] - x_offset
+                    y_ = hbboxes[:,[1,3,5,7]] - y_offset
+                    x_, y_ = rotate_x(x_, y_), rotate_y(x_, y_)
+                    x = x_ + x_offset
+                    y = y_ + y_offset
+
+                    rbboxes = np.concatenate([x[...,None], y[...,None]], axis=-1)
+                    rbboxes = rbboxes.reshape(-1,8)
+                    return rbboxes
+
+                bbox_entries = xywh2xyxy(bbox_entries, theta)
+                theta1= 45
+
+                bbox_entries[:,:8]=rotate(bbox_entries[:,:8], theta1) # todo new
+                rbboxes.append(bbox_entries)
 
             labels_out_dir = Path(f"{output_dir}/{config['labels_dir']}/{split}")
-            dota_entries_to_files(polygons, category_names, label_out_fnames, labels_out_dir)
+            dota_entries_to_files(rbboxes, category_names, label_out_fnames, labels_out_dir)
 
         elif config.get('labels_file_format')=='kpts_detection_yolov5':
-            labels_out_dir = Path(f"{labels_out_dir}/{config['labels_dir']}/{split}")
+            labels_out_dir = Path(f"{output_dir}/{config['labels_dir']}/{split}")
             labels_out_dir.mkdir(parents=True, exist_ok=True)
             # related label file has same name with .txt ext - split filename, replace ext to txt:
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
             kpts_entries=create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, categories_lists)
-            entries_to_files(kpts_entries, label_out_fnames, )
+            entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
 
             # create dataset yaml:
             npkts = len(images_polygons[0][0])  # [nimg,nobj, nvertices, 2], assumed nvertices identical to all (same shapes)
@@ -160,7 +180,7 @@ def create_shapes_dataset():
 
         #  4. Ultralitics like segmentation
         elif config.get('labels_file_format')=='segmentation_yolov5':
-            labels_out_dir = Path(f"{config['labels_dir']}/{split}")
+            labels_out_dir = Path(f"{output_dir}/{config['labels_dir']}/{split}")
             labels_out_dir.mkdir(parents=True, exist_ok=True)
             # related label file has same name with .txt ext - split filename, replace ext to txt:
             label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
@@ -168,8 +188,8 @@ def create_shapes_dataset():
                                           categories_lists, label_out_fnames, labels_out_dir)
 
     # write category names file:
-    print(f'Saving {config["category_names_file"]}')
-    with open(config['category_names_file'], 'w') as f:
+    print(f'Saving {output_dir}/{config["category_names_file"]}')
+    with open(f'{output_dir}/{config["category_names_file"]}', 'w') as f:
         for category_name in category_names:
             f.write(f'{category_name}\n')
 
