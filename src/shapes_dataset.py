@@ -80,7 +80,17 @@ class ShapesDataset:
 
 
     def rotate(self, polygon, theta0):
-        rot_angle = theta0 # rot_tick*np.random.randint(0, 8)
+        """
+        Rotates image - wip
+        :param polygon:
+        :type polygon:
+        :param theta0:
+        :type theta0:
+        :return:
+        :rtype:
+        """
+
+        rot_angle = theta0/180*math.pi # rot_tick*np.random.randint(0, 8)
         rotate_x = lambda x, y: x * cos(rot_angle) + y * sin(rot_angle)
         rotate_y = lambda x, y: -x * sin(rot_angle) + y * cos(rot_angle)
         x, y = np.split(np.array(polygon), 2, axis=-1)
