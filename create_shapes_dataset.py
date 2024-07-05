@@ -123,32 +123,16 @@ def create_shapes_dataset():
                 nentries,
                 f'{images_out_dir}')
 
-        labels_out_dir = Path(f"{config[f'labels_dir']}/{split}")
+        labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
         labels_out_dir.mkdir(parents=True, exist_ok=True)
         # related label file has same name with .txt ext - split filename, replace ext to txt:
         label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
         bbox_entries = create_detection_entries(images_bboxes, images_sizes, categories_lists)
 
-        # 1. coco format (i.e. dataset entries defined by a json file)
-        if config.get('labels_file_format')=='detection_coco_json_format':
-            labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
-            images_filenames = [f'{config["image_dir"]}/{split}/{images_filename}' for images_filename in images_filenames]
-            create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, categories_lists,
-                           category_names, category_ids,
-                           labels_out_dir)
-        elif config.get('labels_file_format') == 'detection_unified_textfile':
-            labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
-            labels_dir = Path(os.path.dirname(labels_out_dir))
-            labels_dir.mkdir(parents=True, exist_ok=True)
-            create_detection_labels_unified_file(images_filenames, images_bboxes, categories_lists,
-                                    labels_out_dir)
 
         # 3. text file per image
-        elif config.get('labels_file_format')=='detection_yolov5':
-            labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
-            labels_out_dir.mkdir(parents=True, exist_ok=True)
+        if config.get('labels_file_format')=='detection_yolov5':
             # related label file has same name with .txt ext - split filename, replace ext to txt:
-            label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
             bbox_entries = create_detection_entries(images_bboxes, images_sizes, categories_lists)
             entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
         elif config.get('labels_file_format') == 'dota_obb':
@@ -163,14 +147,11 @@ def create_shapes_dataset():
                 bbox_entries[:,:8]=rotate(bbox_entries[:,:8].reshape([-1, 4,2]), theta).reshape(-1, 8) # todo new
                 rbboxes.append(bbox_entries)
 
-            labels_out_dir = Path(f"{output_dir}/{config['labels_dir']}/{split}")
+            # labels_out_dir.mkdir(parents=True, exist_ok=True)
             dota_entries_to_files(rbboxes, category_names, label_out_fnames, labels_out_dir)
 
         elif config.get('labels_file_format')=='kpts_detection_yolov5':
-            labels_out_dir = Path(f"{output_dir}/{config['labels_dir']}/{split}")
-            labels_out_dir.mkdir(parents=True, exist_ok=True)
             # related label file has same name with .txt ext - split filename, replace ext to txt:
-            label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
             kpts_entries=create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, categories_lists)
             entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
 
@@ -185,18 +166,31 @@ def create_shapes_dataset():
                 'train': f"{config['base_dir']}/{config['image_dir']}/train",
                 'val': f"{config['base_dir']}/{config['image_dir']}/valid"
             }
+        #  4. Ultralitics like segmentation
+        elif config.get('labels_file_format') == 'segmentation_yolov5':
+            # related label file has same name with .txt ext - split filename, replace ext to txt:
+            create_segmentation_label_files(images_polygons, images_sizes,
+                                            categories_lists, label_out_fnames, labels_out_dir)
+
+            # 1. coco format (i.e. dataset entries defined by a json file)
+        elif config.get('labels_file_format') == 'detection_coco_json_format':
+            labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
+            images_filenames = [f'{config["image_dir"]}/{split}/{images_filename}' for images_filename in
+                                images_filenames]
+            create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, categories_lists,
+                                         category_names, category_ids,
+                                         labels_out_dir)
+        elif config.get('labels_file_format') == 'detection_unified_textfile':
+            labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
+            labels_dir = Path(os.path.dirname(labels_out_dir))
+            labels_dir.mkdir(parents=True, exist_ok=True)
+            create_detection_labels_unified_file(images_filenames, images_bboxes, categories_lists,
+                                                 labels_out_dir)
+
             with open(out_filename, 'w') as outfile:
                 yaml.dump(dataset_yaml, outfile, default_flow_style=False)
 
 
-        #  4. Ultralitics like segmentation
-        elif config.get('labels_file_format')=='segmentation_yolov5':
-            labels_out_dir = Path(f"{output_dir}/{config['labels_dir']}/{split}")
-            labels_out_dir.mkdir(parents=True, exist_ok=True)
-            # related label file has same name with .txt ext - split filename, replace ext to txt:
-            label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
-            create_segmentation_label_files(images_polygons, images_sizes,
-                                          categories_lists, label_out_fnames, labels_out_dir)
 
     # write category names file:
     print(f'Saving category_names_file {output_dir}/{config["category_names_file"]}')
