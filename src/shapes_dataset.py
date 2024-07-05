@@ -128,8 +128,7 @@ class ShapesDataset:
         sel_height = sel_height * random.uniform(1 - size_fluctuation, 1)
 
         radius = np.array([shape_width  / 2, sel_height / 2])
-        center = np.random.randint(
-            low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
+
 
         polygon = [
             (cos(th) * radius[0],
@@ -143,9 +142,27 @@ class ShapesDataset:
             polygon= self.rotate(polygon, theta0)
 
         # translate to center:
+        center = np.random.randint(
+            low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
         polygon+=center
-        polygon=tuple(map(tuple, polygon))
+        # polygon=tuple(map(tuple, polygon))
         return polygon
+
+    def draw_image(self, images_polygons, images_filenames, image_size, bg_color, output_dir):
+        image = Image.new('RGB', image_size, bg_color)
+        draw = ImageDraw.Draw(image)
+        for example_id, (polygons, image_filename) in enumerate(zip(images_polygons, images_filenames)):
+
+            for polygon in polygons:
+                sel_color = np.random.choice(color)
+
+                draw.polygon(polygon, fill=ImageColor.getrgb(sel_color) )
+
+            image_filename = f'img_{example_id:06d}.jpg'
+            file_path = f'{output_dir}/{image_filename}'
+            print(f'writing image file to disk: {image_filename}')
+            image.save(file_path)
+
 
     def __create_ds_entry(self, objects_attributes, image_size, bg_color, iou_thresh,
                           margin_from_edge,
@@ -186,6 +203,13 @@ class ShapesDataset:
                                                 margin_from_edge,
                                                 image_size)
                 bbox = self.__polygon_to_box(polygon)
+
+                from create_shapes_dataset import rotate
+                if self.rotate_shapes:
+                    theta0=45 # todo temp debug!!!!
+                    polygon =rotate(polygon, theta0)
+
+                    polygon = tuple(map(tuple, polygon))
 
                 iou = list(map(lambda x: self.__compute_iou(bbox, x), bboxes)) # check iou with other generated boxes, must be below thresh
 
