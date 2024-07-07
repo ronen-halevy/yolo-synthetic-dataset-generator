@@ -3,6 +3,7 @@ from datetime import date, datetime
 import numpy as np
 import os
 import yaml
+import math
 
 def segments2bboxes_batch(segments, width=640, height=640):
     """
@@ -112,6 +113,52 @@ def create_detection_labels_unified_file(images_paths, images_bboxes, images_cla
             file.write(item + "\n")
     file.close()
 
+def xywh2xyxy(obboxes):
+    """
+    Trans rbox format to poly format.
+    Args:
+        rboxes (array/tensor): (num_gts, [cx cy l s θ]) θ∈[-pi/2, pi/2)
+
+    Returns:
+        polys (array/tensor): (num_gts, [x1 y1 x2 y2 x3 y3 x4 y4])
+    """
+
+    cls,  center, w, h = np.split(obboxes, (1, 3, 4), axis=-1)
+
+    point1 = center + np.concatenate([-w/2,-h/2], axis=1)
+    point2 = center + np.concatenate([w/2,-h/2], axis=1)
+    point3 = center + np.concatenate([w/2,h/2], axis=1)
+    point4 = center + np.concatenate([-w/2,h/2], axis=1)
+
+    # order = obboxes.shape[:-1]
+    return np.concatenate(
+            [point1, point2, point3, point4, cls], axis=-1)
+
+def rotate(hbboxes, theta0):
+    rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
+
+    rotate_bbox = lambda xy: np.concatenate([np.sum(xy * (math.cos(rot_angle),  math.sin(rot_angle)), axis=-1,keepdims=True),
+                              np.sum(xy * (-math.sin(rot_angle) , math.cos(rot_angle)), axis=-1,keepdims=True)], axis=-1)
+
+
+
+    offset_xy = (np.max(hbboxes, axis=-2, keepdims=True) + np.min(hbboxes,axis=-2, keepdims=True)) / 2
+    hbboxes_ = hbboxes - offset_xy
+    rbboxes =  rotate_bbox(hbboxes_)
+    rbboxes=rbboxes+offset_xy
+    return rbboxes
+
+def create_obb_entries(bbox_entries):
+    rbboxes = []
+    for idx, bbox_entry in enumerate(bbox_entries):  # loop on images
+
+        bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry]
+        bbox_entries = np.array(bbox_entries)
+        bbox_entries = xywh2xyxy(bbox_entries)
+        rbboxes.append(bbox_entries)
+    rbboxes=np.array(rbboxes)
+    return rbboxes
+
 
 def create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, images_class_ids):
 
@@ -128,10 +175,10 @@ def create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, 
     :return:
     """
 
-    detection_entries = create_detection_entries(images_bboxes, images_sizes, images_class_ids)
+    # detection_entries = create_detection_entries(images_bboxes, images_sizes, images_class_ids)
     entries=[]
     for image_polygons, images_size, class_ids, image_detection_entries in zip(images_polygons, images_sizes,
-                                                              images_class_ids, detection_entries):
+                                                              images_class_ids, images_bboxes):
         image_detection_entries=np.array(image_detection_entries)
         image_polygons=np.array(image_polygons)
 
@@ -151,7 +198,7 @@ def create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, 
     return entries
 
 
-def create_detection_entries(images_bboxes, images_sizes, images_class_ids):
+def normalize_bboxes(images_bboxes, images_sizes, images_class_ids):
     """
 
     Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
@@ -166,7 +213,7 @@ def create_detection_entries(images_bboxes, images_sizes, images_class_ids):
     :return:
     """
 
-    entries = []
+    all_bboxes = []
     for bboxes, images_size, class_ids, in zip(images_bboxes, images_sizes,
                                                                  images_class_ids): # images loop
         im_height = images_size[0]
@@ -174,7 +221,7 @@ def create_detection_entries(images_bboxes, images_sizes, images_class_ids):
 
         # head, filename = os.path.split(image_path)
         bboxes = np.array(bboxes, dtype=float)
-        img_entries = []
+        img_bboxes = []
 
         for bbox, category_id in zip(bboxes, class_ids): # labels in image loop
                 # normalize scale:
@@ -182,9 +229,9 @@ def create_detection_entries(images_bboxes, images_sizes, images_class_ids):
                              bbox[2] / im_width, bbox[3] / im_height]
 
             entry = f"{category_id} {' '.join(str(e) for e in xywh_bbox)}"
-            img_entries.append(entry)
-        entries.append(img_entries)
-    return entries
+            img_bboxes.append(entry)
+        all_bboxes.append(img_bboxes)
+    return all_bboxes
 
 def entries_to_files(batch_entries, out_fnames, output_dir):
     """
@@ -238,14 +285,10 @@ def dota_entries_to_files(batch_entries, category_names, out_fnames, output_dir)
         with open(out_path, 'w') as f:
             for entry  in zip(img_entries):
                 for elem in entry[0][:-1]: # skip class - the last list entry
-
-                    # hh=*entry[0].tolist()) + '\n'
                     f.write(str(elem)+' ')
-
                 f.write(str(category_names[int(entry[0][-1])]) + ' ')
                 difficulty = 0
                 f.write(str(difficulty))
-
                 f.write('\n')
 
 
@@ -341,3 +384,19 @@ def create_coco_json_lable_files(images_paths, images_sizes, images_bboxes, imag
     print(f'Save annotation  in {annotations_output_path}')
     with open(annotations_output_path, 'w') as fp:
         json.dump(output_records, fp)
+
+
+
+def write_images_to_file(images, images_out_dir, images_filenames):
+            images_sizes=[images[idx].size for idx in np.arange(len(images))]
+
+            print(f'\nimages_out_dir {images_out_dir}')
+
+            # images_filenames=[]
+            for idx, (image,image_filename) in enumerate(zip(images, images_filenames)):
+                # image_filename = f'img_{idx:06d}.jpg'
+                file_path = f'{images_out_dir}/{image_filename}'
+                image.save(file_path)
+                # images_filenames.append(image_filename)
+                print(f'writing image file to disk: {image_filename}')
+            return images_filenames

@@ -19,52 +19,19 @@ import yaml
 import argparse
 from pathlib import Path
 import numpy as np
+from PIL import Image, ImageDraw
+from PIL import Image, ImageColor
+import random
 
 from src.create_label_files import (create_coco_json_lable_files,
-                                    create_detection_entries, entries_to_files, dota_entries_to_files,create_segmentation_label_files, create_detection_kpts_entries,
-                                    create_detection_labels_unified_file)
+                                    normalize_bboxes, entries_to_files, dota_entries_to_files,create_segmentation_label_files, create_detection_kpts_entries, create_obb_entries,
+                                    create_detection_labels_unified_file, write_images_to_file)
 from src.shapes_dataset import ShapesDataset
 
-def xywh2xyxy(obboxes, theta):
-    """
-    Trans rbox format to poly format.
-    Args:
-        rboxes (array/tensor): (num_gts, [cx cy l s θ]) θ∈[-pi/2, pi/2)
-
-    Returns:
-        polys (array/tensor): (num_gts, [x1 y1 x2 y2 x3 y3 x4 y4])
-    """
-
-    cls,  center, w, h = np.split(obboxes, (1, 3, 4), axis=-1)
-
-
-
-
-    point1 = center + np.concatenate([-w/2,-h/2], axis=1)
-    point2 = center + np.concatenate([w/2,-h/2], axis=1)
-    point3 = center + np.concatenate([w/2,h/2], axis=1)
-    point4 = center + np.concatenate([-w/2,h/2], axis=1)
-
-    # order = obboxes.shape[:-1]
-    return np.concatenate(
-            [point1, point2, point3, point4, cls], axis=-1)
 
 
 import math
 
-def rotate(hbboxes, theta0):
-    rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
-
-    rotate_bbox = lambda xy: np.concatenate([np.sum(xy * (math.cos(rot_angle),  math.sin(rot_angle)), axis=-1,keepdims=True),
-                              np.sum(xy * (-math.sin(rot_angle) , math.cos(rot_angle)), axis=-1,keepdims=True)], axis=-1)
-
-
-
-    offset_xy = (np.max(hbboxes, axis=-2) + np.min(hbboxes,axis=-2)) / 2
-    hbboxes_ = hbboxes - offset_xy
-    rbboxes =  rotate_bbox(hbboxes_)
-    rbboxes=rbboxes+offset_xy
-    return rbboxes
 
 # def rotateo(hbboxes, theta0):
 #     rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
@@ -83,6 +50,37 @@ def rotate(hbboxes, theta0):
 #     rbboxes = np.concatenate([x[..., None], y[..., None]], axis=-1)
 #     rbboxes = rbboxes.reshape(-1, 8)
 #     return rbboxes
+def draw_images(images_polygons, images_objects_colors=None, images_size=None, bg_color='white'):
+    # related label file has same name with .txt ext - split filename, replace ext to txt:
+
+    images_filenames = []
+    images = []
+    # images_objects_colors = np.full(list(np.array(images_polygons).shape[0:2])+[1], ['blue'])
+    # images_size = np.full([len(images_polygons),2],(640,640))
+
+    # for idx, (bboxes, categories_list, category_names, category_ids, image_polygons, image_objects_colors) in enumerate(zip(images_bboxes, categories_lists, categories_names, categories_ids, images_polygons, images_objects_colors)):
+    for idx, (image_polygons, image_objects_colors, image_size) in enumerate(
+            zip(images_polygons, images_objects_colors, images_size)):
+
+        # save image files
+        # sel_index = random.randint(0, len(image_size)-1) # randomly select img size index from config
+        # image_size= image_size[sel_index]
+        bg_color = np.random.choice(bg_color)
+        image = Image.new('RGB', tuple(image_size), bg_color)
+        draw = ImageDraw.Draw(image)
+
+        # draw shape on image:
+        # sel_color = np.random.choice(color)
+        # draw.polygon(image_polygons, fill=ImageColor.getrgb(sel_color) )
+        # draw.polygon(image_polygon, fill=ImageColor.getrgb('red') )
+
+        for image_polygon in image_polygons:
+            sel_color = np.random.choice(image_objects_colors[idx])
+            draw.polygon(image_polygon.flatten().tolist(), fill=ImageColor.getrgb(sel_color))
+        images.append(image)
+    return images
+
+
 def create_shapes_dataset():
     """
     Creates image detection and segmentation datasets in various formats, according to config files defitions
@@ -107,6 +105,7 @@ def create_shapes_dataset():
     shapes_config_file = config['shapes_config_file']
     shapes_dataset = ShapesDataset(shapes_config_file)
     output_dir = config['output_dir']
+    bg_color = config['bg_color']
 
     for split in splits: # loop: train, validation, test
         print(f'create {split} files:')
@@ -118,84 +117,86 @@ def create_shapes_dataset():
         # create image dir for split - if needed
         images_out_path.mkdir(parents=True, exist_ok=True)
 
-        images_filenames, images_sizes, images_bboxes, categories_lists, category_names, category_ids, images_polygons = \
+        labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
+        labels_out_dir.mkdir(parents=True, exist_ok=True)
+        images_bboxes, categories_lists, categories_names, categories_ids, images_polygons, images_objects_colors = \
             shapes_dataset.create_dataset(
                 nentries,
                 f'{images_out_dir}')
 
-        labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
-        labels_out_dir.mkdir(parents=True, exist_ok=True)
-        # related label file has same name with .txt ext - split filename, replace ext to txt:
+
+
+
+        config_image_size = config['image_size']
+        sel_index = [random.randint(0, len(config['image_size']) - 1) for idx in range(len(images_polygons))] # randomly select img size index from config
+        images_size = tuple(np.array(config_image_size)[sel_index])
+        images_filenames = [f'img_{idx:06d}.jpg' for idx in range(len(images_polygons))]
         label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
-        bbox_entries = create_detection_entries(images_bboxes, images_sizes, categories_lists)
+        bbox_entries = normalize_bboxes(images_bboxes, images_size, categories_lists)
 
-
-        # 3. text file per image
+            # 3. text file per image
         if config.get('labels_file_format')=='detection_yolov5':
-            # related label file has same name with .txt ext - split filename, replace ext to txt:
-            bbox_entries = create_detection_entries(images_bboxes, images_sizes, categories_lists)
-            entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
+                entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
         elif config.get('labels_file_format') == 'dota_obb':
-            rbboxes = []
-            for idx, bbox_entry in enumerate(bbox_entries):  # loop on images
-                bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry]
-                bbox_entries = np.array(bbox_entries)
-                theta=45 # todo ronen debug
+                theta = config['obb_rotate'] #rotate(polygon, theta0)
+                from src.create_label_files import rotate
 
-                bbox_entries = xywh2xyxy(bbox_entries, theta)
-
-                bbox_entries[:,:8]=rotate(bbox_entries[:,:8].reshape([-1, 4,2]), theta).reshape(-1, 8) # todo new
-                rbboxes.append(bbox_entries)
-
-            # labels_out_dir.mkdir(parents=True, exist_ok=True)
-            dota_entries_to_files(rbboxes, category_names, label_out_fnames, labels_out_dir)
+                hbboxes = create_obb_entries(bbox_entries)
+                hbboxes[..., :8] = rotate(hbboxes[..., :8].reshape([hbboxes.shape[0],-1, 4, 2]), theta).reshape(-1,hbboxes.shape[1],
+                                                                                                    8)  # todo new
+                images_polygons = rotate(images_polygons, theta)
+                images_polygons = tuple(map(tuple, images_polygons))
+                dota_entries_to_files(hbboxes, categories_names, label_out_fnames, labels_out_dir)
 
         elif config.get('labels_file_format')=='kpts_detection_yolov5':
-            # related label file has same name with .txt ext - split filename, replace ext to txt:
-            kpts_entries=create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, categories_lists)
-            entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
+                # related label file has same name with .txt ext - split filename, replace ext to txt:
+                kpts_entries=create_detection_kpts_entries(images_bboxes, images_polygons, images_size, categories_lists)
+                entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
 
-            # create dataset yaml:
-            npkts = len(images_polygons[0][0])  # [nimg,nobj, nvertices, 2], assumed nvertices identical to all (same shapes)
-            out_filename = f"{output_dir}/dataset.yaml"
-            dataset_yaml = {
-                'nc': 1,
-                'names': {0: 0},
-                'kpt_shape': [npkts, 3],  # x,y,valid
-                'skeleton': [],
-                'train': f"{config['base_dir']}/{config['image_dir']}/train",
-                'val': f"{config['base_dir']}/{config['image_dir']}/valid"
-            }
-        #  4. Ultralitics like segmentation
+                # create dataset yaml:
+                npkts = len(images_polygons[0][0])  # [nimg,nobj, nvertices, 2], assumed nvertices identical to all (same shapes)
+                out_filename = f"{output_dir}/dataset.yaml"
+                dataset_yaml = {
+                    'nc': 1,
+                    'names': {0: 0},
+                    'kpt_shape': [npkts, 3],  # x,y,valid
+                    'skeleton': [],
+                    'train': f"{config['base_dir']}/{config['image_dir']}/train",
+                    'val': f"{config['base_dir']}/{config['image_dir']}/valid"
+                }
+            #  4. Ultralitics like segmentation
         elif config.get('labels_file_format') == 'segmentation_yolov5':
-            # related label file has same name with .txt ext - split filename, replace ext to txt:
-            create_segmentation_label_files(images_polygons, images_sizes,
-                                            categories_lists, label_out_fnames, labels_out_dir)
+                # related label file has same name with .txt ext - split filename, replace ext to txt:
+                create_segmentation_label_files(images_polygons, images_size,
+                                                categories_lists, label_out_fnames, labels_out_dir)
 
-            # 1. coco format (i.e. dataset entries defined by a json file)
+                # 1. coco format (i.e. dataset entries defined by a json file)
         elif config.get('labels_file_format') == 'detection_coco_json_format':
-            labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
-            images_filenames = [f'{config["image_dir"]}/{split}/{images_filename}' for images_filename in
-                                images_filenames]
-            create_coco_json_lable_files(images_filenames, images_sizes, images_bboxes, categories_lists,
-                                         category_names, category_ids,
-                                         labels_out_dir)
+                labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
+                images_filenames = [f'{config["image_dir"]}/{split}/{images_filename}' for images_filename in
+                                    images_filenames]
+                create_coco_json_lable_files(images_filenames, images_size, images_bboxes, categories_lists,
+                                             categories_names, categories_ids,
+                                             labels_out_dir)
         elif config.get('labels_file_format') == 'detection_unified_textfile':
-            labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
-            labels_dir = Path(os.path.dirname(labels_out_dir))
-            labels_dir.mkdir(parents=True, exist_ok=True)
-            create_detection_labels_unified_file(images_filenames, images_bboxes, categories_lists,
-                                                 labels_out_dir)
+                labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
+                labels_dir = Path(os.path.dirname(labels_out_dir))
+                labels_dir.mkdir(parents=True, exist_ok=True)
+                create_detection_labels_unified_file(images_filenames, images_bboxes, categories_lists,
+                                                     labels_out_dir)
 
-            with open(out_filename, 'w') as outfile:
-                yaml.dump(dataset_yaml, outfile, default_flow_style=False)
+                with open(out_filename, 'w') as outfile:
+                    yaml.dump(dataset_yaml, outfile, default_flow_style=False)
 
+        images = draw_images(images_polygons, images_objects_colors, images_size, bg_color)
+        images_out_dir = Path(f"{output_dir}/{config[f'image_dir']}/{split}")
 
+        write_images_to_file(images, images_out_dir,images_filenames)
 
     # write category names file:
     print(f'Saving category_names_file {output_dir}/{config["category_names_file"]}')
     with open(f'{output_dir}/{config["category_names_file"]}', 'w') as f:
-        for category_name in category_names:
+        for category_name in categories_names:
             f.write(f'{category_name}\n')
 
 

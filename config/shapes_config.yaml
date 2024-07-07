@@ -2,7 +2,7 @@
 
 
 min_objects_in_image: 2 #4
-max_objects_in_image: 2 #8
+max_objects_in_image: 3 #8
 
 # images background color: color is randomy selected from list
 bg_color: [white] # [black, white, yellow, magenta, cyan]
@@ -21,7 +21,6 @@ iou_thresh: 0.
 
 
 # randomly rotate shapes by n*pi/4:
-rotate_shapes: false # boolean, note: a rotated shape is chopped if exceeds image boundaries
 # image_size random selection:
 #image_size: [[640, 640], [960, 800], [600, 800], [1000, 800]] # format: [height, width]
 #image_size: [ [ 720, 480 ] ]
@@ -46,6 +45,6 @@ shapes_categories:
     { cname: ellipse, nvertices: 80, theta0: 0, color: [ red ], height: [ 60 ], aspect_ratio: [ 0.5, 2 ], active: False },
     { cname: hexagon, nvertices: 6, theta0: 0, color: [ green ], height: [ 60], aspect_ratio: [ 4 ], active: False },
     { cname: rhombus, nvertices: 4, theta0: 0, color: [ green ], height: [ 60, 120 ], aspect_ratio: [ 2, 0.5 ], active: False },
-    { cname: rectangular, nvertices: 4, theta0: 45, color: [ red ], height: [ 120, 120 ], aspect_ratio: [ 0.5,2 ], active: False },
+    { cname: rectangular, nvertices: 4, theta0: 0, color: [ red ], height: [ 120, 120 ], aspect_ratio: [ 0.5,2 ], active: False },
   ]
 

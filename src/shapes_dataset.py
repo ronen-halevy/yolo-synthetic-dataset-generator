@@ -6,6 +6,8 @@ import random
 import yaml
 import os
 from PIL import Image, ImageColor
+from src.create_label_files import rotate
+
 import sys
 
 
@@ -30,7 +32,6 @@ class ShapesDataset:
         self.margin_from_edge = shapes_config['margin_from_edge']
         self.bbox_margin = shapes_config['bbox_margin']
         self.size_fluctuation = shapes_config['size_fluctuation']
-        self.rotate_shapes = shapes_config['rotate_shapes'] # rotated shape may be image boundaries exeeded
 
         # create a class names output file.
         self.shapes = []
@@ -138,7 +139,7 @@ class ShapesDataset:
         ]
 
         # rotate shape:
-        if self.rotate_shapes:
+        if theta0:
             polygon= self.rotate(polygon, theta0)
 
         # translate to center:
@@ -187,12 +188,13 @@ class ShapesDataset:
             objects_categories_names: type: str. list of nobjects category names
             polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
         """
-        image = Image.new('RGB', image_size, bg_color)
-        draw = ImageDraw.Draw(image)
+
         bboxes = []
         polygons=[]
         objects_categories_names = []
         objects_categories_indices = []
+        objects_colors = []
+
 
         for category_id, nvertices, theta0, category_name, aspect_ratio, height, color in objects_attributes:
             max_count = 10
@@ -204,12 +206,6 @@ class ShapesDataset:
                                                 image_size)
                 bbox = self.__polygon_to_box(polygon)
 
-                from create_shapes_dataset import rotate
-                if self.rotate_shapes:
-                    theta0=45 # todo temp debug!!!!
-                    polygon =rotate(polygon, theta0)
-
-                    polygon = tuple(map(tuple, polygon))
 
                 iou = list(map(lambda x: self.__compute_iou(bbox, x), bboxes)) # check iou with other generated boxes, must be below thresh
 
@@ -226,13 +222,11 @@ class ShapesDataset:
             if len(bbox):
                 bboxes.append(bbox)
 
-            # draw shape on image:
-            sel_color = np.random.choice(color)
-            draw.polygon(polygon, fill=ImageColor.getrgb(sel_color) )
 
             polygons.append(polygon)
             objects_categories_names.append(category_name)
             objects_categories_indices.append(category_id)
+            objects_colors.append(color)
 
         bboxes = np.array(bboxes)
         # [x,y,x,y] to [xc, yc, w, h] (bbox_margin is added distance between shape and bbox):
@@ -243,7 +237,7 @@ class ShapesDataset:
 
         bboxes = np.stack(bboxes, axis=1)  # / np.tile(image_size, 2)
 
-        return image, bboxes, tuple(objects_categories_indices), objects_categories_names, polygons
+        return bboxes, tuple(objects_categories_indices), objects_categories_names, polygons, objects_colors
 
 
     def create_dataset(self,  nentries, output_dir):
@@ -263,12 +257,13 @@ class ShapesDataset:
 
         """
 
-        images_filenames = []
+        # images_filenames = []
         images_sizes = []
         images_bboxes = []
         images_objects_categories_indices = []
         images_objects_categories_names = []
         images_polygons = []
+        images_objects_colors=[]
         # loop to create nentries examples:
         for example_id in range(nentries):
             # randomize num of objects in an image:
@@ -286,7 +281,8 @@ class ShapesDataset:
                 [self.category_names.index(shape_entry['cname']), shape_entry['nvertices'], shape_entry['theta0'], shape_entry['cname'], shape_entry['aspect_ratio'],
                  shape_entry['height'],
                  shape_entry['color']] for shape_entry in sel_shape_entris]
-            image, bboxes, objects_categories_indices, objects_categories_names, polygons = self.__create_ds_entry(
+
+            bboxes, objects_categories_indices, objects_categories_names, polygons, objects_colors = self.__create_ds_entry(
                     objects_attributes,
                     image_size,
                     bg_color,
@@ -295,19 +291,15 @@ class ShapesDataset:
                     self.bbox_margin,
                     self.size_fluctuation)
 
-            # save image files
-            image_filename = f'img_{example_id:06d}.jpg'
-            file_path = f'{output_dir}/{image_filename}'
-            print(f'writing image file to disk: {image_filename}')
-            image.save(file_path)
             if len(bboxes) == 0:
                 continue
 
-            images_filenames.append(image_filename)
-            images_sizes.append((image.width, image.height))
             images_bboxes.append(bboxes)
             images_objects_categories_indices.append(objects_categories_indices)
             images_objects_categories_names.append(objects_categories_names)
             images_polygons.append(polygons)
+            images_objects_colors.append(objects_colors)
 
-        return images_filenames, images_sizes, images_bboxes, images_objects_categories_indices, self.category_names, self.category_ids, images_polygons
+
+
+        return images_bboxes, images_objects_categories_indices, self.category_names, self.category_ids, images_polygons, images_objects_colors
