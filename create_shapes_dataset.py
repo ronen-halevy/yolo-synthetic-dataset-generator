@@ -120,7 +120,7 @@ def create_shapes_dataset():
         labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
         labels_out_dir.mkdir(parents=True, exist_ok=True)
         images_bboxes, categories_lists, categories_names, categories_ids, images_polygons, images_objects_colors = \
-            shapes_dataset.create_dataset(
+            shapes_dataset.create_images_shapes(
                 nentries)
 
 

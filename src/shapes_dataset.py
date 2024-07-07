@@ -27,7 +27,6 @@ class ShapesDataset:
         self.image_size = config['image_size']
         self.min_objects_in_image = config['min_objects_in_image']
         self.max_objects_in_image = config['max_objects_in_image']
-        self.bg_color = config['bg_color']
         self.iou_thresh = config['iou_thresh']
         self.margin_from_edge = config['margin_from_edge']
         self.bbox_margin = config['bbox_margin']
@@ -149,23 +148,8 @@ class ShapesDataset:
         # polygon=tuple(map(tuple, polygon))
         return polygon
 
-    def draw_image(self, images_polygons, images_filenames, image_size, bg_color, output_dir):
-        image = Image.new('RGB', image_size, bg_color)
-        draw = ImageDraw.Draw(image)
-        for example_id, (polygons, image_filename) in enumerate(zip(images_polygons, images_filenames)):
 
-            for polygon in polygons:
-                sel_color = np.random.choice(color)
-
-                draw.polygon(polygon, fill=ImageColor.getrgb(sel_color) )
-
-            image_filename = f'img_{example_id:06d}.jpg'
-            file_path = f'{output_dir}/{image_filename}'
-            print(f'writing image file to disk: {image_filename}')
-            image.save(file_path)
-
-
-    def __create_ds_entry(self, objects_attributes, image_size, bg_color, iou_thresh,
+    def create_one_image_shapes(self, objects_attributes, image_size, iou_thresh,
                           margin_from_edge,
                           bbox_margin,
                           size_fluctuation
@@ -176,7 +160,6 @@ class ShapesDataset:
         :param objects_attributes: list[nt], entry: [cls_id, nvertices, theta0, cls_name, [aspect_ratio], [height],
         [color]] where aspect ratio, height and color(str) are lists for random selection,
         :param image_size: image size, list[2] height and width
-        :param bg_color: type: str image's bg color
         :param iou_thresh: type: float [0,1], maximal iou value for adjacent bboxes. iou=1 means complete overlap. iou=0 means no overlap
         :param margin_from_edge: type: int. minimal distance in pixels of bbox from image's edge.
         :param bbox_margin: type: int. distance in pixels between bbox and shape
@@ -240,7 +223,7 @@ class ShapesDataset:
         return bboxes, tuple(objects_categories_indices), objects_categories_names, polygons, objects_colors
 
 
-    def create_dataset(self,  nentries):
+    def create_images_shapes(self,  nentries):
         """
         Description: Create dataset entries. svae created images in output_dir, and return dataset metadata.
 
@@ -270,7 +253,6 @@ class ShapesDataset:
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
             # take only active shapes for dataset creation:
             active_shapes = [shape   for shape in self.shapes if shape['active']]
-            bg_color = np.random.choice(self.bg_color)
             # randomly select num_of_objects shapes:
             sel_shape_entris = [np.random.choice(active_shapes) for idx in range(num_of_objects)]
 
@@ -282,10 +264,9 @@ class ShapesDataset:
                  shape_entry['height'],
                  shape_entry['color']] for shape_entry in sel_shape_entris]
 
-            bboxes, objects_categories_indices, objects_categories_names, polygons, objects_colors = self.__create_ds_entry(
+            bboxes, objects_categories_indices, objects_categories_names, polygons, objects_colors = self.create_one_image_shapes(
                     objects_attributes,
                     image_size,
-                    bg_color,
                     self.iou_thresh,
                     self.margin_from_edge,
                     self.bbox_margin,
