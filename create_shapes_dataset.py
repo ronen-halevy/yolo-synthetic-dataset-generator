@@ -102,8 +102,8 @@ def create_shapes_dataset():
 
     # train val test split sizes:
     splits = config["splits"]
-    shapes_config_file = config['shapes_config_file']
-    shapes_dataset = ShapesDataset(shapes_config_file)
+    shapes_config_file = config['shapes_config']
+    shapes_dataset = ShapesDataset(config)
     output_dir = config['output_dir']
     bg_color = config['bg_color']
 
@@ -121,9 +121,7 @@ def create_shapes_dataset():
         labels_out_dir.mkdir(parents=True, exist_ok=True)
         images_bboxes, categories_lists, categories_names, categories_ids, images_polygons, images_objects_colors = \
             shapes_dataset.create_dataset(
-                nentries,
-                f'{images_out_dir}')
-
+                nentries)
 
 
 

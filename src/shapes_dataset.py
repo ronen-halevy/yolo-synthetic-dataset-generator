@@ -19,23 +19,23 @@ class ShapesDataset:
 
     """
 
-    def __init__(self, shapes_config_file):
-        with open(shapes_config_file, 'r') as stream:
-            shapes_config = yaml.safe_load(stream)
+    def __init__(self, config):
+        # with open(shapes_config_file, 'r') as stream:
+        #     shapes_config = yaml.safe_load(stream)
         # load shape yaml files.
-
-        self.image_size = shapes_config['image_size']
-        self.min_objects_in_image = shapes_config['min_objects_in_image']
-        self.max_objects_in_image = shapes_config['max_objects_in_image']
-        self.bg_color = shapes_config['bg_color']
-        self.iou_thresh = shapes_config['iou_thresh']
-        self.margin_from_edge = shapes_config['margin_from_edge']
-        self.bbox_margin = shapes_config['bbox_margin']
-        self.size_fluctuation = shapes_config['size_fluctuation']
+        shapes_config = config['shapes_config']
+        self.image_size = config['image_size']
+        self.min_objects_in_image = config['min_objects_in_image']
+        self.max_objects_in_image = config['max_objects_in_image']
+        self.bg_color = config['bg_color']
+        self.iou_thresh = config['iou_thresh']
+        self.margin_from_edge = config['margin_from_edge']
+        self.bbox_margin = config['bbox_margin']
+        self.size_fluctuation = config['size_fluctuation']
 
         # create a class names output file.
         self.shapes = []
-        for shape in shapes_config['shapes_categories']:
+        for shape in shapes_config:
             self.shapes.append(shape)
 
         self.category_names = [shape['cname'] for shape in self.shapes]
@@ -240,7 +240,7 @@ class ShapesDataset:
         return bboxes, tuple(objects_categories_indices), objects_categories_names, polygons, objects_colors
 
 
-    def create_dataset(self,  nentries, output_dir):
+    def create_dataset(self,  nentries):
         """
         Description: Create dataset entries. svae created images in output_dir, and return dataset metadata.
 
