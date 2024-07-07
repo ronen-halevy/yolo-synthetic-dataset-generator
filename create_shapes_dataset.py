@@ -24,7 +24,7 @@ from PIL import Image, ImageColor
 import random
 
 from src.create_label_files import (create_coco_json_lable_files,
-                                    normalize_bboxes, entries_to_files, dota_entries_to_files,create_segmentation_label_files, create_detection_kpts_entries, create_obb_entries,
+                                    normalize_bboxes, entries_to_files, dota_entries_to_files,arrange_segmentation_entries, create_detection_kpts_entries, create_obb_entries,
                                     create_detection_labels_unified_file, write_images_to_file)
 from src.shapes_dataset import ShapesDataset
 
@@ -50,7 +50,7 @@ import math
 #     rbboxes = np.concatenate([x[..., None], y[..., None]], axis=-1)
 #     rbboxes = rbboxes.reshape(-1, 8)
 #     return rbboxes
-def draw_images(images_polygons, images_objects_colors=None, images_size=None, bg_color='white'):
+def draw_images(images_polygons, images_objects_colors=None, images_size=None, bg_color_set=['red']):
     # related label file has same name with .txt ext - split filename, replace ext to txt:
 
     images_filenames = []
@@ -59,13 +59,13 @@ def draw_images(images_polygons, images_objects_colors=None, images_size=None, b
     # images_size = np.full([len(images_polygons),2],(640,640))
 
     # for idx, (bboxes, categories_list, category_names, category_ids, image_polygons, image_objects_colors) in enumerate(zip(images_bboxes, categories_lists, categories_names, categories_ids, images_polygons, images_objects_colors)):
-    for idx, (image_polygons, image_objects_colors, image_size) in enumerate(
+    for idx, (image_polygons, image_objects_color, image_size) in enumerate(
             zip(images_polygons, images_objects_colors, images_size)):
 
         # save image files
         # sel_index = random.randint(0, len(image_size)-1) # randomly select img size index from config
         # image_size= image_size[sel_index]
-        bg_color = np.random.choice(bg_color)
+        bg_color = np.random.choice(bg_color_set)
         image = Image.new('RGB', tuple(image_size), bg_color)
         draw = ImageDraw.Draw(image)
 
@@ -74,9 +74,9 @@ def draw_images(images_polygons, images_objects_colors=None, images_size=None, b
         # draw.polygon(image_polygons, fill=ImageColor.getrgb(sel_color) )
         # draw.polygon(image_polygon, fill=ImageColor.getrgb('red') )
 
-        for image_polygon in image_polygons:
-            sel_color = np.random.choice(image_objects_colors[idx])
-            draw.polygon(image_polygon.flatten().tolist(), fill=ImageColor.getrgb(sel_color))
+        for image_polygon, image_object_color in zip(image_polygons, image_objects_color):
+            color = np.random.choice(image_object_color)
+            draw.polygon(image_polygon.flatten().tolist(), fill=ImageColor.getrgb(color))
         images.append(image)
     return images
 
@@ -162,11 +162,14 @@ def create_shapes_dataset():
                     'train': f"{config['base_dir']}/{config['image_dir']}/train",
                     'val': f"{config['base_dir']}/{config['image_dir']}/valid"
                 }
+                with open(out_filename, 'w') as outfile:
+                    yaml.dump(dataset_yaml, outfile, default_flow_style=False)
             #  4. Ultralitics like segmentation
         elif config.get('labels_file_format') == 'segmentation_yolov5':
                 # related label file has same name with .txt ext - split filename, replace ext to txt:
-                create_segmentation_label_files(images_polygons, images_size,
-                                                categories_lists, label_out_fnames, labels_out_dir)
+
+                batch_entries = arrange_segmentation_entries(images_polygons, images_size, categories_lists)
+                entries_to_files(batch_entries, label_out_fnames, labels_out_dir)
 
                 # 1. coco format (i.e. dataset entries defined by a json file)
         elif config.get('labels_file_format') == 'detection_coco_json_format':
@@ -183,8 +186,6 @@ def create_shapes_dataset():
                 create_detection_labels_unified_file(images_filenames, images_bboxes, categories_lists,
                                                      labels_out_dir)
 
-                with open(out_filename, 'w') as outfile:
-                    yaml.dump(dataset_yaml, outfile, default_flow_style=False)
 
         images = draw_images(images_polygons, images_objects_colors, images_size, bg_color)
         images_out_dir = Path(f"{output_dir}/{config[f'image_dir']}/{split}")

@@ -49,41 +49,18 @@ def segments2bboxes_batch(segments, width=640, height=640):
     return bbox
 
 
-def create_segmentation_label_files(images_polygons, images_sizes, images_class_ids,labels_fnames,
-                                  output_dir):
-    """
-    Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
-    normalized coordinates [0 to 1].
-    zero-indexed class numbers - start from 0
-
-
-    :param images_paths: list of dataset image filenames
-    :param images_polygons: list of per image polygons arrays
-    :param images_class_ids:  list of per image class_ids
-    :param output_dir: output dir of labels text files
-    :return:
-    """
-    print(f'create_segmentation_label_files. output_dir: {output_dir}')
-    # create out dirs if needed - tbd never needed...
-    try:
-        os.makedirs(output_dir)
-    except FileExistsError:
-        # catch if directory already exists
-        pass
-    ## create label files
-    for image_polygons, labels_fname, images_size, class_ids in zip(images_polygons, labels_fnames, images_sizes,
-                                                              images_class_ids):
-        im_height = images_size[0]
-        im_width = images_size[1]
-        labels_filename = f"{output_dir}/{labels_fname}"
-        print(f'labels_filename: {labels_filename}')
-
+def arrange_segmentation_entries(images_polygons, images_size, categories_lists):
+    batch_entries = []
+    for image_polygons, image_size, class_ids in zip(images_polygons, images_size,
+                                                     categories_lists):
         # normalize sizes:
-        image_polygons=[image_polygon/np.array(images_size) for image_polygon in image_polygons]
-        with open(labels_filename, 'w') as f:
-            for image_polygon, category_id in zip(image_polygons, class_ids):
-                entry = f"{category_id} {' '.join(str(vertix) for vertix in list(image_polygon.reshape(-1)))}\n"
-                f.write(entry) # fill label file with entries
+        image_polygons = [image_polygon / np.array(image_size) for image_polygon in image_polygons]
+
+        image_entries = [
+            f"{category_id} {' '.join(str(vertix) for vertix in list(image_polygon.reshape(-1)))}\n" for
+            image_polygon, category_id in zip(image_polygons, class_ids)]
+        batch_entries.append(image_entries)
+    return batch_entries
 
 
 def create_detection_labels_unified_file(images_paths, images_bboxes, images_class_ids,
