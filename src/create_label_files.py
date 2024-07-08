@@ -49,6 +49,40 @@ def segments2bboxes_batch(segments, width=640, height=640):
     return bbox
 
 
+def arrange_obb_entries(images_polygons, images_size, categories_lists):
+    batch_entries = []
+    for image_polygons, image_size, class_ids in zip(images_polygons, images_size,
+                                                     categories_lists):
+        # normalize sizes:
+        image_polygons = [image_polygon / np.array(image_size) for image_polygon in image_polygons]
+
+        image_entries = [
+            f"{category_id} {' '.join(str(vertix) for vertix in list(image_polygon.reshape(-1)))}\n" for
+            image_polygon, category_id in zip(image_polygons, class_ids)]
+        batch_entries.append(image_entries)
+    return batch_entries
+
+
+def rotate_polygon_entries(batch_polygons, images_size, theta):
+    batch_rpolygons = []
+    for image_polygons, image_size in zip(batch_polygons, images_size):
+        rpolygons=[]
+        for polygon in image_polygons:
+            polygon = rotate(polygon, theta)
+            rpolygons.append(polygon)
+
+        batch_rpolygons.append(rpolygons)
+    batch_polygons = batch_rpolygons
+    return batch_polygons
+
+def rotate_obb_bbox_entries(bbox_entries, images_size, theta):
+    batch_rbboxes = []
+    for hbboxes, image_size in zip(bbox_entries, images_size):
+        hbboxes[:, :8] = rotate(hbboxes[:, :8].reshape([-1, 4, 2]), theta).reshape(-1, 8)
+        rbboxes = [' '.join(str(x) for x in hbboxes[idx]) for idx in
+                   range(len(hbboxes))]  # store string entries
+        batch_rbboxes.append(rbboxes)
+    return batch_rbboxes
 def arrange_segmentation_entries(images_polygons, images_size, categories_lists):
     batch_entries = []
     for image_polygons, image_size, class_ids in zip(images_polygons, images_size,
@@ -125,16 +159,33 @@ def rotate(hbboxes, theta0):
     rbboxes=rbboxes+offset_xy
     return rbboxes
 
+def rotate2(polgons, theta0):
+    rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
+
+    rotate_polygon = lambda xy: np.concatenate([np.sum(xy * (math.cos(rot_angle),  math.sin(rot_angle)), axis=-1,keepdims=True),
+                              np.sum(xy * (-math.sin(rot_angle) , math.cos(rot_angle)), axis=-1,keepdims=True)], axis=-1)
+
+    rpolgons=[]
+    # for polygon in polgons:
+    offset_xy = (np.max(polygon, axis=-2, keepdims=True) + np.min(polygon,axis=-2, keepdims=True)) / 2
+    polygon = polygon - offset_xy
+    polygon =  rotate_polygon(polygon)
+    polygon=polygon+offset_xy
+    return polygon
+
+
+    return rpolgons
+
 def create_obb_entries(bbox_entries):
-    rbboxes = []
+    bboxes = []
     for idx, bbox_entry in enumerate(bbox_entries):  # loop on images
 
-        bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry]
+        bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry] #  string rbbox entries to float
         bbox_entries = np.array(bbox_entries)
         bbox_entries = xywh2xyxy(bbox_entries)
-        rbboxes.append(bbox_entries)
-    rbboxes=np.array(rbboxes)
-    return rbboxes
+        bboxes.append(bbox_entries)
+    # rbboxes=np.array(rbboxes)
+    return bboxes
 
 
 def create_detection_kpts_entries(images_bboxes, images_polygons, images_sizes, images_class_ids):
@@ -258,15 +309,27 @@ def dota_entries_to_files(batch_entries, category_names, out_fnames, output_dir)
         # catch exception - directory already exists
         pass
     for img_entries, out_fname in zip(batch_entries, out_fnames):
+            for entry  in zip(img_entries):
+                pass
+                # arranged_entry =
+                # for rbbox in entry[0][:-1]: # skip class - the last list entry
+                #     f.write(str(elem)+' ')
+                # f.write(str(category_names[int(entry[0][-1])]) + ' ')
+                # difficulty = 0
+                # f.write(str(difficulty))
+
+    print(f'create_per_image_labels_files. labels_output_dir: {output_dir}')
+    try:
+        os.makedirs(output_dir)
+    except FileExistsError:
+        # catch exception - directory already exists
+        pass
+    for img_entries, out_fname in zip(batch_entries, out_fnames):
         out_path = f"{output_dir}/{out_fname}"
         with open(out_path, 'w') as f:
-            for entry  in zip(img_entries):
-                for elem in entry[0][:-1]: # skip class - the last list entry
-                    f.write(str(elem)+' ')
-                f.write(str(category_names[int(entry[0][-1])]) + ' ')
-                difficulty = 0
-                f.write(str(difficulty))
-                f.write('\n')
+            for entry in img_entries:
+                f.write(f'{entry}\n')
+
 
 
 # Create a coco like format label file. format:

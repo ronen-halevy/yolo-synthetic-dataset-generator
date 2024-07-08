@@ -35,8 +35,10 @@ def render(nexamples, labels_file_format, image_dir, labels_dir, output_dir, cat
                                                        f'{output_dir}/det2')
         elif labels_file_format == 'segmentation_yolov5':
             draw_segmentation_dataset_example(image_path, label_path, category_names_table, f'{output_dir}/seg')
-        elif labels_file_format == 'dota_obb':
+        elif labels_file_format == 'obb':
             draw_obb_dataset_example(image_path, label_path, category_names_table, f'{output_dir}/det1')
+        else:
+            print(f'Unknow labels_file_format: {labels_file_format}')
 
 if __name__ == "__main__":
     config_file = './config/dataset_config.yaml'
@@ -45,7 +47,7 @@ if __name__ == "__main__":
     split = config['split_to_render'] # 'train'  # can be 'train', 'test', 'valid'
     labels_file_format = config.get('labels_file_format')
 
-    if labels_file_format in ['segmentation_yolov5', 'detection_yolov5', 'kpts_detection_yolov5', 'dota_obb']:
+    if labels_file_format in ['segmentation_yolov5', 'detection_yolov5', 'kpts_detection_yolov5', 'obb']:
         labels_dir = f'{config["output_dir"]}/{config["labels_dir"]}/{split}'
         images_dir = f'{config["output_dir"]}/{config["image_dir"]}/{split}'
     elif labels_file_format == 'detection_coco_json_format':
