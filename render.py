@@ -7,18 +7,17 @@ from src.utils import increment_path
 from src.render.draw_dataset_examples import draw_detection_dataset_example, draw_detection_single_file_dataset_example, \
     draw_segmentation_dataset_example, draw_coco_detection_dataset_example, draw_obb_dataset_example
 
+import random
 
 
 def render(nexamples, labels_file_format, image_dir, labels_dir, output_dir, category_names_table, split):
-    for idx in range(nexamples):
+    listdir = [filename for filename in os.listdir(image_dir) if
+               filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
 
-        listdir = [filename for filename in os.listdir(image_dir) if
-                   filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
-        if idx >= len(listdir): # loop <= nof images
-            break
-        import random
-        sel_fname = random.choice(listdir
-                                  )
+
+    sel_files=random.sample(listdir,  k=min(nexamples, len(listdir)))
+
+    for idx, sel_fname in enumerate(sel_files):
         image_path = f'{image_dir}/{sel_fname}'
         label_path = f'{labels_dir}/{Path(sel_fname).stem}.txt'
         if not os.path.isfile(label_path):
