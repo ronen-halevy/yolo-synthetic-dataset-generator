@@ -159,19 +159,19 @@ def rotate(hbboxes, theta0):
     rbboxes=rbboxes+offset_xy
     return rbboxes
 
-def rotate2(polgons, theta0):
-    rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
-
-    rotate_polygon = lambda xy: np.concatenate([np.sum(xy * (math.cos(rot_angle),  math.sin(rot_angle)), axis=-1,keepdims=True),
-                              np.sum(xy * (-math.sin(rot_angle) , math.cos(rot_angle)), axis=-1,keepdims=True)], axis=-1)
-
-    rpolgons=[]
-    # for polygon in polgons:
-    offset_xy = (np.max(polygon, axis=-2, keepdims=True) + np.min(polygon,axis=-2, keepdims=True)) / 2
-    polygon = polygon - offset_xy
-    polygon =  rotate_polygon(polygon)
-    polygon=polygon+offset_xy
-    return polygon
+# def rotate2(polgons, theta0):
+#     rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
+#
+#     rotate_polygon = lambda xy: np.concatenate([np.sum(xy * (math.cos(rot_angle),  math.sin(rot_angle)), axis=-1,keepdims=True),
+#                               np.sum(xy * (-math.sin(rot_angle) , math.cos(rot_angle)), axis=-1,keepdims=True)], axis=-1)
+#
+#     rpolgons=[]
+#     # for polygon in polgons:
+#     offset_xy = (np.max(polygon, axis=-2, keepdims=True) + np.min(polygon,axis=-2, keepdims=True)) / 2
+#     polygon = polygon - offset_xy
+#     polygon =  rotate_polygon(polygon)
+#     polygon=polygon+offset_xy
+#     return polygon
 
 
     return rpolgons
