@@ -24,7 +24,7 @@ from PIL import Image, ImageColor
 import random
 
 from src.create_label_files import (create_coco_json_lable_files,
-                                    normalize_bboxes, entries_to_files, dota_entries_to_files,arrange_segmentation_entries, create_obb_entries, rotate_obb_bbox_entries, rotate_polygon_entries, create_detection_kpts_entries,
+                                    normalize_bboxes, entries_to_files, dota_entries_to_files,arrange_segmentation_entries, create_obb_entries, rotate_obb_bbox_entries, rotate_polygon_entries, remove_dropped_bboxes, create_detection_kpts_entries,
                                     create_detection_labels_unified_file, write_images_to_file)
 from src.shapes_dataset import ShapesDataset
 from src.create_label_files import rotate
@@ -32,23 +32,7 @@ from src.create_label_files import rotate
 import math
 
 
-# def rotateo(hbboxes, theta0):
-#     rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
-#     # rot_angle = 0  # !!!todo debug ronen!!!!!!
-#     # oo=sin(rot_angle)
-#     rotate_x = lambda x, y: x * math.cos(rot_angle) + y * math.sin(rot_angle)
-#     rotate_y = lambda x, y: -x * math.sin(rot_angle) + y * math.cos(rot_angle)
-#     x_offset = (np.max(hbboxes[:, [0, 2, 4, 6]]) + np.min(hbboxes[:, [0, 2, 4, 6]])) / 2
-#     y_offset = (np.max(hbboxes[:, [1, 3, 5, 7]]) + np.min(hbboxes[:, [1, 3, 5, 7]])) / 2
-#     x_ = hbboxes[:, [0, 2, 4, 6]] - x_offset
-#     y_ = hbboxes[:, [1, 3, 5, 7]] - y_offset
-#     x_, y_ = rotate_x(x_, y_), rotate_y(x_, y_)
-#     x = x_ + x_offset
-#     y = y_ + y_offset
-#
-#     rbboxes = np.concatenate([x[..., None], y[..., None]], axis=-1)
-#     rbboxes = rbboxes.reshape(-1, 8)
-#     return rbboxes
+
 def draw_images(images_polygons, images_objects_colors=None, images_size=None, bg_color_set=['red']):
     # related label file has same name with .txt ext - split filename, replace ext to txt:
 
@@ -67,11 +51,6 @@ def draw_images(images_polygons, images_objects_colors=None, images_size=None, b
         bg_color = np.random.choice(bg_color_set)
         image = Image.new('RGB', tuple(image_size), bg_color)
         draw = ImageDraw.Draw(image)
-
-        # draw shape on image:
-        # sel_color = np.random.choice(color)
-        # draw.polygon(image_polygons, fill=ImageColor.getrgb(sel_color) )
-        # draw.polygon(image_polygon, fill=ImageColor.getrgb('red') )
 
         for image_polygon, image_object_color in zip(image_polygons, image_objects_color):
             color = np.random.choice(image_object_color)
@@ -118,7 +97,7 @@ def create_shapes_dataset():
 
         labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
         labels_out_dir.mkdir(parents=True, exist_ok=True)
-        images_bboxes, categories_lists, categories_names, categories_ids, batch_polygons, images_objects_colors = \
+        batch_bboxes, categories_lists, categories_names, categories_ids, batch_polygons, images_objects_colors, obb_thetas = \
             shapes_dataset.create_images_shapes(
                 nentries)
 
@@ -129,20 +108,22 @@ def create_shapes_dataset():
         images_size = tuple(np.array(config_image_size)[sel_index])
         images_filenames = [f'img_{idx:06d}.jpg' for idx in range(len(batch_polygons))]
         label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
-        bbox_entries = normalize_bboxes(images_bboxes, images_size, categories_lists)
+        bbox_entries = normalize_bboxes(batch_bboxes, images_size, categories_lists)
 
             # 3. text file per image
         if config.get('labels_file_format')=='detection_yolov5':
                 entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
         elif config.get('labels_file_format') == 'obb':
-            theta = config['obb_rotate']
+            batch_polygons, batch_obb_thetas, dropped_ids= rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
+
+            bbox_entries, batch_obb_thetas = remove_dropped_bboxes(bbox_entries, batch_obb_thetas, dropped_ids)
+
             bbox_entries = create_obb_entries(bbox_entries)
-            batch_rbboxes= rotate_obb_bbox_entries(bbox_entries, images_size, theta)
+            batch_rbboxes= rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
             entries_to_files(batch_rbboxes, label_out_fnames, labels_out_dir)
-            batch_polygons= rotate_polygon_entries(batch_polygons, images_size, theta)
         elif config.get('labels_file_format')=='kpts_detection_yolov5':
                 # related label file has same name with .txt ext - split filename, replace ext to txt:
-                kpts_entries=create_detection_kpts_entries(images_bboxes, batch_polygons, images_size, categories_lists)
+                kpts_entries=create_detection_kpts_entries(batch_bboxes, batch_polygons, images_size, categories_lists)
                 entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
 
                 # create dataset yaml:
@@ -170,14 +151,14 @@ def create_shapes_dataset():
                 labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
                 images_filenames = [f'{config["image_dir"]}/{split}/{images_filename}' for images_filename in
                                     images_filenames]
-                create_coco_json_lable_files(images_filenames, images_size, images_bboxes, categories_lists,
+                create_coco_json_lable_files(images_filenames, images_size, batch_bboxes, categories_lists,
                                              categories_names, categories_ids,
                                              labels_out_dir)
         elif config.get('labels_file_format') == 'detection_unified_textfile':
                 labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
                 labels_dir = Path(os.path.dirname(labels_out_dir))
                 labels_dir.mkdir(parents=True, exist_ok=True)
-                create_detection_labels_unified_file(images_filenames, images_bboxes, categories_lists,
+                create_detection_labels_unified_file(images_filenames, batch_bboxes, categories_lists,
                                                      labels_out_dir)
 
 

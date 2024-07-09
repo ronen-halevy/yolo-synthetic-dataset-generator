@@ -4,6 +4,8 @@ import numpy as np
 import os
 import yaml
 import math
+from shapely.geometry import Polygon
+
 
 def segments2bboxes_batch(segments, width=640, height=640):
     """
@@ -63,21 +65,87 @@ def arrange_obb_entries(images_polygons, images_size, categories_lists):
     return batch_entries
 
 
-def rotate_polygon_entries(batch_polygons, images_size, theta):
+def calc_iou(polygon1, polygons):
+    """
+    Calc iou between polygon1 and polygons - a list of polygons
+    :param polygon: polygon vertices, np.array, shape: [nvertices,2]
+    :param polygons: a list of np,array polygons of shape [nvertices,2]
+    :return: a list, iou of polygon1 and polygons
+    """
+    polygon1 = Polygon(polygon1)
+    iou=[]
+    for polygon2 in polygons:
+        polygon2 = Polygon(polygon2)
+        intersect = polygon1.intersection(polygon2).area
+        union = polygon1.union(polygon2).area
+        iou.append(intersect / union)
+    return np.array(iou)
+
+
+def remove_dropped_bboxes(bbox_entries, batch_obb_thetas, dropped_ids):
+    bbox_entries_modified = []
+    obb_thetas_modified = []
+    for idx, (bbox_entry, obb_thetas) in enumerate(zip(bbox_entries, batch_obb_thetas)):  # loop on images
+        ii = [ad[1] for ad in dropped_ids if ad[0] == idx]  # todo deleted here!!!!
+        bbox_entry = np.delete(np.array(bbox_entry), ii).tolist()
+        bbox_entries_modified.append(bbox_entry)
+        obb_thetas = np.delete(np.array(obb_thetas), ii).tolist()
+        obb_thetas_modified.append(obb_thetas)
+    return bbox_entries_modified, obb_thetas_modified
+
+
+def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thresh=0):
+    """
+    Rotate polygons by theta.
+    If a rotated polygon crosses image boundaries, keep unrotated polygon.
+    If iou between a rotated polygon and any polygon in list crosses iou_thresh, then keep unrotated polygon.
+    If iou of unrotated polygon and any polygon in list still crosses iou_thresh, then drop polygon from image.
+    :param batch_polygons: batches polygons list. list size: [bimgs, npolygons], np.array polygons shape: [nvertices,2]
+    :param images_size: tuple, [img_w, img_h], used for rotated polygon boundary check
+    :param theta: polygons rotation angle in degrees.
+    :param iou_thresh: max permitted iou between any image's pair of polygons
+    :return:
+       batches rpolygons: rotated polygons list. size: [bimgs, npolygons], entry: np.array polygons shape: [nvertices,2]
+       batch_result_thetas: actual thetas list. size: [bimgs, npolygons], entry: float/int
+       dropped_ids: dropped polygons, (due to iou above thresh). ids list. size: [bimgs, npolygons], entry: int
+    :rtype:
+    """
     batch_rpolygons = []
-    for image_polygons, image_size in zip(batch_polygons, images_size):
+    batch_result_thetas = []
+    dropped_ids=[]
+
+    for im_idx, (image_polygons, image_size, thetas) in enumerate(zip(batch_polygons, images_sizes, batch_thetas)):
+        unrotate=False
         rpolygons=[]
-        for polygon in image_polygons:
-            polygon = rotate(polygon, theta)
-            rpolygons.append(polygon)
+        res_thetas=[]
+        for idx, (polygon, theta) in enumerate(zip(image_polygons, thetas)):
+            rpolygon = rotate(polygon, theta)
 
+            if np.any(rpolygon > image_size) or np.any(rpolygon < 0):
+                rpolygon=polygon
+                unrotate = True
+            # else:
+            if np.any(calc_iou(rpolygon, rpolygons) > iou_thresh):
+                if np.any(calc_iou(polygon, rpolygons) > iou_thresh):
+                    dropped_ids.append([im_idx, idx])
+                    print(f'\nDropping shape polygon from image: iou with rotated images exceeds treshs im_idx: {im_idx} idx: {idx}')
+                    continue
+                else:
+                    unrotate = True
+                    rpolygon=polygon
+
+            rpolygons.append(rpolygon)
+            if unrotate: res_thetas.append(0)
+            else: res_thetas.append(theta)
+
+        batch_result_thetas.append(res_thetas)
         batch_rpolygons.append(rpolygons)
-    batch_polygons = batch_rpolygons
-    return batch_polygons
+    return batch_rpolygons, batch_thetas, dropped_ids
 
-def rotate_obb_bbox_entries(bbox_entries, images_size, theta):
+
+def rotate_obb_bbox_entries(bbox_entries, images_size, obb_thetas):
     batch_rbboxes = []
-    for hbboxes, image_size in zip(bbox_entries, images_size):
+    for hbboxes, image_size, theta in zip(bbox_entries, images_size, obb_thetas):
         hbboxes[:, :8] = rotate(hbboxes[:, :8].reshape([-1, 4, 2]), theta).reshape(-1, 8)
         rbboxes = [' '.join(str(x) for x in hbboxes[idx]) for idx in
                    range(len(hbboxes))]  # store string entries
@@ -146,45 +214,24 @@ def xywh2xyxy(obboxes):
             [point1, point2, point3, point4, cls], axis=-1)
 
 def rotate(hbboxes, theta0):
-    rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
+    rot_angle = np.array(theta0) / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
 
-    rotate_bbox = lambda xy: np.concatenate([np.sum(xy * (math.cos(rot_angle),  math.sin(rot_angle)), axis=-1,keepdims=True),
-                              np.sum(xy * (-math.sin(rot_angle) , math.cos(rot_angle)), axis=-1,keepdims=True)], axis=-1)
-
-
-
+    rotate_bbox = lambda xy: np.concatenate([np.sum(xy * np.concatenate([np.cos(rot_angle)[...,None, None], np.sin(rot_angle)[...,None, None]], axis=-1), axis=-1,keepdims=True),
+                              np.sum(xy * np.concatenate([-np.sin(rot_angle)[...,None, None], np.cos(rot_angle)[...,None, None]], axis=-1), axis=-1,keepdims=True)], axis=-1)
     offset_xy = (np.max(hbboxes, axis=-2, keepdims=True) + np.min(hbboxes,axis=-2, keepdims=True)) / 2
     hbboxes_ = hbboxes - offset_xy
     rbboxes =  rotate_bbox(hbboxes_)
     rbboxes=rbboxes+offset_xy
     return rbboxes
 
-# def rotate2(polgons, theta0):
-#     rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
-#
-#     rotate_polygon = lambda xy: np.concatenate([np.sum(xy * (math.cos(rot_angle),  math.sin(rot_angle)), axis=-1,keepdims=True),
-#                               np.sum(xy * (-math.sin(rot_angle) , math.cos(rot_angle)), axis=-1,keepdims=True)], axis=-1)
-#
-#     rpolgons=[]
-#     # for polygon in polgons:
-#     offset_xy = (np.max(polygon, axis=-2, keepdims=True) + np.min(polygon,axis=-2, keepdims=True)) / 2
-#     polygon = polygon - offset_xy
-#     polygon =  rotate_polygon(polygon)
-#     polygon=polygon+offset_xy
-#     return polygon
-
-
-    return rpolgons
 
 def create_obb_entries(bbox_entries):
     bboxes = []
     for idx, bbox_entry in enumerate(bbox_entries):  # loop on images
-
         bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry] #  string rbbox entries to float
         bbox_entries = np.array(bbox_entries)
         bbox_entries = xywh2xyxy(bbox_entries)
         bboxes.append(bbox_entries)
-    # rbboxes=np.array(rbboxes)
     return bboxes
 
 
