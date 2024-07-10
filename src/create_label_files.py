@@ -82,24 +82,21 @@ def calc_iou(polygon1, polygons):
     return np.array(iou)
 
 
-def remove_dropped_bboxes(bbox_entries, batch_obb_thetas, dropped_ids):
+def remove_dropped_bboxes(bbox_entries, dropped_ids):
     bbox_entries_modified = []
-    obb_thetas_modified = []
-    for idx, (bbox_entry, obb_thetas) in enumerate(zip(bbox_entries, batch_obb_thetas)):  # loop on images
+    for idx, bbox_entry in enumerate(bbox_entries,):  # loop on images
         ii = [ad[1] for ad in dropped_ids if ad[0] == idx]  # todo deleted here!!!!
-        bbox_entry = np.delete(np.array(bbox_entry), ii).tolist()
-        bbox_entries_modified.append(bbox_entry)
-        obb_thetas = np.delete(np.array(obb_thetas), ii).tolist()
-        obb_thetas_modified.append(obb_thetas)
-    return bbox_entries_modified, obb_thetas_modified
+        bbox_entry1 = np.delete(np.array(bbox_entry), ii).tolist()
+        bbox_entries_modified.append(bbox_entry1)
+    return bbox_entries_modified
 
 
 def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thresh=0):
     """
     Rotate polygons by theta.
     If a rotated polygon crosses image boundaries, keep unrotated polygon.
-    If iou between a rotated polygon and any polygon in list crosses iou_thresh, then keep unrotated polygon.
-    If iou of unrotated polygon and any polygon in list still crosses iou_thresh, then drop polygon from image.
+    If iou between a rotated polygon and any polygon in list crosses iou_thresh, then leave unrotated (set theta to 0)
+    If iou of unrotated polygon and any polygon in list still crosses iou_thresh, then drop polygon.
     :param batch_polygons: batches polygons list. list size: [bimgs, npolygons], np.array polygons shape: [nvertices,2]
     :param images_size: tuple, [img_w, img_h], used for rotated polygon boundary check
     :param theta: polygons rotation angle in degrees.
@@ -113,34 +110,40 @@ def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thres
     batch_rpolygons = []
     batch_result_thetas = []
     dropped_ids=[]
-
+    # loop on batch images:
     for im_idx, (image_polygons, image_size, thetas) in enumerate(zip(batch_polygons, images_sizes, batch_thetas)):
-        unrotate=False
         rpolygons=[]
         res_thetas=[]
-        for idx, (polygon, theta) in enumerate(zip(image_polygons, thetas)):
+        for idx, (polygon, theta) in enumerate(zip(image_polygons, thetas)): # loop on image's polygons
+            unrotate = False # reset unrotate fkag
             rpolygon = rotate(polygon, theta)
-
+            # check if rotated shape is inside image bounderies, otherwise leave unrotated:
             if np.any(rpolygon > image_size) or np.any(rpolygon < 0):
-                rpolygon=polygon
+                rpolygon=polygon # replace rotated by original unrotated
                 unrotate = True
-            # else:
+                print(f'\n Rotated shape is outsode image  boundaries. Keep unrotate. img id: {im_idx} shape id: {idx}')
+            # if of rotated with already rotated list: if above thresh, keep unrotated or drop if iou above thresh:
             if np.any(calc_iou(rpolygon, rpolygons) > iou_thresh):
-                if np.any(calc_iou(polygon, rpolygons) > iou_thresh):
+                if np.any(calc_iou(polygon, rpolygons) > iou_thresh):# iou for unrotated: either drop or keep unrotated
                     dropped_ids.append([im_idx, idx])
-                    print(f'\nDropping shape polygon from image: iou with rotated images exceeds treshs im_idx: {im_idx} idx: {idx}')
+                    print(f'IOU with rotated images exceeds treshs: Droppng  img_id: {im_idx} shape_id: {idx}')
                     continue
                 else:
+                    print(f'IOU of unrotated passed. Keep unrotated shape. img_id {im_idx} shape_id: {idx}')
                     unrotate = True
                     rpolygon=polygon
 
             rpolygons.append(rpolygon)
-            if unrotate: res_thetas.append(0)
-            else: res_thetas.append(theta)
+            if unrotate:
+                res_thetas.append(0)
+            else:
+                print(f'Rotate shape by {theta} degrees. img_id: {im_idx} shape_id: {idx} ')
+                res_thetas.append(theta)
 
         batch_result_thetas.append(res_thetas)
         batch_rpolygons.append(rpolygons)
-    return batch_rpolygons, batch_thetas, dropped_ids
+    print(f'Batch rotations angles: {batch_result_thetas}')
+    return batch_rpolygons, batch_result_thetas, dropped_ids
 
 
 def rotate_obb_bbox_entries(bbox_entries, images_size, obb_thetas):

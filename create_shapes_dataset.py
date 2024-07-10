@@ -38,16 +38,11 @@ def draw_images(images_polygons, images_objects_colors=None, images_size=None, b
 
     images_filenames = []
     images = []
-    # images_objects_colors = np.full(list(np.array(images_polygons).shape[0:2])+[1], ['blue'])
-    # images_size = np.full([len(images_polygons),2],(640,640))
 
-    # for idx, (bboxes, categories_list, category_names, category_ids, image_polygons, image_objects_colors) in enumerate(zip(images_bboxes, categories_lists, categories_names, categories_ids, images_polygons, images_objects_colors)):
     for idx, (image_polygons, image_objects_color, image_size) in enumerate(
             zip(images_polygons, images_objects_colors, images_size)):
 
         # save image files
-        # sel_index = random.randint(0, len(image_size)-1) # randomly select img size index from config
-        # image_size= image_size[sel_index]
         bg_color = np.random.choice(bg_color_set)
         image = Image.new('RGB', tuple(image_size), bg_color)
         draw = ImageDraw.Draw(image)
@@ -116,7 +111,7 @@ def create_shapes_dataset():
         elif config.get('labels_file_format') == 'obb':
             batch_polygons, batch_obb_thetas, dropped_ids= rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
 
-            bbox_entries, batch_obb_thetas = remove_dropped_bboxes(bbox_entries, batch_obb_thetas, dropped_ids)
+            bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
 
             bbox_entries = create_obb_entries(bbox_entries)
             batch_rbboxes= rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
