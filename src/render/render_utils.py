@@ -7,11 +7,8 @@ from PIL import Image as im
 from PIL import ImageColor
 from PIL import ImageFont
 import numpy as np
-import os
 import cv2
 import random
-
-# from .utils import draw_bbox_xywh, draw_bbox_xyxy
 
 
 def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), font_size=30):
@@ -222,45 +219,26 @@ def read_obb_dataset_entry(image_path, label_path):
     return image, polygons, category_names
 
 
-def draw_detection_dataset_example(image_path, label_path, category_names_table, output_dir):
+def draw_detection_dataset_example(image_path, label_path, category_names_table):
     [image, bboxes, category_ids] = read_detection_dataset_entry(image_path, label_path)
     category_names = [category_names_table[category_id] for category_id in category_ids]
-
-    dest_dir = f'{output_dir}'
-    Path(dest_dir).mkdir(parents=True, exist_ok=True)
-    fname = Path(image_path)
-    output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
     draw_bbox_xywh(image, bboxes, category_names)
-    print(f'saving test results to {output_path}')
-    image.save(output_path)
+    return image
 
-
-def draw_obb_dataset_example(image_path, label_path, category_names_table, output_dir):
+def draw_obb_dataset_example(image_path, label_path):
     [image, polygons, category_names] = read_obb_dataset_entry(image_path, label_path)
-    # category_names = [category_names_table[category_id] for category_id in category_ids]
-
-    dest_dir = f'{output_dir}'
-    Path(dest_dir).mkdir(parents=True, exist_ok=True)
-    fname = Path(image_path)
-    output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
     draw_bbox_xyxy(image, polygons, category_names)
-    print(f'saving test results to {output_path}')
-    image.save(output_path)
+    return image
 
 
-def draw_detection_single_file_dataset_example(label_path, image_dir, category_names_table, output_dir):
+def draw_detection_single_file_dataset_example(label_path, image_dir, category_names_table):
     [image, bboxes, category_ids, image_path] = read_single_file_detection_dataset(label_path, image_dir)
     category_names = [category_names_table[category_id] for category_id in category_ids]
-    dest_dir = f'{output_dir}'
-    Path(dest_dir).mkdir(parents=True, exist_ok=True)
-    fname = Path(image_path)
-    output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
     draw_bbox_xywh(image, bboxes, category_names)
-    print(f'saving test results to {output_path}')
-    image.save(output_path)
+    return image
 
 
-def draw_segmentation_dataset_example(image_path, label_path, category_names_table, output_dir):
+def draw_segmentation_dataset_example(image_path, label_path, category_names_table):
     """
     Draw a randomly selected image with segmentation, bbox and class labels overlays
 
@@ -270,8 +248,6 @@ def draw_segmentation_dataset_example(image_path, label_path, category_names_tab
     :type label_dir: str
     :param category_names_table: list of dataset's category - to annotate image with a label
     :type category_names_table: list of str
-    :param output_dir:
-    :type output_dir:
     :return:
     :rtype:
     """
@@ -280,27 +256,19 @@ def draw_segmentation_dataset_example(image_path, label_path, category_names_tab
     [image, polygons, bboxes, category_ids] = read_segmentation_dataset_entry(image_path, label_path)
     # fill objects with  masks by polygons:
     array_image = np.array(image)
-    if polygons:
-        for polygon, category_id in zip(polygons, category_ids):
-            color = np.random.randint(low=0, high=255, size=3).tolist()
-            cv2.fillPoly(array_image, np.expand_dims(polygon, 0), color=color)
-        image = im.fromarray(array_image)
-        ImageDraw.Draw(image)
-
-        # extract category names by ids:
-        category_names = [category_names_table[category_id] for category_id in category_ids]
-        # construct outpath:
-        fname = Path(image_path)
-        dest_dir = f'{output_dir}'
-        Path(dest_dir).mkdir(parents=True, exist_ok=True)
-        output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
-
-        draw_bbox_xywh(image, bboxes, category_names)
-        print(f'saving test results to {output_path}')
-        image.save(output_path)
+    # if polygons:
+    for polygon, category_id in zip(polygons, category_ids):
+        color = np.random.randint(low=0, high=255, size=3).tolist()
+        cv2.fillPoly(array_image, np.expand_dims(polygon, 0), color=color)
+    image = im.fromarray(array_image)
+    ImageDraw.Draw(image)
+    # extract category names by ids:
+    category_names = [category_names_table[category_id] for category_id in category_ids]
+    draw_bbox_xywh(image, bboxes, category_names)
+    return image
 
 
-def draw_coco_detection_dataset_example(annotations_path, category_names_table, output_dir):
+def draw_coco_detection_dataset_example(annotations_path, category_names_table):
     """
     Draw a randomly selected image with bboxes and class labels overlays according to COCO format label files
 
@@ -308,8 +276,6 @@ def draw_coco_detection_dataset_example(annotations_path, category_names_table, 
     :type annotations_path: str
     :param category_names_table: list of dataset's category - to annotate image with a label
     :type category_names_table: list of str
-    :param output_dir: dest dir for output image
-    :type output_dir: str
     :return:
     :rtype:
     """
@@ -332,11 +298,5 @@ def draw_coco_detection_dataset_example(annotations_path, category_names_table, 
 
         # draw:
         category_names = [category_names_table[category_id] for category_id in category_ids]
-        fname = Path(image_path)
-        dest_dir = f'{output_dir}'
-        Path(dest_dir).mkdir(parents=True, exist_ok=True)
-        output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
-
         draw_bbox_xywh(image, bboxes, category_names)
-        print(f'saving test results to {output_path}')
-        image.save(output_path)
+        return image

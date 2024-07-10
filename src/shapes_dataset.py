@@ -1,15 +1,7 @@
 import numpy as np
-from PIL import Image, ImageDraw
 import math
 from math import cos, sin
 import random
-import yaml
-import os
-from PIL import Image, ImageColor
-from src.create_label_files import rotate
-
-import sys
-
 
 class ShapesDataset:
     """

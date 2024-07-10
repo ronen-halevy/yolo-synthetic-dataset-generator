@@ -31,7 +31,7 @@ test_output_dir: ./runs/exp
 # 3. detection_unified_textfil: coco like labels format. Dataset entries are defined by a json file
 # 4. class-bbox labels text file per all images, a row per image.
 
-labels_file_format:  obb # [segmentation_yolov5, kpts_detection_yolov5, detection_yolov5, obb, detection_coco_json_format, detection_unified_textfile]
+labels_file_format:  kpts_detection_yolov5 # [segmentation_yolov5, kpts_detection_yolov5, detection_yolov5, obb, detection_coco_json_format, detection_unified_textfile]
 ###########################################################################
 # shape dataset definitions:
 #shapes_config_file: ./config/shapes_config.yaml
@@ -41,8 +41,8 @@ nrender_examples: 10
 
 
 
-min_objects_in_image: 2 #4
-max_objects_in_image: 2 #8
+min_objects_in_image: 4 #4
+max_objects_in_image: 4 #8
 
 # images background color: color is randomy selected from list
 bg_color: [white] # [black, white, yellow, magenta, cyan]
@@ -67,7 +67,7 @@ shapes_config:
   # active: bool. determines row inclusion in dataset generation. Related cname is included class.names and id is assigned anyway.
 
   [
-    { cname: red_square ,nvertices: 4, theta0: 0, obb_theta: 60, color: [ blue ], height: [ 120 ], aspect_ratio: [ 1 ], active: True },
+    { cname: red_square ,nvertices: 4, theta0: 0, obb_theta: 60, color: [ blue ], height: [ 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: blue_square ,nvertices: 4, theta0: 0, obb_theta: 0,  color: [ blue ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: green_square ,nvertices: 4, theta0: 0, obb_theta: 0,  color: [ green ], height: [ 50, 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: triangle, nvertices: 3, theta0: 0,  obb_theta: 45,color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 4 ], active: True },

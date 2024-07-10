@@ -33,11 +33,29 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
 
     if mkdir:
         path.mkdir(parents=True, exist_ok=True)  # make directory
-
     return path
 
 
 def render(nexamples, labels_file_format, image_dir, labels_dir, output_dir, category_names_table, split):
+    """
+
+    :param nexamples:
+    :type nexamples:
+    :param labels_file_format:
+    :type labels_file_format:
+    :param image_dir:
+    :type image_dir:
+    :param labels_dir:
+    :type labels_dir:
+    :param output_dir:
+    :type output_dir:
+    :param category_names_table:
+    :type category_names_table:
+    :param split:
+    :type split:
+    :return:
+    :rtype:
+    """
     listdir = [filename for filename in os.listdir(image_dir) if
                filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
 
@@ -51,20 +69,28 @@ def render(nexamples, labels_file_format, image_dir, labels_dir, output_dir, cat
             print(f'Label file {label_path} not found. terminating!')
             exit(1)
 
+        dest_dir = f'{output_dir}'
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        fname = Path(image_path)
+        output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
+
         if labels_file_format == 'detection_coco_json_format':
             annotations_path = labels_dir
-            draw_coco_detection_dataset_example(annotations_path, category_names_table, f'{output_dir}/coco')
+            image = draw_coco_detection_dataset_example(annotations_path, category_names_table)
         elif labels_file_format == 'detection_yolov5':
-            draw_detection_dataset_example(image_path, label_path, category_names_table, f'{output_dir}/det1')
+            image = draw_detection_dataset_example(image_path, label_path, category_names_table)
         elif labels_file_format == 'detection_unified_textfile':
-            draw_detection_single_file_dataset_example(image_path, label_path, category_names_table,
-                                                       f'{output_dir}/det2')
+            image = draw_detection_single_file_dataset_example(image_path, label_path, category_names_table)
         elif labels_file_format == 'segmentation_yolov5':
-            draw_segmentation_dataset_example(image_path, label_path, category_names_table, f'{output_dir}/seg')
+            output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
+            image = draw_segmentation_dataset_example(image_path, label_path, category_names_table)
         elif labels_file_format == 'obb':
-            draw_obb_dataset_example(image_path, label_path, category_names_table, f'{output_dir}/det1')
+            image = draw_obb_dataset_example(image_path, label_path)
         else:
-            print(f'Unknow labels_file_format: {labels_file_format}')
+            print(f'Unknow labels_file_format. Terminating!!! {labels_file_format}')
+            exit(1)
+        print(f'saving test results to {output_path}')
+        image.save(output_path)
 
 if __name__ == "__main__":
     config_file = './config/dataset_config.yaml'
