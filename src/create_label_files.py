@@ -7,49 +7,6 @@ import math
 from shapely.geometry import Polygon
 
 
-def segments2bboxes_batch(segments, width=640, height=640):
-    """
-    Convert segment polygons to bounding boxes labels, applying inside-image constraint.
-
-    :param segments: shape: [nobjects, nvertices, 2]
-    :type segments:
-    :param width:
-    :type width:
-    :param height:
-    :type height:
-    :return:
-    :rtype:
-    """
-    # 1. Locate out of region entries, i.e. entries with negative or above image dimenssions coords.
-
-    ge = np.logical_or(np.less(segments[...,0:1], 0), np.less(segments[...,1:2], 0))
-    le = np.logical_or(np.greater(segments[...,0:1], width), np.greater(segments[...,1:2], height))
-    out_of_region = np.logical_or(ge, le).astype(np.float32) # values 0 or 1, shape: [nt, nvertices, 1]
-    # 2. Find bbox xmin,ymin coords
-    # 2.1 De-priorities selection of Negative out-of-region coords as xmin, ymin, by adding a large bias
-    bias = 10000
-    bias_vector = out_of_region*bias # bias is 0 for in region coords, and large otherwise.
-    segments_x = segments[..., 0] #+ bias_vector # Add large bias to out of range x coords.
-    segments_y = segments[..., 1] #+ bias_vector # Add large bias to out of range y coords.
-    # 2.2 find xmin, ymin
-
-    xmin= np.min(segments_x,axis=1)
-    ymin = np.min(segments_y, axis=1)
-    # 3. Find bbox max coords
-    # 3.1 De-priorities selection of positive out-of-region coords xmax, ymax, by substractinb a large bias:
-    # segments_x = segments[..., 1]# - 2*bias_vector # substact large bias to out of range x coords.
-    # segments_y = segments[..., 2] #- 2*bias_vector # substact large bias to out of range y coords.
-    # 3.2 find max coords:
-    xmax= np.max(segments_x,axis=1)
-    ymax = np.max(segments_y, axis=1)
-    # 4 concat bboxes:
-    bbox = np.concatenate([xmin[...,None], ymin[...,None], xmax[...,None], ymax[...,None]], axis=-1) # shape: [nt,4]
-    # 5 handle edge case of all segment's vertices out of region, which led to biased vertices selection. set 0s bbox:
-
-    ind = np.logical_and(np.greater(bbox, 0), np.less(bbox, bias/2)) # thresh at bias/2 should be good
-    bbox = np.where(ind, bbox, [0., 0., 0., 0.]) # if all segments are out of region, then set bbox to 0s
-    return bbox
-
 
 def arrange_obb_entries(images_polygons, images_size, categories_lists):
     batch_entries = []
@@ -222,9 +179,9 @@ def rotate(hbboxes, theta0):
     rotate_bbox = lambda xy: np.concatenate([np.sum(xy * np.concatenate([np.cos(rot_angle)[...,None, None], np.sin(rot_angle)[...,None, None]], axis=-1), axis=-1,keepdims=True),
                               np.sum(xy * np.concatenate([-np.sin(rot_angle)[...,None, None], np.cos(rot_angle)[...,None, None]], axis=-1), axis=-1,keepdims=True)], axis=-1)
     offset_xy = (np.max(hbboxes, axis=-2, keepdims=True) + np.min(hbboxes,axis=-2, keepdims=True)) / 2
-    hbboxes_ = hbboxes - offset_xy
+    hbboxes_ = hbboxes - offset_xy # remove offset b4 rotation
     rbboxes =  rotate_bbox(hbboxes_)
-    rbboxes=rbboxes+offset_xy
+    rbboxes=rbboxes+offset_xy # add offset back
     return rbboxes
 
 
@@ -336,50 +293,6 @@ def entries_to_files(batch_entries, out_fnames, output_dir):
         with open(out_path, 'w') as f:
             for entry in img_entries:
                 f.write(f'{entry}\n')
-
-
-def dota_entries_to_files(batch_entries, category_names, out_fnames, output_dir):
-    """
-
-    Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.
-    normalized coordinates [0 to 1].
-    zero-indexed class numbers - start from 0
-
-    :param images_paths: list of dataset image filenames
-    :param images_bboxes: list of per image bboxes arrays in  [xc,yc,w,h] format.
-    :param images_sizes:
-    :param images_class_ids:  list of per image class_ids arrays
-    :param output_dir: output dir of labels text files
-    :return:
-    """
-    print(f'create_per_image_labels_files. labels_output_dir: {output_dir}')
-    try:
-        os.makedirs(output_dir)
-    except FileExistsError:
-        # catch exception - directory already exists
-        pass
-    for img_entries, out_fname in zip(batch_entries, out_fnames):
-            for entry  in zip(img_entries):
-                pass
-                # arranged_entry =
-                # for rbbox in entry[0][:-1]: # skip class - the last list entry
-                #     f.write(str(elem)+' ')
-                # f.write(str(category_names[int(entry[0][-1])]) + ' ')
-                # difficulty = 0
-                # f.write(str(difficulty))
-
-    print(f'create_per_image_labels_files. labels_output_dir: {output_dir}')
-    try:
-        os.makedirs(output_dir)
-    except FileExistsError:
-        # catch exception - directory already exists
-        pass
-    for img_entries, out_fname in zip(batch_entries, out_fnames):
-        out_path = f"{output_dir}/{out_fname}"
-        with open(out_path, 'w') as f:
-            for entry in img_entries:
-                f.write(f'{entry}\n')
-
 
 
 # Create a coco like format label file. format:

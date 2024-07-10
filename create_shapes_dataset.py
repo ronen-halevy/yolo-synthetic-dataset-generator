@@ -24,7 +24,7 @@ from PIL import Image, ImageColor
 import random
 
 from src.create_label_files import (create_coco_json_lable_files,
-                                    normalize_bboxes, entries_to_files, dota_entries_to_files,arrange_segmentation_entries, create_obb_entries, rotate_obb_bbox_entries, rotate_polygon_entries, remove_dropped_bboxes, create_detection_kpts_entries,
+                                    normalize_bboxes, entries_to_files, arrange_segmentation_entries, create_obb_entries, rotate_obb_bbox_entries, rotate_polygon_entries, remove_dropped_bboxes, create_detection_kpts_entries,
                                     create_detection_labels_unified_file, write_images_to_file)
 from src.shapes_dataset import ShapesDataset
 from src.create_label_files import rotate
