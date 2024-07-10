@@ -2,7 +2,7 @@ import yaml
 import os
 from pathlib import Path
 
-from src.render.draw_dataset_examples import draw_detection_dataset_example, draw_detection_single_file_dataset_example, \
+from src.render.render_utils import draw_detection_dataset_example, draw_detection_single_file_dataset_example, \
     draw_segmentation_dataset_example, draw_coco_detection_dataset_example, draw_obb_dataset_example
 
 import random
