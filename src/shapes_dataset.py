@@ -158,7 +158,7 @@ class ShapesDataset:
         :param size_fluctuation: int float [0,1), images' width and height are multiplied by (1-rand(size_fluctuation))
         :return:
             image: an RGB pillow image drawn with shapes
-            bboxes: type: float ndarray [nobjects,4]
+            bboxes: type: float ndarray [nobjects,4]  [xc, yc, w, h]
             tuple(objects_categories_indices): type in. tuple of nobjects category indices
             objects_categories_names: type: str. list of nobjects category names
             polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
@@ -222,7 +222,7 @@ class ShapesDataset:
         :return:
         batch_filenames: type: list of str size:  nentries. created images filenames, w/o dir prefix
         batch_sizes: type:  list of 2 tuples ints.  size:  nentries. (image.height, image.width)
-        batch_bboxes: type:  list of float [nobjects, 4] arrays . size:  nentries. Bounding boxes of image's nobjects
+        batch_bboxes: type:  list of float [nobjects, 4] arrays . size:  nentries. Bounding boxes of image's nobjects  [xc, yc, w, h]
         batch_objects_categories_indices: type: list of nobjects tuples size: nentries. Category id of image's nobjects
         self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
         self.category_ids:  type: list of int. size: ncategories. Created dataset's entries ids.

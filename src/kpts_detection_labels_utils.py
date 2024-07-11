@@ -1,20 +1,19 @@
 import numpy as np
-def create_detection_kpts_entries(batch_bboxes, batch_polygons, batch_sizes, batch_class_ids):
-
+def create_detection_kpts_entries(batch_bboxes, batch_polygons, batch_img_sizes, batch_class_ids):
     """
-    Description: one *.txt file per image,  one row per object, row format: class polygon vertices (x0, y0.....xn,yn)
-    normalized coordinates [0 to 1].
-    zero-indexed class numbers - start from 0
 
-    :param images_paths: list of dataset image filenames
-    :param batch_polygons: list of per image polygons arrays
-    :param batch_class_ids:  list of per image class_ids
-    :param output_dir: output dir of labels text files
+    :param batch_bboxes: list[bsize] of np.array[nti,4] entries, i=0:bsize . float Unormalized. [xc,yc,w,h]
+    :type batch_polygons: list[bsize] of list[nti] entries, i=0:bsize, each entry is a polygon np.array[n_vertices_j,2]
+    :type batch_img_sizes:  list[bisize] of list[2] entries, each holds image's [w,h]
+    :param batch_class_ids: list[bsize] of list[nti], each entry is the related class id.
     :return:
+    entries: list[bsize] of string entries: 'xc yc wh kpt0_x kpt0_y occlusion0.......kptnx kptny occlusionn'
     """
-    # detection_entries = create_detection_entries(batch_bboxes, batch_sizes, batch_class_ids)
+
+
+    # detection_entries = create_detection_entries(batch_bboxes, batch_img_sizes, batch_class_ids)
     entries=[]
-    for image_polygons, image_size, class_ids, image_bboxes in zip(batch_polygons, batch_sizes,
+    for image_polygons, image_size, class_ids, image_bboxes in zip(batch_polygons, batch_img_sizes,
                                                               batch_class_ids, batch_bboxes):
         image_bboxes=np.array(image_bboxes)
         image_polygons=np.array(image_polygons)
@@ -22,16 +21,17 @@ def create_detection_kpts_entries(batch_bboxes, batch_polygons, batch_sizes, bat
         im_height = image_size[0]
         im_width = image_size[1]
 
+        image_bboxes = (image_bboxes/np.array([im_width, im_height, im_width, im_height]))
         img_kpts = (image_polygons/np.array([im_width, im_height]))
-        # concat valid field:
-        img_kpts_valid = np.full( [img_kpts.shape[0], img_kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
-        img_kpts = np.concatenate([img_kpts, img_kpts_valid], axis=-1).reshape(img_kpts.shape[0], -1) # flatten kpts per object
+        # concat occlusion  (=valid) field:
+        img_kpts_occlusion = np.full( [img_kpts.shape[0], img_kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
+        img_kpts = np.concatenate([img_kpts, img_kpts_occlusion], axis=-1).reshape(img_kpts.shape[0], -1) # flatten kpts per object
 
         img_entries=[]
-
+        category_id=0 # assumed a single category
         for bbox, kpts   in zip(image_bboxes, img_kpts):
             bbox = ' '.join(str( round(vertex, 2)) for vertex in list(bbox))
-            entry = f"{bbox} {' '.join(str( round(kpt, 2)) for kpt in list(kpts.reshape(-1)))}"
+            entry = f"{category_id} {bbox} {' '.join(str( round(kpt, 2)) for kpt in list(kpts.reshape(-1)))}"
             img_entries.append(entry)
         entries.append(img_entries)
     return entries

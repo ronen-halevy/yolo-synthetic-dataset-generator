@@ -110,7 +110,7 @@ def create_shapes_dataset():
                 dataset_yaml = {
                     'nc': 1,
                     'names': {0: 0},
-                    'kpt_shape': [npkts, 3],  # x,y,valid
+                    'kpt_shape': [npkts, 3],  # [npkts, [x,y,valid]]
                     'skeleton': [],
                     'train': f"{config['base_dir']}/{config['image_dir']}/train",
                     'val': f"{config['base_dir']}/{config['image_dir']}/valid"
