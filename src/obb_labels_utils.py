@@ -82,24 +82,36 @@ def calc_iou(polygon1, polygons):
         iou.append(intersect / union)
     return np.array(iou)
 
-
 def remove_dropped_bboxes(batch_bbox_entries, dropped_ids):
-    batch_bbox_entries_modified = []
+    """
+    Filter bbox entries by dropping entries according to dropped_ids vector
+    :param batch_bbox_entries:list[batch][nti][5] where nti is nof bbox in image i, each entry is cls,bbox, normalized
+    :param dropped_ids: list[nd], each entry holds id of to-be-droped bbox: [img_id,bbox_id]
+    :type dropped_ids:
+    :return:
+    batch_bbox_entries_filtered: list[batch][nti_filtered][5]
+    """
+    batch_bbox_entries_filtered = []
     for img_idx, img_bbox_entry in enumerate(batch_bbox_entries,):  # loop on images
-        bbox_del_ids = [did[1] for did in dropped_ids if did[0] == img_idx]
-        img_bbox_entries = np.delete(np.array(img_bbox_entry), bbox_del_ids, axis=0)#.tolist()
-        batch_bbox_entries_modified.append(img_bbox_entries)
-    return batch_bbox_entries_modified
+        img_bbox_drop_ids = [drop_id[1] for drop_id in dropped_ids if drop_id[0] == img_idx]
+        img_bbox_filtered_entries = np.delete(np.array(img_bbox_entry), img_bbox_drop_ids, axis=0)
+        batch_bbox_entries_filtered.append(img_bbox_filtered_entries)
+    return batch_bbox_entries_filtered
 
-def remove_dropped_polygons(batch_polygons, dropped_ids):
-    batch_polygons_modified = []
-    for img_idx, img_polygons in enumerate(batch_polygons):  # loop on images
-        img_polygons_modified=[]
-        for poly_idx, polygon in enumerate(img_polygons ):  # loop on images
-            if [img_idx, poly_idx] not in dropped_ids:
-                img_polygons_modified.append(polygon)
-        batch_polygons_modified.append(img_polygons_modified)
-    return batch_polygons_modified
+def filter_polygons(batch_polygons, batch_filters):
+    """
+    Filter polygons by bool filters
+    :param batch_polygons: list[batch][nti] of [nvi,2], where nvj is nof vertices in polygon j of image i. (non normed)
+    :param filter: bool, list[batch] of array(nti), filter polygons
+    :return:
+    batch_polygons_filtered:  list[batch][nti_f] of [nvi,2], nvj is nof vertices in polygon j of image i.(non normed)
+
+    """
+    batch_polygons_filtered = []
+    for img_idx, (img_polygons, img_filters)  in enumerate(zip(batch_polygons,batch_filters)):  # loop on images
+        img_polygons_filtered = [polygon for polygon, filter in zip(img_polygons, img_filters) if filter]
+        batch_polygons_filtered.append(img_polygons_filtered)
+    return batch_polygons_filtered
 
 def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thresh=0):
     """
@@ -156,19 +168,27 @@ def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thres
     return batch_rpolygons, batch_result_thetas, dropped_ids
 
 
-def rotate_obb_bbox_entries(bbox_entries, images_size, obb_thetas):
+def rotate_obb_bbox_entries(batch_bboxes, images_size, obb_thetas):
+    """
+    Rotate bboxes, filter only if inside image boundaries, return in bounderies filter to filter related polygonsL
+    :param batch_bboxes: list[batch[ of arrays[nti,8] where nti is nof bbox in image i, 8 are 4 xy bbox coords, 1 normed
+    :param images_size: list[batch] of array[2], used to check image limits crossing
+    :param obb_thetas: liat[bath] of list[nti] where nti is nof bbox in image i.
+    :return:
+    batch_rbboxes: list[batch] of array[nti,8]where nti is nof bbox in image i, normed to 1
+    batch_in_boundaries: bool, list[batch] of array[nti]where nti is nof bbox in image i.
+    :rtype:
+    """
     batch_rbboxes = []
-    batch_dropped_ids=[]
-    for im_idx, (hbboxes, image_size, theta) in enumerate(zip(bbox_entries, images_size, obb_thetas)):
-        dropped_ids = []
-        rbboxes = rotate(hbboxes.reshape([-1, 4, 2]), theta).reshape(-1, 8)
-        for bbox_id, rbbox in enumerate(rbboxes):
-
-            if np.any(rbbox > image_size[0]) or np.any(rbbox < 0):
-                batch_dropped_ids.append([im_idx, bbox_id])
-            else:
-                batch_rbboxes.append(rbboxes)
-    return batch_rbboxes, batch_dropped_ids
+    batch_in_boundaries=[]
+    for im_idx, (img_hbboxes, image_size, theta) in enumerate(zip(batch_bboxes, images_size, obb_thetas)):
+        img_rbboxes = rotate(img_hbboxes.reshape([-1, 4, 2]), theta).reshape(-1, 8)
+        img_in_bounderies = np.logical_and(img_rbboxes / np.tile(image_size,[4]) < 1, img_rbboxes >  0) # bool, shape[nimg_bboxes, 8]
+        img_in_bounderies = np.all(img_in_bounderies, axis=-1) # bool, shape[nimg_bboxes]
+        img_rbboxes=img_rbboxes[img_in_bounderies] # filter
+        batch_rbboxes.append(img_rbboxes)
+        batch_in_boundaries.append(img_in_bounderies)
+    return batch_rbboxes, batch_in_boundaries
 
 
 def append_category_field(batch_rbboxes, batch_objects_categories_names):

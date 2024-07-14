@@ -26,7 +26,7 @@ from src.create_label_files import (normalize_bboxes, write_entries_to_files,
                                     create_detection_labels_unified_file, write_images_to_file)
 from src.segmentation_labels_utils import arrange_segmentation_entries
 from src.kpts_detection_labels_utils import create_detection_kpts_entries
-from src.obb_labels_utils import create_obb_entries, rotate_obb_bbox_entries, rotate_polygon_entries, remove_dropped_bboxes, remove_dropped_polygons, append_category_field
+from src.obb_labels_utils import create_obb_entries, rotate_obb_bbox_entries, rotate_polygon_entries, remove_dropped_bboxes, filter_polygons, append_category_field
 from src.coco_json_labels_utils import create_coco_json_lable_files
 from src.shapes_dataset import ShapesDataset
 
@@ -99,8 +99,9 @@ def create_shapes_dataset():
             batch_polygons, batch_obb_thetas, dropped_ids= rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
             bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
             bbox_entries = create_obb_entries(bbox_entries)
-            batch_rbboxes, batch_dropped_ids= rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
-            batch_polygons = remove_dropped_polygons(batch_polygons, batch_dropped_ids)
+            batch_rbboxes, batch_in_bounderies= rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
+            batch_polygons = filter_polygons(batch_polygons, batch_in_bounderies)
+
             batch_rbboxes = append_category_field(batch_rbboxes, batch_objects_categories_names)
 
             def entries_list_to_string(batch_rbboxes):
