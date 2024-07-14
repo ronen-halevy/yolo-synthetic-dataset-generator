@@ -68,7 +68,8 @@ def create_shapes_dataset():
     splits = config["splits"]
     shapes_config_file = config['shapes_config']
     shapes_dataset = ShapesDataset(config)
-    output_dir = config['output_dir']
+    format_type = config["labels_format_type"]
+    output_dir = f'{config["output_dir"]}'.replace("{labels_format_type}", format_type)
     bg_color = config['bg_color']
 
     for split in splits: # loop: train, validation, test
@@ -92,9 +93,9 @@ def create_shapes_dataset():
         bbox_entries = normalize_bboxes(batch_bboxes, images_size, categories_lists)
 
             # 3. text file per image
-        if config.get('labels_file_format')=='detection_yolov5':
+        if config['labels_format_type'] == 'detection':
                 write_entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
-        elif config.get('labels_file_format') == 'obb':
+        elif config['labels_format_type'] == 'obb':
             batch_polygons, batch_obb_thetas, dropped_ids= rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
             bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
             bbox_entries = create_obb_entries(bbox_entries)
@@ -114,7 +115,7 @@ def create_shapes_dataset():
 
             out_filename = f"{output_dir}/dataset.yaml"
             dataset_yaml = {
-                'path': f'{config["base_dir"]}/{config["output_dir"]}',
+                'path': f'{config["base_dir"]}/{output_dir}',
                 'train': 'images/train',
                 'val': 'images/valid',
                 'nc': len(categories_names),
@@ -123,37 +124,37 @@ def create_shapes_dataset():
             with open(out_filename, 'w') as outfile:
                 yaml.dump(dataset_yaml, outfile, default_flow_style=False)
 
-        elif config.get('labels_file_format')=='kpts_detection_yolov5':
+        elif config['labels_format_type']=='kpts':
                 # related label file has same name with .txt ext - split filename, replace ext to txt:
                 kpts_entries=create_detection_kpts_entries(batch_bboxes, batch_polygons, images_size, categories_lists)
                 write_entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
                 # create dataset yaml:
                 npkts = len(batch_polygons[0][0])  # [nimg,nobj, nvertices, 2], assumed nvertices identical to all (same shapes)
-                out_filename = f'../{config["base_dir"]}/{output_dir}/dataset.yaml'
+                out_filename = f'{config["base_dir"]}/{output_dir}/dataset.yaml'
                 dataset_yaml = {
                     'nc': 1,
                     'names': {0: 0},
                     'kpt_shape': [npkts, 3],  # [npkts, [x,y,valid]]
                     'skeleton': [],
-                    'train': f"{config['base_dir']}/{config['image_dir']}/train",
-                    'val': f"{config['base_dir']}/{config['image_dir']}/valid"
+                    'train': f"{config['base_dir']}/{output_dir}/{config['image_dir']}/train",
+                    'val': f"{config['base_dir']}/{output_dir}/{config['image_dir']}/valid"
                 }
                 with open(out_filename, 'w') as outfile:
                     yaml.dump(dataset_yaml, outfile, default_flow_style=False)
             #  4. Ultralitics like segmentation
-        elif config.get('labels_file_format') == 'segmentation_yolov5':
+        elif config['labels_format_type'] == 'segmentation':
                 # related label file has same name with .txt ext - split filename, replace ext to txt:
                 batch_entries = arrange_segmentation_entries(batch_polygons, images_size, categories_lists)
                 write_entries_to_files(batch_entries, label_out_fnames, labels_out_dir)
                 # 1. coco format (i.e. dataset entries defined by a json file)
-        elif config.get('labels_file_format') == 'detection_coco_json_format':
+        elif config['labels_format_type'] == 'detection_coco_json_format':
                 labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
                 images_filenames = [f'{config["image_dir"]}/{split}/{images_filename}' for images_filename in
                                     images_filenames]
                 create_coco_json_lable_files(images_filenames, images_size, batch_bboxes, categories_lists,
                                              categories_names, categories_ids,
                                              labels_out_dir)
-        elif config.get('labels_file_format') == 'detection_unified_textfile':
+        elif config['labels_format_type'] == 'detection_unified_textfile':
                 labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
                 labels_dir = Path(os.path.dirname(labels_out_dir))
                 labels_dir.mkdir(parents=True, exist_ok=True)
