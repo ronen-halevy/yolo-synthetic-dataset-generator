@@ -5,9 +5,9 @@ splits:
  valid: 1
  test: 1
 
-output_dir: dataset-obb
 
-base_dir: ../shapes-datase
+base_dir: ../shapes-dataset
+output_dir: dataset-obb
 image_dir: ./images
 labels_dir: ./labels
 labels_all_entries_file: ./dataset/labels/{split}/all_entries.txt
@@ -31,7 +31,7 @@ test_output_dir: ./runs/exp
 # 3. detection_unified_textfil: coco like labels format. Dataset entries are defined by a json file
 # 4. class-bbox labels text file per all images, a row per image.
 
-labels_file_format:  kpts_detection_yolov5 # [segmentation_yolov5, kpts_detection_yolov5, detection_yolov5, obb, detection_coco_json_format, detection_unified_textfile]
+labels_file_format:  obb # [segmentation_yolov5, kpts_detection_yolov5, detection_yolov5, obb, detection_coco_json_format, detection_unified_textfile]
 ###########################################################################
 # shape dataset definitions:
 #shapes_config_file: ./config/shapes_config.yaml
@@ -67,7 +67,7 @@ shapes_config:
   # active: bool. determines row inclusion in dataset generation. Related cname is included class.names and id is assigned anyway.
 
   [
-    { cname: red_square ,nvertices: 4, theta0: 0, obb_theta: 60, color: [ blue ], height: [ 120 ], aspect_ratio: [ 1 ], active: False },
+    { cname: red_square ,nvertices: 4, theta0: 0, obb_theta: 60, color: [ blue ], height: [ 120 ], aspect_ratio: [ 1 ], active: True },
     { cname: blue_square ,nvertices: 4, theta0: 0, obb_theta: 0,  color: [ blue ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: green_square ,nvertices: 4, theta0: 0, obb_theta: 0,  color: [ green ], height: [ 50, 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: triangle, nvertices: 3, theta0: 0,  obb_theta: 45,color: [ red ], height: [ 60, 120 ], aspect_ratio: [ 4 ], active: True },
