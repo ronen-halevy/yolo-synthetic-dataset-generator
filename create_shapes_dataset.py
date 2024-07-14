@@ -22,11 +22,11 @@ from PIL import Image, ImageDraw
 from PIL import Image, ImageColor
 import random
 
-from src.create_label_files import (normalize_bboxes, entries_to_files,
+from src.create_label_files import (normalize_bboxes, write_entries_to_files,
                                     create_detection_labels_unified_file, write_images_to_file)
 from src.segmentation_labels_utils import arrange_segmentation_entries
 from src.kpts_detection_labels_utils import create_detection_kpts_entries
-from src.obb_labels_utils import create_obb_entries, rotate_obb_bbox_entries, rotate_polygon_entries, remove_dropped_bboxes
+from src.obb_labels_utils import create_obb_entries, rotate_obb_bbox_entries, rotate_polygon_entries, remove_dropped_bboxes, remove_dropped_polygons, append_category_field
 from src.coco_json_labels_utils import create_coco_json_lable_files
 from src.shapes_dataset import ShapesDataset
 
@@ -81,7 +81,7 @@ def create_shapes_dataset():
         images_out_path.mkdir(parents=True, exist_ok=True)
         labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
         labels_out_dir.mkdir(parents=True, exist_ok=True)
-        batch_bboxes, categories_lists, categories_names, categories_ids, batch_polygons, images_objects_colors, obb_thetas = \
+        batch_bboxes, categories_lists, batch_objects_categories_names, categories_names, categories_ids, batch_polygons, images_objects_colors, obb_thetas = \
             shapes_dataset.create_images_shapes(
                 nentries)
         config_image_size = config['image_size']
@@ -93,20 +93,43 @@ def create_shapes_dataset():
 
             # 3. text file per image
         if config.get('labels_file_format')=='detection_yolov5':
-                entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
+                write_entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
         elif config.get('labels_file_format') == 'obb':
             batch_polygons, batch_obb_thetas, dropped_ids= rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
             bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
             bbox_entries = create_obb_entries(bbox_entries)
-            batch_rbboxes= rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
-            entries_to_files(batch_rbboxes, label_out_fnames, labels_out_dir)
+            batch_rbboxes, batch_dropped_ids= rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
+            batch_polygons = remove_dropped_polygons(batch_polygons, batch_dropped_ids)
+            batch_rbboxes = append_category_field(batch_rbboxes, batch_objects_categories_names)
+
+            def entries_list_to_string(batch_rbboxes):
+                batch_rbboxes_strings = []
+                for img_rbboxes in batch_rbboxes:
+                    img_rbboxes = [' '.join(str(x) for x in img_rbboxes[idx]) for idx in range(len(img_rbboxes))]
+                    batch_rbboxes_strings.append(img_rbboxes)
+                return batch_rbboxes_strings
+            batch_rbboxes = entries_list_to_string(batch_rbboxes)
+
+            write_entries_to_files(batch_rbboxes, label_out_fnames, labels_out_dir)
+
+            out_filename = f"{output_dir}/dataset.yaml"
+            dataset_yaml = {
+                'path': f'{config["base_dir"]}/{config["output_dir"]}',
+                'train': 'images/train',
+                'val': 'images/valid',
+                'nc': len(categories_names),
+                'names': categories_names,
+            }
+            with open(out_filename, 'w') as outfile:
+                yaml.dump(dataset_yaml, outfile, default_flow_style=False)
+
         elif config.get('labels_file_format')=='kpts_detection_yolov5':
                 # related label file has same name with .txt ext - split filename, replace ext to txt:
                 kpts_entries=create_detection_kpts_entries(batch_bboxes, batch_polygons, images_size, categories_lists)
-                entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
+                write_entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
                 # create dataset yaml:
                 npkts = len(batch_polygons[0][0])  # [nimg,nobj, nvertices, 2], assumed nvertices identical to all (same shapes)
-                out_filename = f"{output_dir}/dataset.yaml"
+                out_filename = f'../{config["base_dir"]}/{output_dir}/dataset.yaml'
                 dataset_yaml = {
                     'nc': 1,
                     'names': {0: 0},
@@ -121,7 +144,7 @@ def create_shapes_dataset():
         elif config.get('labels_file_format') == 'segmentation_yolov5':
                 # related label file has same name with .txt ext - split filename, replace ext to txt:
                 batch_entries = arrange_segmentation_entries(batch_polygons, images_size, categories_lists)
-                entries_to_files(batch_entries, label_out_fnames, labels_out_dir)
+                write_entries_to_files(batch_entries, label_out_fnames, labels_out_dir)
                 # 1. coco format (i.e. dataset entries defined by a json file)
         elif config.get('labels_file_format') == 'detection_coco_json_format':
                 labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)

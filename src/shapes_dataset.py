@@ -270,4 +270,4 @@ class ShapesDataset:
             batch_polygons.append(polygons)
             batch_objects_colors.append(objects_colors)
             batch_obb_thetas.append(obb_thetas)
-        return batch_bboxes, batch_objects_categories_indices, self.category_names, self.category_ids, batch_polygons, batch_objects_colors, batch_obb_thetas
+        return batch_bboxes, batch_objects_categories_indices, batch_objects_categories_names, self.category_names, self.category_ids, batch_polygons, batch_objects_colors, batch_obb_thetas

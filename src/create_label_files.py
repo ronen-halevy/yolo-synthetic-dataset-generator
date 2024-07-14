@@ -68,7 +68,7 @@ def normalize_bboxes(images_bboxes, images_sizes, images_class_ids):
         all_bboxes.append(img_bboxes)
     return all_bboxes
 
-def entries_to_files(batch_entries, out_fnames, output_dir):
+def write_entries_to_files(batch_entries, out_fnames, output_dir):
     """
 
     Description: one *.txt file per image,  one row per object, row format: class x_center y_center width height.

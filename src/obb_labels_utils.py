@@ -21,7 +21,7 @@ def xywh2xyxy(obboxes):
 
     # order = obboxes.shape[:-1]
     return np.concatenate(
-            [point1, point2, point3, point4, cls], axis=-1)
+            [point1, point2, point3, point4], axis=-1)
 
 def rotate(hbboxes, theta0):
     rot_angle = np.array(theta0) / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
@@ -36,6 +36,13 @@ def rotate(hbboxes, theta0):
 
 
 def create_obb_entries(bbox_entries):
+    """
+
+    :param bbox_entries:
+    :type bbox_entries:
+    :return:
+    :rtype:
+    """
     bboxes = []
     for idx, bbox_entry in enumerate(bbox_entries):  # loop on images
         bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry] #  string rbbox entries to float
@@ -76,14 +83,23 @@ def calc_iou(polygon1, polygons):
     return np.array(iou)
 
 
-def remove_dropped_bboxes(bbox_entries, dropped_ids):
-    bbox_entries_modified = []
-    for idx, bbox_entry in enumerate(bbox_entries,):  # loop on images
-        ii = [ad[1] for ad in dropped_ids if ad[0] == idx]  # todo deleted here!!!!
-        bbox_entry1 = np.delete(np.array(bbox_entry), ii).tolist()
-        bbox_entries_modified.append(bbox_entry1)
-    return bbox_entries_modified
+def remove_dropped_bboxes(batch_bbox_entries, dropped_ids):
+    batch_bbox_entries_modified = []
+    for img_idx, img_bbox_entry in enumerate(batch_bbox_entries,):  # loop on images
+        bbox_del_ids = [did[1] for did in dropped_ids if did[0] == img_idx]
+        img_bbox_entries = np.delete(np.array(img_bbox_entry), bbox_del_ids, axis=0)#.tolist()
+        batch_bbox_entries_modified.append(img_bbox_entries)
+    return batch_bbox_entries_modified
 
+def remove_dropped_polygons(batch_polygons, dropped_ids):
+    batch_polygons_modified = []
+    for img_idx, img_polygons in enumerate(batch_polygons):  # loop on images
+        img_polygons_modified=[]
+        for poly_idx, polygon in enumerate(img_polygons ):  # loop on images
+            if [img_idx, poly_idx] not in dropped_ids:
+                img_polygons_modified.append(polygon)
+        batch_polygons_modified.append(img_polygons_modified)
+    return batch_polygons_modified
 
 def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thresh=0):
     """
@@ -142,9 +158,33 @@ def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thres
 
 def rotate_obb_bbox_entries(bbox_entries, images_size, obb_thetas):
     batch_rbboxes = []
-    for hbboxes, image_size, theta in zip(bbox_entries, images_size, obb_thetas):
-        hbboxes[:, :8] = rotate(hbboxes[:, :8].reshape([-1, 4, 2]), theta).reshape(-1, 8)
-        rbboxes = [' '.join(str(x) for x in hbboxes[idx]) for idx in
-                   range(len(hbboxes))]  # store string entries
-        batch_rbboxes.append(rbboxes)
-    return batch_rbboxes
+    batch_dropped_ids=[]
+    for im_idx, (hbboxes, image_size, theta) in enumerate(zip(bbox_entries, images_size, obb_thetas)):
+        dropped_ids = []
+        rbboxes = rotate(hbboxes.reshape([-1, 4, 2]), theta).reshape(-1, 8)
+        for bbox_id, rbbox in enumerate(rbboxes):
+
+            if np.any(rbbox > image_size[0]) or np.any(rbbox < 0):
+                batch_dropped_ids.append([im_idx, bbox_id])
+            else:
+                batch_rbboxes.append(rbboxes)
+    return batch_rbboxes, batch_dropped_ids
+
+
+def append_category_field(batch_rbboxes, batch_objects_categories_names):
+    """
+    append category name at the end of each entry (as in dota format for obb)
+
+    :param batch_rbboxes: list size: [batch][nti][entry string] where an entry string holds 8 bbox normed coordinates.
+    :param batch_objects_categories_names: list of objects' names. list size: [batch][nti], string
+    :return: batch_rbboxes_update, each entry apendedd with a category name.  list size: [batch][nti][entry string]
+    """
+    batch_rbboxes_update = []
+    for img_rbboxes, img_objects_categories_names in zip(batch_rbboxes, batch_objects_categories_names):
+        img_rbboxes_update = []
+        for rbbox, img_object_category_name in zip(img_rbboxes, img_objects_categories_names):
+            entry=rbbox.tolist()
+            entry.append(img_object_category_name)
+            img_rbboxes_update.append(entry)
+        batch_rbboxes_update.append(img_rbboxes_update)
+    return batch_rbboxes_update
