@@ -1,9 +1,10 @@
 import yaml
 import os
 from pathlib import Path
+from PIL import Image
 
 from src.render.render_utils import draw_detection_dataset_example, draw_detection_single_file_dataset_example, \
-    draw_segmentation_dataset_example, draw_coco_detection_dataset_example, draw_obb_dataset_example
+    draw_segmentation_dataset_example, draw_coco_detection_dataset_example, draw_obb_dataset_example, draw_kpts_dataset_example
 
 import random
 
@@ -36,13 +37,13 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
     return path
 
 
-def render(nexamples, labels_file_format, image_dir, labels_dir, output_dir, category_names_table, split):
+def render(nexamples, labels_format_type, image_dir, labels_dir, output_dir, category_names_table, split):
     """
 
     :param nexamples:
     :type nexamples:
-    :param labels_file_format:
-    :type labels_file_format:
+    :param labels_format_type:
+    :type labels_format_type:
     :param image_dir:
     :type image_dir:
     :param labels_dir:
@@ -74,22 +75,26 @@ def render(nexamples, labels_file_format, image_dir, labels_dir, output_dir, cat
         fname = Path(image_path)
         output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
 
-        if labels_file_format == 'detection_coco_json_format':
+        if labels_format_type == 'detection_coco_json_format':
             annotations_path = labels_dir
             image = draw_coco_detection_dataset_example(annotations_path, category_names_table)
-        elif labels_file_format == 'detection_yolov5':
+        elif labels_format_type == 'detection':
             image = draw_detection_dataset_example(image_path, label_path, category_names_table)
-        elif labels_file_format == 'detection_unified_textfile':
+        elif labels_format_type == 'detection_unified_textfile':
             image = draw_detection_single_file_dataset_example(image_path, label_path, category_names_table)
-        elif labels_file_format == 'segmentation_yolov5':
+        elif labels_format_type == 'segmentation':
             output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
             image = draw_segmentation_dataset_example(image_path, label_path, category_names_table)
-        elif labels_file_format == 'obb':
+        elif labels_format_type == 'obb':
             image = draw_obb_dataset_example(image_path, label_path)
+        elif labels_format_type == 'kpts':
+            image = draw_kpts_dataset_example(image_path, label_path)
         else:
-            print(f'Unknow labels_file_format. Terminating!!! {labels_file_format}')
+            print(f'Unknow labels_format_type. Terminating!!! {labels_format_type}')
             exit(1)
         print(f'saving test results to {output_path}')
+        image = Image.fromarray(image)
+
         image.save(output_path)
 
 if __name__ == "__main__":
@@ -97,30 +102,31 @@ if __name__ == "__main__":
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
     split = config['split_to_render'] # 'train'  # can be 'train', 'test', 'valid'
-    labels_file_format = config.get('labels_file_format')
+    labels_format_type = config['labels_format_type']
+    output_dir = f'{config["output_dir"]}'.replace('{labels_format_type}', config["labels_format_type"])
 
-    if labels_file_format in ['segmentation_yolov5', 'detection_yolov5', 'kpts_detection_yolov5', 'obb']:
-        labels_dir = f'{config["output_dir"]}/{config["labels_dir"]}/{split}'
-        images_dir = f'{config["output_dir"]}/{config["image_dir"]}/{split}'
-    elif labels_file_format == 'detection_coco_json_format':
+    if labels_format_type in ['segmentation', 'detection', 'kpts', 'obb']:
+        labels_dir = f'{output_dir}/{config["labels_dir"]}/{split}'
+        images_dir = f'{output_dir}/{config["image_dir"]}/{split}'
+    elif labels_format_type == 'detection_coco_json_format':
         coco_json_labels_file_path = config['coco_json_labels_file_path']
         labels_dir = coco_json_labels_file_path.replace('{split}', split)
         images_dir=None # complete path within json file
-    elif labels_file_format == 'detection_unified_textfile':
+    elif labels_format_type == 'detection_unified_textfile':
         labels_dir = config['labels_all_entries_file'].replace("{split}", split)
         images_dir = config["image_dir"].replace("{split}", split) # an offset for image filenames located in labels
     else:
-        raise('Unknown or missing labels_file_format! configuration')
+        raise('Unknown or missing labels_format_type! configuration')
     nexamples = config['nrender_examples'] + 1
-    labels_file_format = config.get('labels_file_format')
+    labels_format_type = config.get('labels_format_type')
 
     class_names_file=config['category_names_file']
 
-    output_dir = config['test_output_dir']
+    render_output_dir = config['render_output_dir']
     print('\nrendering dataset images with bbox and mask overlays\n')
-    output_dir=increment_path(output_dir)
+    render_output_dir=increment_path(render_output_dir)
 
 
     category_names = [c.strip() for c in open(class_names_file).readlines()]
-    render(nexamples, labels_file_format, images_dir, labels_dir, f'{output_dir}/{split}', category_names, split)
+    render(nexamples, labels_format_type, images_dir, labels_dir, f'{render_output_dir}/{split}', category_names, split)
 
