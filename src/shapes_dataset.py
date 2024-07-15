@@ -71,7 +71,7 @@ class ShapesDataset:
         return  [x.min(), y.min(), x.max(), y.max()]
 
 
-    def rotate(self, polygon, theta0):
+    def __rotate(self, polygon, theta0):
         """
         Rotates image - wip
         :param polygon:
@@ -131,7 +131,7 @@ class ShapesDataset:
 
         # rotate shape:
         if theta0:
-            polygon= self.rotate(polygon, theta0)
+            polygon= self.__rotate(polygon, theta0)
 
         # translate to center:
         center = np.random.randint(
@@ -141,7 +141,7 @@ class ShapesDataset:
         return polygon
 
 
-    def create_one_image_shapes(self, objects_attributes, image_size, iou_thresh,
+    def __create_one_image_shapes(self, objects_attributes, image_size, iou_thresh,
                           margin_from_edge,
                           bbox_margin,
                           size_fluctuation
@@ -253,7 +253,7 @@ class ShapesDataset:
                  shape_entry['height'],
                  shape_entry['color'], shape_entry['obb_theta']] for shape_entry in sel_shape_entris]
 
-            bboxes, objects_categories_indices, objects_categories_names, polygons, objects_colors, obb_thetas = self.create_one_image_shapes(
+            bboxes, objects_categories_indices, objects_categories_names, polygons, objects_colors, obb_thetas = self.__create_one_image_shapes(
                     objects_attributes,
                     image_size,
                     self.iou_thresh,
