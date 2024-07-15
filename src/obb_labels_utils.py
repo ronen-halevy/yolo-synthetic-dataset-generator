@@ -208,3 +208,23 @@ def append_category_field(batch_rbboxes, batch_objects_categories_names):
             img_rbboxes_update.append(entry)
         batch_rbboxes_update.append(img_rbboxes_update)
     return batch_rbboxes_update
+
+
+def create_obb_labels(batch_polygons, bbox_entries, images_size, obb_thetas, batch_objects_categories_names):
+    batch_polygons, batch_obb_thetas, dropped_ids = rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
+    bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
+    bbox_entries = create_obb_entries(bbox_entries)
+    batch_rbboxes, batch_in_bounderies = rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
+    batch_polygons = filter_polygons(batch_polygons, batch_in_bounderies)
+
+    batch_rbboxes = append_category_field(batch_rbboxes, batch_objects_categories_names)
+
+    def entries_list_to_string(batch_rbboxes):
+        batch_rbboxes_strings = []
+        for img_rbboxes in batch_rbboxes:
+            img_rbboxes = [' '.join(str(x) for x in img_rbboxes[idx]) for idx in range(len(img_rbboxes))]
+            batch_rbboxes_strings.append(img_rbboxes)
+        return batch_rbboxes_strings
+
+    batch_labels = entries_list_to_string(batch_rbboxes)
+    return batch_labels

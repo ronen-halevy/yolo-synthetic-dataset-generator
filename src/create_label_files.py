@@ -82,7 +82,6 @@ def write_entries_to_files(batch_entries, out_fnames, output_dir):
     :param output_dir: output dir of labels text files
     :return:
     """
-    print(f'create_per_image_labels_files. labels_output_dir: {output_dir}')
     try:
         os.makedirs(output_dir)
     except FileExistsError:
@@ -105,15 +104,7 @@ def write_entries_to_files(batch_entries, out_fnames, output_dir):
 
 
 def write_images_to_file(images, images_out_dir, images_filenames):
-            images_sizes=[images[idx].size for idx in np.arange(len(images))]
-
-            print(f'\nimages_out_dir {images_out_dir}')
-
-            # images_filenames=[]
             for idx, (image,image_filename) in enumerate(zip(images, images_filenames)):
-                # image_filename = f'img_{idx:06d}.jpg'
                 file_path = f'{images_out_dir}/{image_filename}'
                 image.save(file_path)
-                # images_filenames.append(image_filename)
-                print(f'writing image file to disk: {image_filename}')
             return images_filenames

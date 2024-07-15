@@ -189,10 +189,10 @@ class ShapesDataset:
 
             iou = list(map(lambda x: self.__compute_iou(bbox, x), bboxes)) # check iou with other generated boxes, must be below thresh
             if len(iou) !=0 and np.any(np.array(iou)) > iou_thresh:
-                print(f'\nDropping shape polygon from image: iou above theshold {category_id} {nvertices} {category_name} {aspect_ratio} {height}')
+                print(f'Dropping shape polygon from image: iou above theshold {category_name} height: {height} aspect_ratio: {aspect_ratio} ')
                 continue
             if np.any(np.array(bbox) > image_size[0]) or np.any(np.array(bbox) < 0): # debug!!!
-                print(f'\nDropping shape polygon from image: shape exceeds image boundaries {category_id} {nvertices} {category_name} {aspect_ratio} {height}')
+                print(f'Dropping shape polygon from image: shape exceeds image boundaries  {category_name} height: {height} aspect_ratio: {aspect_ratio}')
                 continue
             if len(bbox):
                 bboxes.append(bbox)
