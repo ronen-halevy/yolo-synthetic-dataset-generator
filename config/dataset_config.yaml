@@ -7,7 +7,7 @@ splits:
 
 
 base_dir: ../shapes-dataset
-output_dir: dataset-{labels_format_type} # code replaces {format_type} by selected format_type
+output_dir: dataset/dataset-{labels_format_type} # code replaces {format_type} by selected format_type
 image_dir: images
 labels_dir: labels
 labels_all_entries_file: ./dataset/labels/{split}/all_entries.txt
