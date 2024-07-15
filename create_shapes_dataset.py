@@ -67,11 +67,30 @@ def create_shapes_dataset():
     # train val test split sizes:
     splits = config["splits"]
     shapes_config_file = config['shapes_config']
-    shapes_dataset = ShapesDataset(config)
-    format_type = config["labels_format_type"]
-    output_dir = f'{config["output_dir"]}'.replace("{labels_format_type}", format_type)
+    labels_format_type = config['labels_format_type']
+    output_dir = f'{config["output_dir"]}'.replace("{labels_format_type}", labels_format_type)
     bg_color = config['bg_color']
+    shapes_dataset = ShapesDataset(config)
+    categories_names = shapes_dataset.categories_names
 
+    # create_dataset_config_file:
+    dataset_yaml = {
+        'path': f'{output_dir}',
+        'train': 'images/train',
+        'val': 'images/valid',
+        'nc': len(categories_names),
+        'names': categories_names,
+    }
+    if labels_format_type == 'kpts':
+        nkpts = max(shapes_dataset.shapes_nvertices)
+        dataset_yaml.update({'kpt_shape': [nkpts,3], 'skeleton': []})
+    out_filename = f"{output_dir}/dataset.yaml"
+    print(f'\n writing {out_filename}')
+    with open(out_filename, 'w') as outfile:
+        yaml.dump(dataset_yaml, outfile, default_flow_style=False)
+
+    # create dataset for all splits:
+    print(f'\n Creating dataset entries: {splits}')
     for split in splits: # loop: train, validation, test
         print(f'create {split} files:')
         nentries = int(splits[split])
@@ -82,7 +101,7 @@ def create_shapes_dataset():
         images_out_path.mkdir(parents=True, exist_ok=True)
         labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
         labels_out_dir.mkdir(parents=True, exist_ok=True)
-        batch_bboxes, categories_lists, batch_objects_categories_names, categories_names, categories_ids, batch_polygons, images_objects_colors, obb_thetas = \
+        batch_bboxes, categories_lists, batch_objects_categories_names, batch_polygons, images_objects_colors, obb_thetas = \
             shapes_dataset.create_images_shapes(
                 nentries)
         config_image_size = config['image_size']
@@ -92,10 +111,10 @@ def create_shapes_dataset():
         label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
         bbox_entries = normalize_bboxes(batch_bboxes, images_size, categories_lists)
 
-            # 3. text file per image
-        if config['labels_format_type'] == 'detection':
+        # 3. text file per image
+        if labels_format_type == 'detection':
                 write_entries_to_files(bbox_entries, label_out_fnames, labels_out_dir)
-        elif config['labels_format_type'] == 'obb':
+        elif labels_format_type == 'obb':
             batch_polygons, batch_obb_thetas, dropped_ids= rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
             bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
             bbox_entries = create_obb_entries(bbox_entries)
@@ -111,51 +130,26 @@ def create_shapes_dataset():
                     batch_rbboxes_strings.append(img_rbboxes)
                 return batch_rbboxes_strings
             batch_rbboxes = entries_list_to_string(batch_rbboxes)
-
             write_entries_to_files(batch_rbboxes, label_out_fnames, labels_out_dir)
-
-            out_filename = f"{output_dir}/dataset.yaml"
-            dataset_yaml = {
-                'path': f'{config["base_dir"]}/{output_dir}',
-                'train': 'images/train',
-                'val': 'images/valid',
-                'nc': len(categories_names),
-                'names': categories_names,
-            }
-            with open(out_filename, 'w') as outfile:
-                yaml.dump(dataset_yaml, outfile, default_flow_style=False)
-
-        elif config['labels_format_type']=='kpts':
-                # related label file has same name with .txt ext - split filename, replace ext to txt:
-                kpts_entries=create_detection_kpts_entries(batch_bboxes, batch_polygons, images_size, categories_lists)
-                write_entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
-                # create dataset yaml:
-                npkts = len(batch_polygons[0][0])  # [nimg,nobj, nvertices, 2], assumed nvertices identical to all (same shapes)
-                out_filename = f'{config["base_dir"]}/{output_dir}/dataset.yaml'
-                dataset_yaml = {
-                    'nc': 1,
-                    'names': {0: 0},
-                    'kpt_shape': [npkts, 3],  # [npkts, [x,y,valid]]
-                    'skeleton': [],
-                    'train': f"{config['base_dir']}/{output_dir}/{config['image_dir']}/train",
-                    'val': f"{config['base_dir']}/{output_dir}/{config['image_dir']}/valid"
-                }
-                with open(out_filename, 'w') as outfile:
-                    yaml.dump(dataset_yaml, outfile, default_flow_style=False)
-            #  4. Ultralitics like segmentation
-        elif config['labels_format_type'] == 'segmentation':
+        elif labels_format_type=='kpts':
+            # related label file has same name with .txt ext - split filename, replace ext to txt:
+            kpts_entries=create_detection_kpts_entries(batch_bboxes, batch_polygons, images_size, categories_lists)
+            write_entries_to_files(kpts_entries, label_out_fnames, labels_out_dir)
+        #  4. Ultralitics like segmentation
+        elif labels_format_type == 'segmentation':
                 # related label file has same name with .txt ext - split filename, replace ext to txt:
                 batch_entries = arrange_segmentation_entries(batch_polygons, images_size, categories_lists)
                 write_entries_to_files(batch_entries, label_out_fnames, labels_out_dir)
-                # 1. coco format (i.e. dataset entries defined by a json file)
-        elif config['labels_format_type'] == 'detection_coco_json_format':
+        # 1. coco format (i.e. dataset entries defined by a json file)
+        elif labels_format_type == 'detection_coco_json_format':
                 labels_out_dir = config['coco_json_labels_file_path'].replace('{split}', split)
                 images_filenames = [f'{config["image_dir"]}/{split}/{images_filename}' for images_filename in
                                     images_filenames]
+                categories_ids=range(len(categories_names))
                 create_coco_json_lable_files(images_filenames, images_size, batch_bboxes, categories_lists,
                                              categories_names, categories_ids,
                                              labels_out_dir)
-        elif config['labels_format_type'] == 'detection_unified_textfile':
+        elif labels_format_type == 'detection_unified_textfile':
                 labels_out_dir = config['labels_all_entries_file'].replace("{split}", split)
                 labels_dir = Path(os.path.dirname(labels_out_dir))
                 labels_dir.mkdir(parents=True, exist_ok=True)

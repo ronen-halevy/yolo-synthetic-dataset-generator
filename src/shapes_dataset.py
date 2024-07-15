@@ -29,12 +29,16 @@ class ShapesDataset:
         for shape in shapes_config:
             self.shapes.append(shape)
 
-        self.category_names = [shape['cname'] for shape in self.shapes]
-        # reduce duplicated category names (config list may have dup rows for same category):
-        indexes = np.unique(self.category_names, return_index=True)[1]
-        self.category_names = [self.category_names[index] for index in sorted(indexes)]
-        self.category_ids = [self.category_names.index(category_name) for category_name in self.category_names ]
+        self._categories_names = [shape['cname'] for shape in self.shapes if shape['active']]
+        self._shapes_nvertices = [shape['nvertices'] for shape in self.shapes if shape['active']]
 
+
+    @property
+    def categories_names(self):
+        return self._categories_names
+    @property
+    def shapes_nvertices(self):
+        return self._shapes_nvertices
 
     def __compute_iou(self, box1, box2):
         """
@@ -249,7 +253,7 @@ class ShapesDataset:
             image_size=self.image_size[sel_index]
             # arrange target objects attributes from selected shapes:
             objects_attributes = [
-                [self.category_names.index(shape_entry['cname']), shape_entry['nvertices'], shape_entry['theta0'], shape_entry['cname'], shape_entry['aspect_ratio'],
+                [self.categories_names.index(shape_entry['cname']), shape_entry['nvertices'], shape_entry['theta0'], shape_entry['cname'], shape_entry['aspect_ratio'],
                  shape_entry['height'],
                  shape_entry['color'], shape_entry['obb_theta']] for shape_entry in sel_shape_entris]
 
@@ -270,4 +274,4 @@ class ShapesDataset:
             batch_polygons.append(polygons)
             batch_objects_colors.append(objects_colors)
             batch_obb_thetas.append(obb_thetas)
-        return batch_bboxes, batch_objects_categories_indices, batch_objects_categories_names, self.category_names, self.category_ids, batch_polygons, batch_objects_colors, batch_obb_thetas
+        return batch_bboxes, batch_objects_categories_indices, batch_objects_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas
