@@ -51,21 +51,21 @@ class CreateBboxes:
         :param image_size: image size, list[2] height and width
         :param iou_thresh: type: float [0,1], maximal iou value for adjacent bboxes. iou=1 means complete overlap. iou=0 means no overlap
         :param margin_from_edge: type: int. minimal distance in pixels of bbox from image's edge.
-        :param bbox_margin: type: int. distance in pixels between bbox and shape
+        :param bbox_margin: type: int. distance in pixels between bbox and polygon
         :param size_fluctuation: int float [0,1), images' width and height are multiplied by (1-rand(size_fluctuation))
         :return:
-            image: an RGB pillow image drawn with shapes
+            image: an RGB pillow image drawn with polygons
             bboxes: type: float ndarray [nobjects,4]  [xc, yc, w, h]
             tuple(objects_categories_indices): type in. tuple of nobjects category indices
             objects_categories_names: type: str. list of nobjects category names
-            polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
+            polygons: type: float. list of nobjects, each object polygon with own 2 points nvertices
         """
 
         bboxes = []
         for polygon in polygons:
             max_count = 10
             count = 0
-            # Iterative loop to find location for shape placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
+            # Iterative loop to find location for polygon placement i.e. center. Max iou with prev boxes should be g.t. iou_thresh
             # while True:
 
             bbox = self.__polygon_to_box(polygon)
@@ -73,10 +73,10 @@ class CreateBboxes:
 
             # iou = list(map(lambda x: self.__compute_iou(bbox, x), bboxes)) # check iou with other generated boxes, must be below thresh
             # if len(iou) !=0 and np.any(np.array(iou)) > iou_thresh:
-            #     print(f'Dropping shape polygon from image: iou above theshold {category_name} height: {height} aspect_ratio: {aspect_ratio} ')
+            #     print(f'Dropping polygon from image: iou above theshold {category_name} height: {height} aspect_ratio: {aspect_ratio} ')
             #     continue
             # if np.any(np.array(bbox) > image_size[0]) or np.any(np.array(bbox) < 0): # debug!!!
-            #     print(f'Dropping shape polygon from image: shape exceeds image boundaries  {category_name} height: {height} aspect_ratio: {aspect_ratio}')
+            #     print(f'Dropping  polygon from image: polygon exceeds image boundaries  {category_name} height: {height} aspect_ratio: {aspect_ratio}')
             #     continue
             # if len(bbox):
             bboxes.append(bbox)
@@ -90,7 +90,7 @@ class CreateBboxes:
 
 
         bboxes = np.array(bboxes)
-        # [x,y,x,y] to [xc, yc, w, h] (bbox_margin is added distance between shape and bbox):
+        # [x,y,x,y] to [xc, yc, w, h] (bbox_margin is added distance between polygon and bbox):
         bboxes = [(bboxes[:, 0] +  bboxes[:, 2])/2,
                   (bboxes[:, 1] +  bboxes[:, 3])/2,
                   bboxes[:, 2] - bboxes[:, 0] + 2 * bbox_margin,
@@ -148,7 +148,7 @@ class CreateBboxes:
         batch_objects_categories_indices: type: list of nobjects tuples size: nentries. Category id of image's nobjects
         self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
         self.category_ids:  type: list of int. size: ncategories. Created dataset's entries ids.
-        polygons: type: float. list of nobjects, each object shape with own 2 points nvertices. Needed for segmentation
+        polygons: type: float. list of nobjects, each object polygon with own 2 points nvertices. Needed for segmentation
 
         """
 

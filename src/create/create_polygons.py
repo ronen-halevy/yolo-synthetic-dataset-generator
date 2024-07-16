@@ -16,22 +16,17 @@ class CreatePolygons:
     def __init__(self, config):
 
         # load polygon yaml files.
-        polygons_config = config['polygons_config_table']
+        polygons_table = config['polygons_config_table']
         self.image_size = config['image_size']
         self.min_objects_in_image = config['min_objects_in_image']
         self.max_objects_in_image = config['max_objects_in_image']
-        # self.iou_thresh = config['iou_thresh']
         self.margin_from_edge = config['margin_from_edge']
-        # self.bbox_margin = config['bbox_margin']
         self.size_fluctuation = config['size_fluctuation']
 
         # create a class names output file.
-        self.polygons = []
-        for polygon in polygons_config:
-            self.polygons.append(polygon)
-
-        self._categories_names = [polygon['cname'] for polygon in self.polygons if polygon['active']]
-        self._polygons_nvertices = [polygon['nvertices'] for polygon in self.polygons if polygon['active']]
+        self.active_polygons = [polygon for polygon in polygons_table if polygon['active']]
+        self._categories_names = [polygon['cname'] for polygon in self.active_polygons]
+        self._polygons_nvertices = [polygon['nvertices'] for polygon in self.active_polygons]
 
     def __rotate(self, polygon, theta0):
         """
@@ -168,9 +163,8 @@ class CreatePolygons:
             # randomize num of objects in an image:
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
             # take only active polygons for dataset creation:
-            active_polygons = [polygon for polygon in self.polygons if polygon['active']]
             # randomly select num_of_objects polygons:
-            sel_polygon_entris = [np.random.choice(active_polygons) for idx in range(num_of_objects)]
+            sel_polygon_entris = [np.random.choice(self.active_polygons) for idx in range(num_of_objects)]
 
             sel_index = random.randint(0, len(self.image_size) - 1)  # randomly select img size index from config
             image_size = self.image_size[sel_index]
