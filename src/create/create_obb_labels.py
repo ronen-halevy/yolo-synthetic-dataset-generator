@@ -4,6 +4,7 @@ from src.create.create_polygons import CreatePolygons
 from src.create.create_bboxes import CreateBboxes
 from src.create.utils import calc_iou
 
+
 def xywh2xyxy(obboxes):
     """
     Trans rbox format to poly format.
@@ -32,9 +33,9 @@ def rotate(hbboxes, theta0):
     rotate_bbox = lambda xy: np.concatenate([np.sum(
         xy * np.concatenate([np.cos(rot_angle)[..., None, None], np.sin(rot_angle)[..., None, None]], axis=-1), axis=-1,
         keepdims=True),
-                                             np.sum(xy * np.concatenate([-np.sin(rot_angle)[..., None, None],
-                                                                         np.cos(rot_angle)[..., None, None]], axis=-1),
-                                                    axis=-1, keepdims=True)], axis=-1)
+        np.sum(xy * np.concatenate([-np.sin(rot_angle)[..., None, None],
+                                    np.cos(rot_angle)[..., None, None]], axis=-1),
+               axis=-1, keepdims=True)], axis=-1)
     offset_xy = (np.max(hbboxes, axis=-2, keepdims=True) + np.min(hbboxes, axis=-2, keepdims=True)) / 2
     hbboxes_ = hbboxes - offset_xy  # remove offset b4 rotation
     rbboxes = rotate_bbox(hbboxes_)
@@ -55,20 +56,6 @@ def create_obb_entries(bbox_entries):
         bbox_entries = xywh2xyxy(bbox_entry)
         bboxes.append(bbox_entries)
     return bboxes
-
-
-def arrange_obb_entries(images_polygons, images_size, categories_lists):
-    batch_entries = []
-    for image_polygons, image_size, class_ids in zip(images_polygons, images_size,
-                                                     categories_lists):
-        # normalize sizes:
-        image_polygons = [image_polygon / np.array(image_size) for image_polygon in image_polygons]
-
-        image_entries = [
-            f"{category_id} {' '.join(str(vertix) for vertix in list(image_polygon.reshape(-1)))}\n" for
-            image_polygon, category_id in zip(image_polygons, class_ids)]
-        batch_entries.append(image_entries)
-    return batch_entries
 
 
 def remove_dropped_bboxes(batch_bbox_entries, dropped_ids):
