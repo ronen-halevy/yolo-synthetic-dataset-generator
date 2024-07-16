@@ -16,24 +16,29 @@ def xywh2xyxy(obboxes):
 
     center, w, h = np.split(obboxes, (2, 3), axis=-1)
 
-    point1 = center + np.concatenate([-w/2,-h/2], axis=1)
-    point2 = center + np.concatenate([w/2,-h/2], axis=1)
-    point3 = center + np.concatenate([w/2,h/2], axis=1)
-    point4 = center + np.concatenate([-w/2,h/2], axis=1)
+    point1 = center + np.concatenate([-w / 2, -h / 2], axis=1)
+    point2 = center + np.concatenate([w / 2, -h / 2], axis=1)
+    point3 = center + np.concatenate([w / 2, h / 2], axis=1)
+    point4 = center + np.concatenate([-w / 2, h / 2], axis=1)
 
     # order = obboxes.shape[:-1]
     return np.concatenate(
-            [point1, point2, point3, point4], axis=-1)
+        [point1, point2, point3, point4], axis=-1)
+
 
 def rotate(hbboxes, theta0):
     rot_angle = np.array(theta0) / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
 
-    rotate_bbox = lambda xy: np.concatenate([np.sum(xy * np.concatenate([np.cos(rot_angle)[...,None, None], np.sin(rot_angle)[...,None, None]], axis=-1), axis=-1,keepdims=True),
-                              np.sum(xy * np.concatenate([-np.sin(rot_angle)[...,None, None], np.cos(rot_angle)[...,None, None]], axis=-1), axis=-1,keepdims=True)], axis=-1)
-    offset_xy = (np.max(hbboxes, axis=-2, keepdims=True) + np.min(hbboxes,axis=-2, keepdims=True)) / 2
-    hbboxes_ = hbboxes - offset_xy # remove offset b4 rotation
-    rbboxes =  rotate_bbox(hbboxes_)
-    rbboxes=rbboxes+offset_xy # add offset back
+    rotate_bbox = lambda xy: np.concatenate([np.sum(
+        xy * np.concatenate([np.cos(rot_angle)[..., None, None], np.sin(rot_angle)[..., None, None]], axis=-1), axis=-1,
+        keepdims=True),
+                                             np.sum(xy * np.concatenate([-np.sin(rot_angle)[..., None, None],
+                                                                         np.cos(rot_angle)[..., None, None]], axis=-1),
+                                                    axis=-1, keepdims=True)], axis=-1)
+    offset_xy = (np.max(hbboxes, axis=-2, keepdims=True) + np.min(hbboxes, axis=-2, keepdims=True)) / 2
+    hbboxes_ = hbboxes - offset_xy  # remove offset b4 rotation
+    rbboxes = rotate_bbox(hbboxes_)
+    rbboxes = rbboxes + offset_xy  # add offset back
     return rbboxes
 
 
@@ -76,11 +81,12 @@ def remove_dropped_bboxes(batch_bbox_entries, dropped_ids):
     batch_bbox_entries_filtered: list[batch][nti_filtered][5]
     """
     batch_bbox_entries_filtered = []
-    for img_idx, img_bbox_entry in enumerate(batch_bbox_entries,):  # loop on images
+    for img_idx, img_bbox_entry in enumerate(batch_bbox_entries):  # loop on images
         img_bbox_drop_ids = [drop_id[1] for drop_id in dropped_ids if drop_id[0] == img_idx]
         img_bbox_filtered_entries = np.delete(np.array(img_bbox_entry), img_bbox_drop_ids, axis=0)
         batch_bbox_entries_filtered.append(img_bbox_filtered_entries)
     return batch_bbox_entries_filtered
+
 
 def filter_polygons(batch_polygons, batch_filters):
     """
@@ -92,10 +98,11 @@ def filter_polygons(batch_polygons, batch_filters):
 
     """
     batch_polygons_filtered = []
-    for img_idx, (img_polygons, img_filters)  in enumerate(zip(batch_polygons,batch_filters)):  # loop on images
+    for img_idx, (img_polygons, img_filters) in enumerate(zip(batch_polygons, batch_filters)):  # loop on images
         img_polygons_filtered = [polygon for polygon, filter in zip(img_polygons, img_filters) if filter]
         batch_polygons_filtered.append(img_polygons_filtered)
     return batch_polygons_filtered
+
 
 def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thresh=0):
     """
@@ -115,30 +122,31 @@ def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thres
     """
     batch_rpolygons = []
     batch_result_thetas = []
-    dropped_ids=[]
+    dropped_ids = []
     # loop on batch images:
     for im_idx, (image_polygons, image_size, thetas) in enumerate(zip(batch_polygons, images_sizes, batch_thetas)):
-        rpolygons=[]
-        res_thetas=[]
-        for idx, (polygon, theta) in enumerate(zip(image_polygons, thetas)): # loop on image's polygons
-            unrotate = False # reset unrotate fkag
+        rpolygons = []
+        res_thetas = []
+        for idx, (polygon, theta) in enumerate(zip(image_polygons, thetas)):  # loop on image's polygons
+            unrotate = False  # reset unrotate fkag
             rpolygon = rotate(polygon, theta)
             # check if rotated shape is inside image bounderies, otherwise leave unrotated:
             if np.any(rpolygon > image_size) or np.any(rpolygon < 0):
-                rpolygon=polygon # replace rotated by original unrotated
+                rpolygon = polygon  # replace rotated by original unrotated
                 unrotate = True
                 print(f'\n Rotated shape is outsode image  boundaries. Keep unrotate. img id: {im_idx} shape id: {idx}')
             # if of rotated with already rotated list:
             if np.any(calc_iou(rpolygon, rpolygons) > iou_thresh):
                 # iou of rotated above thresh, so either keep unrotated or drop if iou above thresh:
-                if np.any(calc_iou(polygon, rpolygons) > iou_thresh):# iou for unrotated: either drop or keep unrotated
+                if np.any(
+                        calc_iou(polygon, rpolygons) > iou_thresh):  # iou for unrotated: either drop or keep unrotated
                     dropped_ids.append([im_idx, idx])
                     print(f'IOU with rotated images exceeds treshs: Droppng  img_id: {im_idx} shape_id: {idx}')
                     continue
                 else:
                     print(f'IOU of unrotated passed. Keep unrotated shape. img_id {im_idx} shape_id: {idx}')
                     unrotate = True
-                    rpolygon=polygon
+                    rpolygon = polygon
 
             rpolygons.append(rpolygon)
             if unrotate:
@@ -165,12 +173,13 @@ def rotate_obb_bbox_entries(batch_bboxes, images_size, obb_thetas):
     :rtype:
     """
     batch_rbboxes = []
-    batch_in_boundaries=[]
+    batch_in_boundaries = []
     for im_idx, (img_hbboxes, image_size, theta) in enumerate(zip(batch_bboxes, images_size, obb_thetas)):
         img_rbboxes = rotate(img_hbboxes.reshape([-1, 4, 2]), theta).reshape(-1, 8)
-        img_in_bounderies = np.logical_and(img_rbboxes / np.tile(image_size,[4]) < 1, img_rbboxes >  0) # bool, shape[nimg_bboxes, 8]
-        img_in_bounderies = np.all(img_in_bounderies, axis=-1) # bool, shape[nimg_bboxes]
-        img_rbboxes=img_rbboxes[img_in_bounderies] # filter
+        img_in_bounderies = np.logical_and(img_rbboxes / np.tile(image_size, [4]) < 1,
+                                           img_rbboxes > 0)  # bool, shape[nimg_bboxes, 8]
+        img_in_bounderies = np.all(img_in_bounderies, axis=-1)  # bool, shape[nimg_bboxes]
+        img_rbboxes = img_rbboxes[img_in_bounderies]  # filter
         batch_rbboxes.append(img_rbboxes)
         batch_in_boundaries.append(img_in_bounderies)
     return batch_rbboxes, batch_in_boundaries
@@ -188,21 +197,24 @@ def append_category_field(batch_rbboxes, batch_objects_categories_names):
     for img_rbboxes, img_objects_categories_names in zip(batch_rbboxes, batch_objects_categories_names):
         img_rbboxes_update = []
         for rbbox, img_object_category_name in zip(img_rbboxes, img_objects_categories_names):
-            entry=rbbox.tolist()
+            entry = rbbox.tolist()
             entry.append(img_object_category_name)
             img_rbboxes_update.append(entry)
         batch_rbboxes_update.append(img_rbboxes_update)
     return batch_rbboxes_update
 
+
 class CreateObbEntries(CreatePolygons, CreateBboxes):
     def __init__(self, config, iou_thresh, bbox_margin):
         CreatePolygons.__init__(self, config)
         CreateBboxes.__init__(self, iou_thresh, bbox_margin)
+
     def run(self, nentries):
         batch_image_size, batch_categories_ids, batch_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas = self.create_batch_polygons(
             nentries)
         batch_bboxes = self.create_batch_bboxes(batch_polygons, batch_image_size)
-        batch_labels, batch_polygons=self.create_obb_labels(batch_polygons, batch_bboxes,   batch_image_size, batch_obb_thetas, batch_categories_names)
+        batch_labels, batch_polygons = self.create_obb_labels(batch_polygons, batch_bboxes, batch_image_size,
+                                                              batch_obb_thetas, batch_categories_names)
         return batch_polygons, batch_labels, batch_objects_colors, batch_image_size
 
     def create_obb_labels(self, batch_polygons, bbox_entries, images_size, obb_thetas, batch_objects_categories_names):
