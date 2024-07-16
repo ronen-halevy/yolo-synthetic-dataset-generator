@@ -1,6 +1,8 @@
 import numpy as np
 import math
 from shapely.geometry import Polygon
+from src.shapes_dataset_new1 import CreateBboxes
+
 
 def xywh2xyxy(obboxes):
     """
@@ -12,7 +14,7 @@ def xywh2xyxy(obboxes):
         polys (array/tensor): (num_gts, [x1 y1 x2 y2 x3 y3 x4 y4])
     """
 
-    cls,  center, w, h = np.split(obboxes, (1, 3, 4), axis=-1)
+    center, w, h = np.split(obboxes, (2, 3), axis=-1)
 
     point1 = center + np.concatenate([-w/2,-h/2], axis=1)
     point2 = center + np.concatenate([w/2,-h/2], axis=1)
@@ -209,8 +211,37 @@ def append_category_field(batch_rbboxes, batch_objects_categories_names):
         batch_rbboxes_update.append(img_rbboxes_update)
     return batch_rbboxes_update
 
+from src.shapes_dataset import ShapesDataset
+class CreateObbLabels(CreateBboxes):
+    def __init__(self, iou_thresh, bbox_margin):
+        super().__init__(iou_thresh, bbox_margin)
 
-def create_obb_labels(batch_polygons, bbox_entries, images_size, obb_thetas, batch_objects_categories_names):
+    def run(self, batch_polygons, batch_image_size, batch_obb_thetas, batch_objects_categories_names):
+        batch_bboxes = self.create_batch_bboxes(batch_polygons, batch_image_size)
+        batch_labels, batch_polygons=self.create_obb_labelso(batch_polygons, batch_bboxes,   batch_image_size, batch_obb_thetas, batch_objects_categories_names)
+        return batch_labels, batch_polygons
+
+    def create_obb_labelso(self, batch_polygons, bbox_entries, images_size, obb_thetas, batch_objects_categories_names):
+        batch_polygons, batch_obb_thetas, dropped_ids = rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
+        bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
+        bbox_entries = create_obb_entries(bbox_entries)
+        batch_rbboxes, batch_in_bounderies = rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
+        batch_polygons = filter_polygons(batch_polygons, batch_in_bounderies)
+
+        batch_rbboxes = append_category_field(batch_rbboxes, batch_objects_categories_names)
+
+        def entries_list_to_string(batch_rbboxes):
+            batch_rbboxes_strings = []
+            for img_rbboxes in batch_rbboxes:
+                img_rbboxes = [' '.join(str(x) for x in img_rbboxes[idx]) for idx in range(len(img_rbboxes))]
+                batch_rbboxes_strings.append(img_rbboxes)
+            return batch_rbboxes_strings
+
+        batch_labels = entries_list_to_string(batch_rbboxes)
+        return batch_labels, batch_polygons
+
+def create_obb_labels(batch_polygons, images_size, obb_thetas, batch_objects_categories_names):
+    # create_batch_bboxes(nentries)
     batch_polygons, batch_obb_thetas, dropped_ids = rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
     bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
     bbox_entries = create_obb_entries(bbox_entries)

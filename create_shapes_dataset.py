@@ -24,10 +24,13 @@ import random
 
 from src.create_label_files import (normalize_bboxes, write_entries_to_files,
                                     create_detection_labels_unified_file, write_images_to_file)
-from src.segmentation_labels_utils import arrange_segmentation_entries
-from src.kpts_detection_labels_utils import create_detection_kpts_entries
-from src.obb_labels_utils import create_obb_labels
+from src.segmentation_labels_utils import CreateSegmentationLabels
+from src.obb_labels_utils import create_obb_labels, CreateObbLabels
+from src.kpts_detection_labels_utils import CreatesKptsLabels
+
+
 from src.shapes_dataset import ShapesDataset
+from src.shapes_dataset_new1 import CreatePolygons
 
 
 def draw_images(images_polygons, images_objects_colors=None, images_size=None, bg_color_set=['red']):
@@ -70,6 +73,18 @@ def create_shapes_dataset():
     output_dir = f'{config["output_dir"]}'.replace("{labels_format_type}", labels_format_type)
     bg_color = config['bg_color']
     shapes_dataset = ShapesDataset(config)
+    create_polygons = CreatePolygons(config)
+    create_obb_labels = CreateObbLabels(config['iou_thresh'], config['bbox_margin'])
+    create_kpts_labels = CreatesKptsLabels(config['iou_thresh'], config['bbox_margin'])
+    create_kpts_labels = CreatesKptsLabels(config['iou_thresh'], config['bbox_margin'])
+    from src.shapes_dataset_new1 import CreateBboxes
+    create_labels = CreateBboxes(config['iou_thresh'], config['bbox_margin'])
+
+
+
+    create_segmentation_labels = CreateSegmentationLabels()
+
+
     categories_names = shapes_dataset.categories_names
 
     # create_dataset_config_file:
@@ -94,6 +109,8 @@ def create_shapes_dataset():
     print(f'\n Creating dataset entries: {splits}')
     for split in splits: # loop: train, validation, test
         nentries = int(splits[split])
+        batch_image_size, batch_objects_categories_indices, batch_objects_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas=create_polygons.create_batch_polygons(nentries)
+
         # create dirs for output if missing:
         images_out_dir = f'{output_dir}/{image_dir}/{split}'
         images_out_path = Path(images_out_dir)
@@ -101,31 +118,32 @@ def create_shapes_dataset():
         images_out_path.mkdir(parents=True, exist_ok=True)
         labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
         labels_out_dir.mkdir(parents=True, exist_ok=True)
-        batch_bboxes, categories_lists, batch_objects_categories_names, batch_polygons, images_objects_colors, obb_thetas = \
-            shapes_dataset.create_images_shapes(
-                nentries)
+        # batch_bboxes, categories_lists, batch_objects_categories_names, batch_polygons, images_objects_colors, obb_thetas = \
+        #     shapes_dataset.create_images_shapes(
+        #         nentries)
         config_image_size = config['image_size']
         sel_index = [random.randint(0, len(config['image_size']) - 1) for idx in range(len(batch_polygons))] # randomly select img size index from config
         images_size = tuple(np.array(config_image_size)[sel_index])
         images_filenames = [f'img_{idx:06d}.jpg' for idx in range(len(batch_polygons))]
         label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
-        bbox_entries = normalize_bboxes(batch_bboxes, images_size, categories_lists)
+        # bbox_entries = normalize_bboxes(batch_bboxes, images_size, categories_lists)
 
         # 3. text file per image
         if labels_format_type == 'detection':
-                batch_labels=bbox_entries
+            batch_labels = create_labels.create_batch_bboxes(batch_polygons, batch_image_size)
+            pass
+            # batch_labels=bbox_entries
         elif labels_format_type == 'obb':
-            batch_labels=create_obb_labels(batch_polygons, bbox_entries, images_size, obb_thetas,
-                                  batch_objects_categories_names)
+            batch_labels, batch_polygons = create_obb_labels.run(batch_polygons, batch_image_size, batch_obb_thetas, batch_objects_categories_names)
         elif labels_format_type=='kpts':
-            batch_labels=create_detection_kpts_entries(batch_bboxes, batch_polygons, images_size, categories_lists)
+            batch_labels = create_kpts_labels.run(batch_polygons, batch_image_size,  batch_objects_categories_names)
         #  4. Ultralitics like segmentation
         elif labels_format_type == 'segmentation':
-                batch_labels = arrange_segmentation_entries(batch_polygons, images_size, categories_lists)
+            batch_labels=create_segmentation_labels.run(batch_polygons, images_size, batch_objects_categories_indices)
         # save result images and label files:
         print(f'writing {len(label_out_fnames)} label files to {labels_out_dir}')
         write_entries_to_files(batch_labels, label_out_fnames, labels_out_dir)
-        images = draw_images(batch_polygons, images_objects_colors, images_size, bg_color)
+        images = draw_images(batch_polygons, batch_objects_colors, images_size, bg_color)
         images_out_dir = Path(f"{output_dir}/{config[f'image_dir']}/{split}")
         print(f'writing {len(images_filenames)} image files to {images_out_dir}')
         write_images_to_file(images, images_out_dir,images_filenames)

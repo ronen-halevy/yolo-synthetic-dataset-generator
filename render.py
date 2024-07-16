@@ -95,8 +95,6 @@ def render(nexamples, labels_format_type, image_dir, labels_dir, output_dir, cat
             print(f'Unknow labels_format_type. Terminating!!! {labels_format_type}')
             exit(1)
         print(f'saving test results to {output_path}')
-        image = Image.fromarray(image)
-
         image.save(output_path)
 
 

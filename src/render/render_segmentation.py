@@ -1,3 +1,9 @@
+from PIL import Image
+
+from PIL import ImageDraw
+import numpy as np
+import cv2
+from src.render.render_utils import draw_bbox_xywh
 
 def read_segmentation_dataset_entry(image_path, label_path):
     """
@@ -59,7 +65,7 @@ def draw_segmentation_dataset_example(image_path, label_path, category_names_tab
     for polygon, category_id in zip(polygons, category_ids):
         color = np.random.randint(low=0, high=255, size=3).tolist()
         cv2.fillPoly(array_image, np.expand_dims(polygon, 0), color=color)
-    image = im.fromarray(array_image)
+    image = Image.fromarray(array_image)
     ImageDraw.Draw(image)
     # extract category names by ids:
     category_names = [category_names_table[category_id] for category_id in category_ids]

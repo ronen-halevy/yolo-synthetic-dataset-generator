@@ -1,38 +1,52 @@
 import numpy as np
-def create_detection_kpts_entries(batch_bboxes, batch_polygons, batch_img_sizes, batch_class_ids):
-    """
+from src.shapes_dataset_new1 import CreateBboxes
+class CreatesKptsLabels(CreateBboxes):
+    def __init__(self, iou_thresh, bbox_margin):
+        super().__init__(iou_thresh, bbox_margin)
 
-    :param batch_bboxes: list[bsize] of np.array[nti,4] entries, i=0:bsize . float Unormalized. [xc,yc,w,h]
-    :type batch_polygons: list[bsize] of list[nti] entries, i=0:bsize, each entry is a polygon np.array[n_vertices_j,2]
-    :type batch_img_sizes:  list[bisize] of list[2] entries, each holds image's [w,h]
-    :param batch_class_ids: list[bsize] of list[nti], each entry is the related class id.
-    :return:
-    entries: list[bsize] of string entries: 'xc yc wh kpt0_x kpt0_y occlusion0.......kptnx kptny occlusionn'
-    """
+    def run(self, batch_polygons, batch_image_size, batch_class_ids):
+        batch_bboxes = self.create_batch_bboxes(batch_polygons, batch_image_size)
+        batch_labels=self.create_detection_kpts_entries(batch_bboxes, batch_polygons, batch_image_size, batch_class_ids)
+        return batch_labels
 
+    def create_detection_kpts_entries(self, batch_bboxes, batch_polygons, batch_img_sizes, batch_class_ids):
+        """
 
-    # detection_entries = create_detection_entries(batch_bboxes, batch_img_sizes, batch_class_ids)
-    entries=[]
-    for image_polygons, image_size, class_ids, image_bboxes in zip(batch_polygons, batch_img_sizes,
-                                                              batch_class_ids, batch_bboxes):
-        image_bboxes=np.array(image_bboxes)
-        image_polygons=np.array(image_polygons)
+        :param batch_bboxes: list[bsize] of np.array[nti,4] entries, i=0:bsize . float Unormalized. [xc,yc,w,h]
+        :type batch_polygons: list[bsize] of list[nti] entries, i=0:bsize, each entry is a polygon np.array[n_vertices_j,2]
+        :type batch_img_sizes:  list[bisize] of list[2] entries, each holds image's [w,h]
+        :param batch_class_ids: list[bsize] of list[nti], each entry is the related class id.
+        :return:
+        entries: list[bsize] of string entries: 'xc yc wh kpt0_x kpt0_y occlusion0.......kptnx kptny occlusionn'
+        """
 
-        im_height = image_size[0]
-        im_width = image_size[1]
+        # detection_entries = create_detection_entries(batch_bboxes, batch_img_sizes, batch_class_ids)
+        entries=[]
 
-        image_bboxes = (image_bboxes/np.array([im_width, im_height, im_width, im_height]))
-        img_kpts = (image_polygons/np.array([im_width, im_height]))
-        # concat occlusion  (=valid) field:
-        img_kpts_occlusion = np.full( [img_kpts.shape[0], img_kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
-        img_kpts = np.concatenate([img_kpts, img_kpts_occlusion], axis=-1).reshape(img_kpts.shape[0], -1) # flatten kpts per object
+        for image_polygons, image_size, class_ids, image_bboxes in zip(batch_polygons, batch_img_sizes,
+                                                                  batch_class_ids, batch_bboxes):
+            image_bboxes = [[float(idx) for idx in entry.split(' ')] for entry in
+                            image_bboxes]  # string rbbox entries to float
 
-        img_entries=[]
-        category_id=0 # assumed a single category
-        for bbox, kpts   in zip(image_bboxes, img_kpts):
-            bbox = ' '.join(str( round(vertex, 2)) for vertex in list(bbox))
-            entry = f"{category_id} {bbox} {' '.join(str( round(kpt, 2)) for kpt in list(kpts.reshape(-1)))}"
-            img_entries.append(entry)
-        entries.append(img_entries)
-    return entries
+            image_bboxes=np.array(image_bboxes)
+            image_polygons=np.array(image_polygons)
+
+            im_height = image_size[0]
+            im_width = image_size[1]
+
+            # image_bboxes = (image_bboxes/np.array([im_width, im_height, im_width, im_height]))
+            img_kpts = (image_polygons/np.array([im_width, im_height]))
+            # concat occlusion  (=valid) field:
+            img_kpts_occlusion = np.full( [img_kpts.shape[0], img_kpts.shape[1], 1], 2.) # shape: [nobj, nkpts, 1]
+            img_kpts = np.concatenate([img_kpts, img_kpts_occlusion], axis=-1).reshape(img_kpts.shape[0], -1) # flatten kpts per object
+
+            img_entries=[]
+            category_id=0 # assumed a single category
+            for bbox, kpts   in zip(image_bboxes, img_kpts):
+                # box = ' '.join(str( round(vertex, 2)) for vertex in list(bbox))
+                box = ' '.join(str(vertex) for vertex in list(bbox))
+                entry = f"{category_id} {box} {' '.join(str( round(kpt, 2)) for kpt in list(kpts.reshape(-1)))}"
+                img_entries.append(entry)
+            entries.append(img_entries)
+        return entries
 

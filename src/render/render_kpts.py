@@ -129,7 +129,7 @@ def draw_kpts_dataset_example(image_path, label_path):
     steps=3 # each entry is [x,y,occlusiuon]
     skeleton=[]
     plot_skeleton_kpts(image, kpts, steps, skeleton)
-
+    image = Image.fromarray(image)
     return image
 
 

@@ -4,6 +4,25 @@ from PIL import ImageFont
 import numpy as np
 
 
+def draw_bbox_xywh(image, bboxes, category_names, thickness=1):
+    # annotated_bbox_image = draw_bounding_box(image, bboxes)
+    colors = list(ImageColor.colormap.values())
+    color = colors[7]
+    draw = ImageDraw.Draw(image)
+    for bbox in bboxes:
+        xmin, ymin, w, h = bbox
+        draw.line([(xmin, ymin), (xmin, ymin + h), (xmin + w, ymin + h), (xmin + w, ymin),
+                   (xmin, ymin)],
+                  width=thickness,
+                  fill=color)
+
+    text_box_color = [255, 255, 255]
+    draw_text_on_bounding_box(image, np.array(bboxes)[..., 1],
+                              np.array(bboxes)[..., 0], text_box_color,
+                              category_names, font_size=15)
+
+    return image
+
 def draw_text_on_bounding_box(image, ymin, xmin, color, display_str_list=(), font_size=30):
     """
     Description: Draws a text which starts at xmin,ymin bbox corner
