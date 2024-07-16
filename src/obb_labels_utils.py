@@ -211,7 +211,6 @@ def append_category_field(batch_rbboxes, batch_objects_categories_names):
         batch_rbboxes_update.append(img_rbboxes_update)
     return batch_rbboxes_update
 
-from src.shapes_dataset import ShapesDataset
 class CreateObbLabels(CreateBboxes):
     def __init__(self, iou_thresh, bbox_margin):
         super().__init__(iou_thresh, bbox_margin)

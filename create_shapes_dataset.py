@@ -28,8 +28,6 @@ from src.segmentation_labels_utils import CreateSegmentationLabels
 from src.obb_labels_utils import create_obb_labels, CreateObbLabels
 from src.kpts_detection_labels_utils import CreatesKptsLabels
 
-
-from src.shapes_dataset import ShapesDataset
 from src.create_polygons import CreatePolygons
 
 
@@ -118,15 +116,12 @@ def create_shapes_dataset():
         images_out_path.mkdir(parents=True, exist_ok=True)
         labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
         labels_out_dir.mkdir(parents=True, exist_ok=True)
-        # batch_bboxes, categories_lists, batch_objects_categories_names, batch_polygons, images_objects_colors, obb_thetas = \
-        #     shapes_dataset.create_images_shapes(
-        #         nentries)
+
         config_image_size = config['image_size']
         sel_index = [random.randint(0, len(config['image_size']) - 1) for idx in range(len(batch_polygons))] # randomly select img size index from config
         images_size = tuple(np.array(config_image_size)[sel_index])
         images_filenames = [f'img_{idx:06d}.jpg' for idx in range(len(batch_polygons))]
         label_out_fnames = [f"{os.path.basename(filepath).rsplit('.', 1)[0]}.txt" for filepath in images_filenames]
-        # bbox_entries = normalize_bboxes(batch_bboxes, images_size, categories_lists)
 
         # 3. text file per image
         if labels_format_type == 'detection':
