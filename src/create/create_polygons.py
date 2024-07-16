@@ -3,10 +3,12 @@ import math
 from math import cos, sin
 import random
 
+
 class CreatePolygons:
     @property
     def categories_names(self):
         return self._categories_names
+
     @property
     def shapes_nvertices(self):
         return self._shapes_nvertices
@@ -42,7 +44,7 @@ class CreatePolygons:
         :rtype:
         """
 
-        rot_angle = theta0/180*math.pi # rot_tick*np.random.randint(0, 8)
+        rot_angle = theta0 / 180 * math.pi  # rot_tick*np.random.randint(0, 8)
         rotate_x = lambda x, y: x * cos(rot_angle) + y * sin(rot_angle)
         rotate_y = lambda x, y: -x * sin(rot_angle) + y * cos(rot_angle)
         x, y = np.split(np.array(polygon), 2, axis=-1)
@@ -50,13 +52,12 @@ class CreatePolygons:
         x, y = rotate_x(x, y), rotate_y(x, y)
         polygon = np.concatenate([x, y], axis=-1)
 
-
         return polygon
 
     def __create_one_image_polygons(self, objects_attributes, image_size,
-                          margin_from_edge,
-                          size_fluctuation
-                          ):
+                                    margin_from_edge,
+                                    size_fluctuation
+                                    ):
         """
         Create a single dataset entry, with nt bboxes and polygons.
 
@@ -75,18 +76,16 @@ class CreatePolygons:
             polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
         """
 
-        polygons=[]
+        polygons = []
         objects_categories_names = []
         objects_categories_indices = []
         objects_colors = []
         obb_thetas = []
 
-
         for category_id, nvertices, theta0, category_name, aspect_ratio, height, color, obb_theta in objects_attributes:
-            polygon = self.__create_polygon(nvertices,theta0, height, aspect_ratio, size_fluctuation,
-                                                margin_from_edge,
-                                                image_size)
-
+            polygon = self.__create_polygon(nvertices, theta0, height, aspect_ratio, size_fluctuation,
+                                            margin_from_edge,
+                                            image_size)
 
             polygons.append(polygon)
             objects_categories_names.append(category_name)
@@ -94,9 +93,7 @@ class CreatePolygons:
             objects_colors.append(color)
             obb_thetas.append(obb_theta)
 
-
-        return  tuple(objects_categories_indices), objects_categories_names, polygons, objects_colors, obb_thetas
-
+        return tuple(objects_categories_indices), objects_categories_names, polygons, objects_colors, obb_thetas
 
     def __create_polygon(self, nvertices, theta0, height, aspect_ratio, size_fluctuation, margin_from_edge, image_size):
 
@@ -123,28 +120,24 @@ class CreatePolygons:
         sel_aspect_ratio = np.random.choice(aspect_ratio)
         shape_width = sel_height * sel_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
         sel_height = sel_height * random.uniform(1 - size_fluctuation, 1)
-
-        radius = np.array([shape_width  / 2, sel_height / 2])
-
-
+        radius = np.array([shape_width / 2, sel_height / 2])
         polygon = [
             (cos(th) * radius[0],
              sin(th
-                      ) * radius[1])
+                 ) * radius[1])
             for th in [i * (2 * math.pi) / nvertices for i in range(nvertices)]
         ]
 
         # rotate shape:
         if theta0:
-            polygon= self.__rotate(polygon, theta0)
+            polygon = self.__rotate(polygon, theta0)
 
         # translate to center:
         center = np.random.randint(
             low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
-        polygon+=center
+        polygon += center
         # polygon=tuple(map(tuple, polygon))
         return polygon
-
 
     def create_batch_polygons(self, nentries):
         """
@@ -164,7 +157,7 @@ class CreatePolygons:
         """
 
         batch_bboxes = []
-        batch_image_size=[]
+        batch_image_size = []
         batch_categories_ids = []
         batch_categories_names = []
         batch_polygons = []
@@ -194,12 +187,6 @@ class CreatePolygons:
                 self.margin_from_edge,
                 self.size_fluctuation)
 
-
-            # if len(bboxes) == 0:
-            #     continue
-
-            # batch_bboxes.append(bboxes)
-            # batch_bboxes.append(bboxes)
             batch_image_size.append(image_size)
             batch_categories_ids.append(objects_categories_indices)
             batch_categories_names.append(objects_categories_names)
@@ -207,4 +194,3 @@ class CreatePolygons:
             batch_objects_colors.append(objects_colors)
             batch_obb_thetas.append(obb_thetas)
         return batch_image_size, batch_categories_ids, batch_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas
-

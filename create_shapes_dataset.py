@@ -18,38 +18,18 @@ import yaml
 import argparse
 from pathlib import Path
 import numpy as np
-from PIL import Image, ImageDraw
-from PIL import Image, ImageColor
-import random
 
-from src.create.create_label_files import ( write_entries_to_files, write_images_to_file)
-from src.create.create_bboxes import CreateBboxes
+import random
+from src.create.utils import  draw_images, write_images_to_file, write_entries_to_files
 from src.create.create_detection_labels import CreateDetectionLabels
-from src.create.segmentation_labels_utils import CreateSegmentationLabels
-from src.create.obb_labels_utils import create_obb_labels, CreateObbLabels
-from src.create.kpts_detection_labels_utils import CreatesKptsLabels
+from src.create.create_segmentation_labels import CreateSegmentationLabels
+from src.create.create_obb_labels import create_obb_labels, CreateObbLabels
+from src.create.create_kpts_labels import CreatesKptsLabels
 from src.create.create_polygons import CreatePolygons
 
 
-def draw_images(images_polygons, images_objects_colors=None, images_size=None, bg_color_set=['red']):
-    # related label file has same name with .txt ext - split filename, replace ext to txt:
-    images = []
-    for idx, (image_polygons, image_objects_color, image_size) in enumerate(
-            zip(images_polygons, images_objects_colors, images_size)):
+if __name__ == '__main__':
 
-        # save image files
-        bg_color = np.random.choice(bg_color_set)
-        image = Image.new('RGB', tuple(image_size), bg_color)
-        draw = ImageDraw.Draw(image)
-
-        for image_polygon, image_object_color in zip(image_polygons, image_objects_color):
-            color = np.random.choice(image_object_color)
-            draw.polygon(image_polygon.flatten().tolist(), fill=ImageColor.getrgb(color))
-        images.append(image)
-    return images
-
-
-def create_shapes_dataset():
     """
     Creates image detection and segmentation datasets in various formats, according to config files defitions
     :return:
@@ -141,5 +121,3 @@ def create_shapes_dataset():
             f.write(f'{category_name}\n')
 
 
-if __name__ == '__main__':
-    create_shapes_dataset()
