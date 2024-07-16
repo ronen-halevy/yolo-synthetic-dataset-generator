@@ -156,7 +156,7 @@ class CreatePolygons:
         batch_filenames: type: list of str size:  nentries. created images filenames, w/o dir prefix
         batch_sizes: type:  list of 2 tuples ints.  size:  nentries. (image.height, image.width)
         batch_bboxes: type:  list of float [nobjects, 4] arrays . size:  nentries. Bounding boxes of image's nobjects  [xc, yc, w, h]
-        batch_objects_categories_indices: type: list of nobjects tuples size: nentries. Category id of image's nobjects
+        batch_categories_ids: type: list of nobjects tuples size: nentries. Category id of image's nobjects
         self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
         self.category_ids:  type: list of int. size: ncategories. Created dataset's entries ids.
         polygons: type: float. list of nobjects, each object shape with own 2 points nvertices. Needed for segmentation
@@ -165,8 +165,8 @@ class CreatePolygons:
 
         batch_bboxes = []
         batch_image_size=[]
-        batch_objects_categories_indices = []
-        batch_objects_categories_names = []
+        batch_categories_ids = []
+        batch_categories_names = []
         batch_polygons = []
         batch_objects_colors = []
         batch_obb_thetas = []
@@ -201,10 +201,10 @@ class CreatePolygons:
             # batch_bboxes.append(bboxes)
             # batch_bboxes.append(bboxes)
             batch_image_size.append(image_size)
-            batch_objects_categories_indices.append(objects_categories_indices)
-            batch_objects_categories_names.append(objects_categories_names)
+            batch_categories_ids.append(objects_categories_indices)
+            batch_categories_names.append(objects_categories_names)
             batch_polygons.append(polygons)
             batch_objects_colors.append(objects_colors)
             batch_obb_thetas.append(obb_thetas)
-        return batch_image_size, batch_objects_categories_indices, batch_objects_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas
+        return batch_image_size, batch_categories_ids, batch_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas
 
