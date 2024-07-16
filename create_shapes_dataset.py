@@ -75,13 +75,7 @@ def create_shapes_dataset():
     create_detection_labels = CreateDetectionLabels(config['iou_thresh'], config['bbox_margin'])
     create_obb_labels = CreateObbLabels(config['iou_thresh'], config['bbox_margin'])
     create_kpts_labels = CreatesKptsLabels(config['iou_thresh'], config['bbox_margin'])
-    create_labels = CreateBboxes(config['iou_thresh'], config['bbox_margin'])
-
-
-
     create_segmentation_labels = CreateSegmentationLabels()
-
-
     categories_names = create_polygons.categories_names
 
     # create_dataset_config_file:
