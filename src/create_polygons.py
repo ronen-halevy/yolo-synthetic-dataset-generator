@@ -3,35 +3,6 @@ import math
 from math import cos, sin
 import random
 
-class ShapesDataset:
-    """
-    A class to generate shapes dataset, based on a config file:
-
-    Public method: create_dataset
-
-    """
-
-    def __init__(self, config):
-        # with open(shapes_config_file, 'r') as stream:
-        #     shapes_config = yaml.safe_load(stream)
-        # load shape yaml files.
-        shapes_config = config['shapes_config']
-        self.image_size = config['image_size']
-        self.min_objects_in_image = config['min_objects_in_image']
-        self.max_objects_in_image = config['max_objects_in_image']
-        self.iou_thresh = config['iou_thresh']
-        self.margin_from_edge = config['margin_from_edge']
-        self.bbox_margin = config['bbox_margin']
-        self.size_fluctuation = config['size_fluctuation']
-
-        # create a class names output file.
-        self.shapes = []
-        for shape in shapes_config:
-            self.shapes.append(shape)
-
-        self._categories_names = [shape['cname'] for shape in self.shapes if shape['active']]
-        self._shapes_nvertices = [shape['nvertices'] for shape in self.shapes if shape['active']]
-
 class CreatePolygons:
     @property
     def categories_names(self):
@@ -78,6 +49,8 @@ class CreatePolygons:
 
         x, y = rotate_x(x, y), rotate_y(x, y)
         polygon = np.concatenate([x, y], axis=-1)
+
+
         return polygon
 
     def __create_one_image_polygons(self, objects_attributes, image_size,
@@ -108,18 +81,25 @@ class CreatePolygons:
         objects_colors = []
         obb_thetas = []
 
+
         for category_id, nvertices, theta0, category_name, aspect_ratio, height, color, obb_theta in objects_attributes:
             polygon = self.__create_polygon(nvertices,theta0, height, aspect_ratio, size_fluctuation,
                                                 margin_from_edge,
                                                 image_size)
+
+
             polygons.append(polygon)
             objects_categories_names.append(category_name)
             objects_categories_indices.append(category_id)
             objects_colors.append(color)
             obb_thetas.append(obb_theta)
+
+
         return  tuple(objects_categories_indices), objects_categories_names, polygons, objects_colors, obb_thetas
 
+
     def __create_polygon(self, nvertices, theta0, height, aspect_ratio, size_fluctuation, margin_from_edge, image_size):
+
         """
         Description: Creates a polygon given nvertices, and data on shape's dims
         :param nvertices: type: string name of a supported shape
@@ -138,27 +118,33 @@ class CreatePolygons:
         :return:
         polygon: type:float. a nvertices size list of tuple entries. tuples hold vertices x,y coords
         """
+
         sel_height = np.random.choice(height)
         sel_aspect_ratio = np.random.choice(aspect_ratio)
         shape_width = sel_height * sel_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
         sel_height = sel_height * random.uniform(1 - size_fluctuation, 1)
 
         radius = np.array([shape_width  / 2, sel_height / 2])
+
+
         polygon = [
             (cos(th) * radius[0],
              sin(th
                       ) * radius[1])
             for th in [i * (2 * math.pi) / nvertices for i in range(nvertices)]
         ]
+
         # rotate shape:
         if theta0:
             polygon= self.__rotate(polygon, theta0)
+
         # translate to center:
         center = np.random.randint(
             low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
         polygon+=center
         # polygon=tuple(map(tuple, polygon))
         return polygon
+
 
     def create_batch_polygons(self, nentries):
         """
@@ -174,6 +160,7 @@ class CreatePolygons:
         self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
         self.category_ids:  type: list of int. size: ncategories. Created dataset's entries ids.
         polygons: type: float. list of nobjects, each object shape with own 2 points nvertices. Needed for segmentation
+
         """
 
         batch_bboxes = []
@@ -191,6 +178,7 @@ class CreatePolygons:
             active_shapes = [shape for shape in self.shapes if shape['active']]
             # randomly select num_of_objects shapes:
             sel_shape_entris = [np.random.choice(active_shapes) for idx in range(num_of_objects)]
+
             sel_index = random.randint(0, len(self.image_size) - 1)  # randomly select img size index from config
             image_size = self.image_size[sel_index]
             # arrange target objects attributes from selected shapes:
@@ -199,11 +187,19 @@ class CreatePolygons:
                  shape_entry['cname'], shape_entry['aspect_ratio'],
                  shape_entry['height'],
                  shape_entry['color'], shape_entry['obb_theta']] for shape_entry in sel_shape_entris]
+
             objects_categories_indices, objects_categories_names, polygons, objects_colors, obb_thetas = self.__create_one_image_polygons(
                 objects_attributes,
                 image_size,
                 self.margin_from_edge,
                 self.size_fluctuation)
+
+
+            # if len(bboxes) == 0:
+            #     continue
+
+            # batch_bboxes.append(bboxes)
+            # batch_bboxes.append(bboxes)
             batch_image_size.append(image_size)
             batch_objects_categories_indices.append(objects_categories_indices)
             batch_objects_categories_names.append(objects_categories_names)

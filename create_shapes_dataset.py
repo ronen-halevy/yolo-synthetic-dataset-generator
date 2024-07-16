@@ -30,7 +30,7 @@ from src.kpts_detection_labels_utils import CreatesKptsLabels
 
 
 from src.shapes_dataset import ShapesDataset
-from src.shapes_dataset_new1 import CreatePolygons
+from src.create_polygons import CreatePolygons
 
 
 def draw_images(images_polygons, images_objects_colors=None, images_size=None, bg_color_set=['red']):
@@ -72,12 +72,12 @@ def create_shapes_dataset():
     labels_format_type = config['labels_format_type']
     output_dir = f'{config["output_dir"]}'.replace("{labels_format_type}", labels_format_type)
     bg_color = config['bg_color']
-    shapes_dataset = ShapesDataset(config)
+    # shapes_dataset = ShapesDataset(config)
     create_polygons = CreatePolygons(config)
     create_obb_labels = CreateObbLabels(config['iou_thresh'], config['bbox_margin'])
+    # create_kpts_labels = CreatesKptsLabels(config['iou_thresh'], config['bbox_margin'])
     create_kpts_labels = CreatesKptsLabels(config['iou_thresh'], config['bbox_margin'])
-    create_kpts_labels = CreatesKptsLabels(config['iou_thresh'], config['bbox_margin'])
-    from src.shapes_dataset_new1 import CreateBboxes
+    from src.create_bboxes import CreateBboxes
     create_labels = CreateBboxes(config['iou_thresh'], config['bbox_margin'])
 
 
@@ -85,7 +85,7 @@ def create_shapes_dataset():
     create_segmentation_labels = CreateSegmentationLabels()
 
 
-    categories_names = shapes_dataset.categories_names
+    categories_names = create_polygons.categories_names
 
     # create_dataset_config_file:
     dataset_yaml = {
@@ -96,7 +96,7 @@ def create_shapes_dataset():
         'names': categories_names,
     }
     if labels_format_type == 'kpts':
-        nkpts = max(shapes_dataset.shapes_nvertices)
+        nkpts = max(create_polygons.shapes_nvertices)
         dataset_yaml.update({'kpt_shape': [nkpts,3], 'skeleton': []})
     out_filename = f"{output_dir}/dataset.yaml"
     print(f'\n writing {out_filename}')

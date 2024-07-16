@@ -1,5 +1,5 @@
 import numpy as np
-from src.shapes_dataset_new1 import CreateBboxes
+from src.create_bboxes import CreateBboxes
 class CreatesKptsLabels(CreateBboxes):
     def __init__(self, iou_thresh, bbox_margin):
         super().__init__(iou_thresh, bbox_margin)

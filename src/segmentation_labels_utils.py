@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from src.shapes_dataset_new1 import CreateBboxes
+from src.create_bboxes import CreateBboxes
 
 class CreateSegmentationLabels():
     def run(self, batch_polygons, batch_images_sizes, batch_categories_lists):
