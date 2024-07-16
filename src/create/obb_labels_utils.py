@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from shapely.geometry import Polygon
-from src.create_bboxes import CreateBboxes
+from src.create.create_bboxes import CreateBboxes
 
 
 def xywh2xyxy(obboxes):

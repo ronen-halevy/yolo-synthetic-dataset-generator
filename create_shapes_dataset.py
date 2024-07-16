@@ -22,13 +22,12 @@ from PIL import Image, ImageDraw
 from PIL import Image, ImageColor
 import random
 
-from src.create_label_files import (normalize_bboxes, write_entries_to_files,
-                                    create_detection_labels_unified_file, write_images_to_file)
-from src.segmentation_labels_utils import CreateSegmentationLabels
-from src.obb_labels_utils import create_obb_labels, CreateObbLabels
-from src.kpts_detection_labels_utils import CreatesKptsLabels
-
-from src.create_polygons import CreatePolygons
+from src.create.create_label_files import ( write_entries_to_files, write_images_to_file)
+from src.create.create_bboxes import CreateBboxes
+from src.create.segmentation_labels_utils import CreateSegmentationLabels
+from src.create.obb_labels_utils import create_obb_labels, CreateObbLabels
+from src.create.kpts_detection_labels_utils import CreatesKptsLabels
+from src.create.create_polygons import CreatePolygons
 
 
 def draw_images(images_polygons, images_objects_colors=None, images_size=None, bg_color_set=['red']):
@@ -75,7 +74,6 @@ def create_shapes_dataset():
     create_obb_labels = CreateObbLabels(config['iou_thresh'], config['bbox_margin'])
     # create_kpts_labels = CreatesKptsLabels(config['iou_thresh'], config['bbox_margin'])
     create_kpts_labels = CreatesKptsLabels(config['iou_thresh'], config['bbox_margin'])
-    from src.create_bboxes import CreateBboxes
     create_labels = CreateBboxes(config['iou_thresh'], config['bbox_margin'])
 
 
