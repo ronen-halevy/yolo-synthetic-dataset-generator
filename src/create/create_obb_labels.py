@@ -145,8 +145,9 @@ def rotate_polygon_entries(batch_polygons, images_sizes, batch_thetas, iou_thres
                 rpolygon=polygon # replace rotated by original unrotated
                 unrotate = True
                 print(f'\n Rotated shape is outsode image  boundaries. Keep unrotate. img id: {im_idx} shape id: {idx}')
-            # if of rotated with already rotated list: if above thresh, keep unrotated or drop if iou above thresh:
+            # if of rotated with already rotated list:
             if np.any(calc_iou(rpolygon, rpolygons) > iou_thresh):
+                # iou of rotated above thresh, so either keep unrotated or drop if iou above thresh:
                 if np.any(calc_iou(polygon, rpolygons) > iou_thresh):# iou for unrotated: either drop or keep unrotated
                     dropped_ids.append([im_idx, idx])
                     print(f'IOU with rotated images exceeds treshs: Droppng  img_id: {im_idx} shape_id: {idx}')
