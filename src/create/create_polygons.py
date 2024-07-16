@@ -2,6 +2,8 @@ import numpy as np
 import math
 from math import cos, sin
 import random
+from shapely.geometry import Polygon
+
 
 
 class CreatePolygons:
@@ -22,11 +24,28 @@ class CreatePolygons:
         self.max_objects_in_image = config['max_objects_in_image']
         self.margin_from_edge = config['margin_from_edge']
         self.size_fluctuation = config['size_fluctuation']
+        self.iou_thresh = config['iou_thresh']
 
         # create a class names output file.
         self.active_polygons = [polygon for polygon in polygons_table if polygon['active']]
         self._categories_names = [polygon['cname'] for polygon in self.active_polygons]
         self._polygons_nvertices = [polygon['nvertices'] for polygon in self.active_polygons]
+
+    def __calc_iou(self, polygon1, polygons):
+            """
+            Calc iou between polygon1 and polygons - a list of polygons
+            :param polygon: polygon vertices, np.array, shape: [nvertices,2]
+            :param polygons: a list of np,array polygons of shape [nvertices,2]
+            :return: a list, iou of polygon1 and polygons
+            """
+            polygon1 = Polygon(polygon1)
+            iou = []
+            for polygon2 in polygons:
+                polygon2 = Polygon(polygon2)
+                intersect = polygon1.intersection(polygon2).area
+                union = polygon1.union(polygon2).area
+                iou.append(intersect / union)
+            return np.array(iou)
 
     def __rotate(self, polygon, theta0):
         """
@@ -54,12 +73,12 @@ class CreatePolygons:
                                     size_fluctuation
                                     ):
         """
-        Create a single dataset entry, with nt bboxes and polygons.
+        Create a single dataset entry, with nt bboxes and polygons. To control overlap. drop a polygon if iou
+        with other polygons exceeds threshold.
 
         :param objects_attributes: list[nt], entry: [cls_id, nvertices, theta0, cls_name, [aspect_ratio], [height],
         [color]] where aspect ratio, height and color(str) are lists for random selection,
         :param image_size: image size, list[2] height and width
-        :param iou_thresh: type: float [0,1], maximal iou value for adjacent bboxes. iou=1 means complete overlap. iou=0 means no overlap
         :param margin_from_edge: type: int. minimal distance in pixels of bbox from image's edge.
         :param bbox_margin: type: int. distance in pixels between bbox and polygon
         :param size_fluctuation: int float [0,1), images' width and height are multiplied by (1-rand(size_fluctuation))
@@ -81,6 +100,9 @@ class CreatePolygons:
             polygon = self.__create_polygon(nvertices, theta0, height, aspect_ratio, size_fluctuation,
                                             margin_from_edge,
                                             image_size)
+            if np.any(self.__calc_iou(polygon, polygons) > self.iou_thresh):
+                    print(f'IOU with rotated images exceeds treshs: Droppng  category_id: {category_id} nvertices: {nvertices} height {height} aspect_ratio {aspect_ratio}')
+                    continue
 
             polygons.append(polygon)
             objects_categories_names.append(category_name)
