@@ -1,6 +1,24 @@
 import numpy as np
 import os
 from PIL import Image, ImageColor, ImageDraw
+from shapely.geometry import Polygon
+
+
+def calc_iou(polygon1, polygons):
+    """
+    Calc iou between polygon1 and polygons - a list of polygons
+    :param polygon: polygon vertices, np.array, shape: [nvertices,2]
+    :param polygons: a list of np,array polygons of shape [nvertices,2]
+    :return: a list, iou of polygon1 and polygons
+    """
+    polygon1 = Polygon(polygon1)
+    iou = []
+    for polygon2 in polygons:
+        polygon2 = Polygon(polygon2)
+        intersect = polygon1.intersection(polygon2).area
+        union = polygon1.union(polygon2).area
+        iou.append(intersect / union)
+    return np.array(iou)
 def write_entries_to_files(batch_entries, out_fnames, output_dir):
     """
 

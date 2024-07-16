@@ -1,9 +1,8 @@
 import numpy as np
 import math
-from shapely.geometry import Polygon
 from src.create.create_polygons import CreatePolygons
 from src.create.create_bboxes import CreateBboxes
-
+from src.create.utils import calc_iou
 
 def xywh2xyxy(obboxes):
     """
@@ -66,22 +65,6 @@ def arrange_obb_entries(images_polygons, images_size, categories_lists):
         batch_entries.append(image_entries)
     return batch_entries
 
-
-def calc_iou(polygon1, polygons):
-    """
-    Calc iou between polygon1 and polygons - a list of polygons
-    :param polygon: polygon vertices, np.array, shape: [nvertices,2]
-    :param polygons: a list of np,array polygons of shape [nvertices,2]
-    :return: a list, iou of polygon1 and polygons
-    """
-    polygon1 = Polygon(polygon1)
-    iou=[]
-    for polygon2 in polygons:
-        polygon2 = Polygon(polygon2)
-        intersect = polygon1.intersection(polygon2).area
-        union = polygon1.union(polygon2).area
-        iou.append(intersect / union)
-    return np.array(iou)
 
 def remove_dropped_bboxes(batch_bbox_entries, dropped_ids):
     """
