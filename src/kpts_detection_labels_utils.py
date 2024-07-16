@@ -25,8 +25,6 @@ class CreatesKptsLabels(CreateBboxes):
 
         for image_polygons, image_size, class_ids, image_bboxes in zip(batch_polygons, batch_img_sizes,
                                                                   batch_class_ids, batch_bboxes):
-            image_bboxes = [[float(idx) for idx in entry.split(' ')] for entry in
-                            image_bboxes]  # string rbbox entries to float
 
             image_bboxes=np.array(image_bboxes)
             image_polygons=np.array(image_polygons)

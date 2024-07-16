@@ -47,9 +47,7 @@ def create_obb_entries(bbox_entries):
     """
     bboxes = []
     for idx, bbox_entry in enumerate(bbox_entries):  # loop on images
-        bbox_entries = [[float(idx) for idx in entry.split(' ')] for entry in bbox_entry] #  string rbbox entries to float
-        bbox_entries = np.array(bbox_entries)
-        bbox_entries = xywh2xyxy(bbox_entries)
+        bbox_entries = xywh2xyxy(bbox_entry)
         bboxes.append(bbox_entries)
     return bboxes
 

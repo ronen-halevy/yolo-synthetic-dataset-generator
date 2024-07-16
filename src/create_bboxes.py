@@ -130,8 +130,7 @@ class CreateBboxes:
                 xywh_bbox = [bbox[0] / im_width, bbox[1] / im_height,
                              bbox[2] / im_width, bbox[3] / im_height]
 
-                entry = f"{' '.join(str(e) for e in xywh_bbox)}"
-                img_bboxes.append(entry)
+                img_bboxes.append(xywh_bbox)
             all_bboxes.append(img_bboxes)
         return all_bboxes
 
