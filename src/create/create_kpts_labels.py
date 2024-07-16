@@ -1,13 +1,17 @@
 import numpy as np
-from src.create.create_bboxes import CreateBboxes
-class CreatesKptsLabels(CreateBboxes):
-    def __init__(self, iou_thresh, bbox_margin):
-        super().__init__(iou_thresh, bbox_margin)
 
-    def run(self, batch_polygons, batch_image_size, batch_class_ids):
+from src.create.create_polygons import CreatePolygons
+from src.create.create_bboxes import CreateBboxes
+class CreatesKptsEntries(CreatePolygons, CreateBboxes):
+    def __init__(self, config, iou_thresh, bbox_margin):
+        CreatePolygons.__init__(self, config)
+        CreateBboxes.__init__(self, iou_thresh, bbox_margin)
+    def run(self, nentries):
+        batch_image_size, batch_categories_ids, batch_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas = self.create_batch_polygons(nentries
+            )
         batch_bboxes = self.create_batch_bboxes(batch_polygons, batch_image_size)
-        batch_labels=self.create_detection_kpts_entries(batch_bboxes, batch_polygons, batch_image_size, batch_class_ids)
-        return batch_labels
+        batch_labels=self.create_detection_kpts_entries(batch_bboxes, batch_polygons, batch_image_size, batch_categories_ids)
+        return batch_polygons, batch_labels, batch_objects_colors, batch_image_size
 
     def create_detection_kpts_entries(self, batch_bboxes, batch_polygons, batch_img_sizes, batch_class_ids):
         """

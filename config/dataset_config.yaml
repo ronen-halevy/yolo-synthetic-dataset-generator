@@ -31,7 +31,7 @@ render_output_dir: ./runs/exp
 # 3. detection_unified_textfil: coco like labels format. Dataset entries are defined by a json file
 # 4. class-bbox labels text file per all images, a row per image.
 
-labels_format_type:  kpts # [segmentation, kpts, detection, obb, detection_coco_json_format, detection_unified_textfile]
+labels_format_type:  obb # [segmentation, kpts, detection, obb, detection_coco_json_format, detection_unified_textfile]
 ###########################################################################
 # shape dataset definitions:
 #shapes_config_file: ./config/shapes_config.yaml
@@ -57,7 +57,7 @@ iou_thresh: 0.
 image_size: [ [ 640, 640 ]  ] # random selection from list
 obb_rotate: 45 # [black, white, yellow, magenta, cyan]
 
-shapes_config:
+polygons_config_table:
   # nvertices: nvertices of polygon. determines the actual shape
   # aspect_ratio: w/h. random selection from list. set 1 one for square &circle, otherwise-rectangle and ellipse
   # theta0: angle of first vertice wrt shape center. e.g for rectangular theta0 must be 45, otherwise rhombus results

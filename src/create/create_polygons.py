@@ -10,13 +10,13 @@ class CreatePolygons:
         return self._categories_names
 
     @property
-    def shapes_nvertices(self):
-        return self._shapes_nvertices
+    def polygons_nvertices(self):
+        return self._polygons_nvertices
 
     def __init__(self, config):
 
-        # load shape yaml files.
-        shapes_config = config['shapes_config']
+        # load polygon yaml files.
+        polygons_config = config['polygons_config_table']
         self.image_size = config['image_size']
         self.min_objects_in_image = config['min_objects_in_image']
         self.max_objects_in_image = config['max_objects_in_image']
@@ -26,12 +26,12 @@ class CreatePolygons:
         self.size_fluctuation = config['size_fluctuation']
 
         # create a class names output file.
-        self.shapes = []
-        for shape in shapes_config:
-            self.shapes.append(shape)
+        self.polygons = []
+        for polygon in polygons_config:
+            self.polygons.append(polygon)
 
-        self._categories_names = [shape['cname'] for shape in self.shapes if shape['active']]
-        self._shapes_nvertices = [shape['nvertices'] for shape in self.shapes if shape['active']]
+        self._categories_names = [polygon['cname'] for polygon in self.polygons if polygon['active']]
+        self._polygons_nvertices = [polygon['nvertices'] for polygon in self.polygons if polygon['active']]
 
     def __rotate(self, polygon, theta0):
         """
@@ -66,14 +66,14 @@ class CreatePolygons:
         :param image_size: image size, list[2] height and width
         :param iou_thresh: type: float [0,1], maximal iou value for adjacent bboxes. iou=1 means complete overlap. iou=0 means no overlap
         :param margin_from_edge: type: int. minimal distance in pixels of bbox from image's edge.
-        :param bbox_margin: type: int. distance in pixels between bbox and shape
+        :param bbox_margin: type: int. distance in pixels between bbox and polygon
         :param size_fluctuation: int float [0,1), images' width and height are multiplied by (1-rand(size_fluctuation))
         :return:
-            image: an RGB pillow image drawn with shapes
+            image: an RGB pillow image drawn with polygons
             bboxes: type: float ndarray [nobjects,4]  [xc, yc, w, h]
             tuple(objects_categories_indices): type in. tuple of nobjects category indices
             objects_categories_names: type: str. list of nobjects category names
-            polygons: type: float. list of nobjects, each object shape with own 2 points nvertices
+            polygons: type: float. list of nobjects, each object polygon with own 2 points nvertices
         """
 
         polygons = []
@@ -98,11 +98,11 @@ class CreatePolygons:
     def __create_polygon(self, nvertices, theta0, height, aspect_ratio, size_fluctuation, margin_from_edge, image_size):
 
         """
-        Description: Creates a polygon given nvertices, and data on shape's dims
-        :param nvertices: type: string name of a supported shape
+        Description: Creates a polygon given nvertices, and data on polygon's dims
+        :param nvertices: type: string name of a supported polygon
         :param height: A list of widths choices for random selection.
         :type height: floats list
-        :param aspect_ratio: ratio between shapes height and width
+        :param aspect_ratio: ratio between polygons height and width
         :type aspect_ratio:
         :param size_fluctuation: fluctuations of new bbox dims, each multiplied by (1-rand(0, size_fluctuation)) where
         <=0size_fluctuation<1
@@ -118,9 +118,9 @@ class CreatePolygons:
 
         sel_height = np.random.choice(height)
         sel_aspect_ratio = np.random.choice(aspect_ratio)
-        shape_width = sel_height * sel_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
+        polygon_width = sel_height * sel_aspect_ratio * random.uniform(1 - size_fluctuation, 1)
         sel_height = sel_height * random.uniform(1 - size_fluctuation, 1)
-        radius = np.array([shape_width / 2, sel_height / 2])
+        radius = np.array([polygon_width / 2, sel_height / 2])
         polygon = [
             (cos(th) * radius[0],
              sin(th
@@ -128,7 +128,7 @@ class CreatePolygons:
             for th in [i * (2 * math.pi) / nvertices for i in range(nvertices)]
         ]
 
-        # rotate shape:
+        # rotate polygon:
         if theta0:
             polygon = self.__rotate(polygon, theta0)
 
@@ -152,7 +152,7 @@ class CreatePolygons:
         batch_categories_ids: type: list of nobjects tuples size: nentries. Category id of image's nobjects
         self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
         self.category_ids:  type: list of int. size: ncategories. Created dataset's entries ids.
-        polygons: type: float. list of nobjects, each object shape with own 2 points nvertices. Needed for segmentation
+        polygons: type: float. list of nobjects, each object polygon with own 2 points nvertices. Needed for segmentation
 
         """
 
@@ -167,19 +167,19 @@ class CreatePolygons:
         for example_id in range(nentries):
             # randomize num of objects in an image:
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
-            # take only active shapes for dataset creation:
-            active_shapes = [shape for shape in self.shapes if shape['active']]
-            # randomly select num_of_objects shapes:
-            sel_shape_entris = [np.random.choice(active_shapes) for idx in range(num_of_objects)]
+            # take only active polygons for dataset creation:
+            active_polygons = [polygon for polygon in self.polygons if polygon['active']]
+            # randomly select num_of_objects polygons:
+            sel_polygon_entris = [np.random.choice(active_polygons) for idx in range(num_of_objects)]
 
             sel_index = random.randint(0, len(self.image_size) - 1)  # randomly select img size index from config
             image_size = self.image_size[sel_index]
-            # arrange target objects attributes from selected shapes:
+            # arrange target objects attributes from selected polygons:
             objects_attributes = [
-                [self.categories_names.index(shape_entry['cname']), shape_entry['nvertices'], shape_entry['theta0'],
-                 shape_entry['cname'], shape_entry['aspect_ratio'],
-                 shape_entry['height'],
-                 shape_entry['color'], shape_entry['obb_theta']] for shape_entry in sel_shape_entris]
+                [self.categories_names.index(polygon_entry['cname']), polygon_entry['nvertices'], polygon_entry['theta0'],
+                 polygon_entry['cname'], polygon_entry['aspect_ratio'],
+                 polygon_entry['height'],
+                 polygon_entry['color'], polygon_entry['obb_theta']] for polygon_entry in sel_polygon_entris]
 
             objects_categories_indices, objects_categories_names, polygons, objects_colors, obb_thetas = self.__create_one_image_polygons(
                 objects_attributes,

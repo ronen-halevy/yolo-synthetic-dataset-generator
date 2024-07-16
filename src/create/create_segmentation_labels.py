@@ -1,11 +1,16 @@
 import numpy as np
 import math
-from src.create.create_bboxes import CreateBboxes
+from src.create.create_polygons import CreatePolygons
 
-class CreateSegmentationLabels():
-    def run(self, batch_polygons, batch_images_sizes, batch_categories_lists):
-        batch_bboxes = self.arrange_segmentation_entries(batch_polygons, batch_images_sizes, batch_categories_lists)
-        return batch_bboxes
+
+class CreateSegmentationEntries(CreatePolygons):
+    def __init__(self, config):
+        CreatePolygons.__init__(self, config)
+    def run(self, nentries):
+        batch_image_size, batch_categories_ids, batch_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas = self.create_batch_polygons(
+            nentries)
+        batch_labels = self.arrange_segmentation_entries(batch_polygons, batch_image_size, batch_categories_ids)
+        return batch_polygons, batch_labels, batch_objects_colors, batch_image_size
 
     def arrange_segmentation_entries(self, images_polygons, images_size, categories_lists):
         batch_entries = []
