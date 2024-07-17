@@ -60,8 +60,9 @@ if __name__ == '__main__':
     # categories_names = create_polygons.categories_names
     categories_names=create_dataset.categories_names
     # create_dataset_config_file:
+    base_dir = os.path.basename(os.path.normpath(os.getcwd())) # current dir is putput's base
     dataset_yaml = {
-        'path': f'{output_dir}',
+        'path': f'../{base_dir}/{output_dir}',
         'train': 'images/train',
         'val': 'images/valid',
         'nc': len(categories_names),
