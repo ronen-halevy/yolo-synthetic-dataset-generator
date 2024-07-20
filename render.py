@@ -40,13 +40,13 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
     return path
 
 
-def render(nexamples, labels_format_type, image_dir, labels_dir, output_dir, category_names_table, split):
+def render(nexamples, labels_mode, image_dir, labels_dir, output_dir, category_names_table, split):
     """
 
     :param nexamples:
     :type nexamples:
-    :param labels_format_type:
-    :type labels_format_type:
+    :param labels_mode:
+    :type labels_mode:
     :param image_dir:
     :type image_dir:
     :param labels_dir:
@@ -77,22 +77,22 @@ def render(nexamples, labels_format_type, image_dir, labels_dir, output_dir, cat
         fname = Path(image_path)
         output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
 
-        if labels_format_type == 'detection_coco_json_format':
+        if labels_mode == 'detection_coco_json_format':
             annotations_path = labels_dir
             image = draw_coco_detection_dataset_example(annotations_path, category_names_table)
-        elif labels_format_type == 'detection':
+        elif labels_mode == 'detection':
             image = draw_detection_dataset_example(image_path, label_path, category_names_table)
-        elif labels_format_type == 'detection_unified_textfile':
+        elif labels_mode == 'detection_unified_textfile':
             image = draw_detection_single_file_dataset_example(image_path, label_path, category_names_table)
-        elif labels_format_type == 'segmentation':
+        elif labels_mode == 'segmentation':
             output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
             image = draw_segmentation_dataset_example(image_path, label_path, category_names_table)
-        elif labels_format_type == 'obb':
+        elif labels_mode == 'obb':
             image = draw_obb_dataset_example(image_path, label_path)
-        elif labels_format_type == 'kpts':
+        elif labels_mode == 'kpts':
             image = draw_kpts_dataset_example(image_path, label_path)
         else:
-            print(f'Unknow labels_format_type. Terminating!!! {labels_format_type}')
+            print(f'Unknow labels_mode. Terminating!!! {labels_mode}')
             exit(1)
         print(f'saving test results to {output_path}')
         image.save(output_path)
@@ -103,29 +103,29 @@ if __name__ == "__main__":
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
     split = config['split_to_render']  # 'train'  # can be 'train', 'test', 'valid'
-    labels_format_type = config['labels_format_type']
-    output_dir = f'{config["output_dir"]}'.replace('{labels_format_type}', config["labels_format_type"])
+    labels_mode = config['labels_mode']
+    output_dir = f'{config["output_dir"]}'.replace('{labels_mode}', config["labels_mode"])
 
-    if labels_format_type in ['segmentation', 'detection', 'kpts', 'obb']:
+    if labels_mode in ['segmentation', 'detection', 'kpts', 'obb']:
         labels_dir = f'{output_dir}/{config["labels_dir"]}/{split}'
         images_dir = f'{output_dir}/{config["image_dir"]}/{split}'
-    elif labels_format_type == 'detection_coco_json_format':
+    elif labels_mode == 'detection_coco_json_format':
         coco_json_labels_file_path = config['coco_json_labels_file_path']
         labels_dir = coco_json_labels_file_path.replace('{split}', split)
         images_dir = None  # complete path within json file
-    elif labels_format_type == 'detection_unified_textfile':
+    elif labels_mode == 'detection_unified_textfile':
         labels_dir = config['labels_all_entries_file'].replace("{split}", split)
         images_dir = config["image_dir"].replace("{split}", split)  # an offset for image filenames located in labels
     else:
-        raise ('Unknown or missing labels_format_type! configuration')
+        raise ('Unknown or missing labels_mode! configuration')
     nexamples = config['nrender_examples'] + 1
-    labels_format_type = config.get('labels_format_type')
+    labels_mode = config.get('labels_mode')
 
     class_names_file = config['category_names_file']
 
-    render_output_dir = f'{config["render_output_dir"]}_{labels_format_type}'
+    render_output_dir = f'{config["render_output_dir"]}_{labels_mode}'
     print('\nrendering dataset images with bbox and mask overlays\n')
     render_output_dir = increment_path(render_output_dir)
 
     category_names = [c.strip() for c in open(class_names_file).readlines()]
-    render(nexamples, labels_format_type, images_dir, labels_dir, f'{render_output_dir}/{split}', category_names, split)
+    render(nexamples, labels_mode, images_dir, labels_dir, f'{render_output_dir}/{split}', category_names, split)

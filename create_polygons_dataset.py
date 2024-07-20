@@ -45,17 +45,17 @@ if __name__ == '__main__':
     # train val test split sizes:
     splits = config["splits"]
     # polygons_config_file = config['polygons_config_table']
-    labels_format_type = config['labels_format_type']
-    output_dir = f'{config["output_dir"]}'.replace("{labels_format_type}", labels_format_type)
+    labels_mode = config['labels_mode']
+    output_dir = f'{config["output_dir"]}'.replace("{labels_mode}", labels_mode)
     bg_color = config['bg_color']
 
-    if labels_format_type == 'detection':
+    if labels_mode == 'detection':
         create_dataset = CreateDetectionEntries(config, config['iou_thresh'], config['bbox_margin'])
-    elif labels_format_type == 'obb':
+    elif labels_mode == 'obb':
         create_dataset = CreateObbEntries(config, config['iou_thresh'], config['bbox_margin'])
-    elif labels_format_type == 'kpts':
+    elif labels_mode == 'kpts':
         create_dataset = CreatesKptsEntries(config,config['iou_thresh'], config['bbox_margin'])
-    elif labels_format_type == 'segmentation':
+    elif labels_mode == 'segmentation':
         create_dataset = CreateSegmentationEntries(config)
     # categories_names = create_polygons.categories_names
     categories_names=create_dataset.categories_names
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         'nc': len(categories_names),
         'names': categories_names,
     }
-    if labels_format_type == 'kpts':
+    if labels_mode == 'kpts':
         nkpts = max(create_dataset.polygons_nvertices)
         dataset_yaml.update({'kpt_shape': [nkpts,3], 'skeleton': []})
     out_filename = f"{output_dir}/dataset.yaml"
