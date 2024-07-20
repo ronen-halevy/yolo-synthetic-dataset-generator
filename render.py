@@ -99,7 +99,7 @@ def render(nexamples, labels_mode, image_dir, labels_dir, output_dir, category_n
 
 
 if __name__ == "__main__":
-    config_file = './config/dataset_config.yaml'
+    config_file = 'dataset_config.yaml'
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
     split = config['split_to_render']  # 'train'  # can be 'train', 'test', 'valid'

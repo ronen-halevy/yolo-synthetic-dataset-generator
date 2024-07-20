@@ -70,7 +70,7 @@ polygons_config_table:
     { cname: red_square ,nvertices: 4, theta0: 0, obb_theta: 60, color: [ blue ], height: [ 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: blue_square ,nvertices: 4, theta0: 0, obb_theta: 0,  color: [ blue ], height: [ 60, 120 ], aspect_ratio: [ 1 ], active: False },
     { cname: green_square ,nvertices: 4, theta0: 0, obb_theta: 0,  color: [ green ], height: [ 50, 120 ], aspect_ratio: [ 1 ], active: False },
-    { cname: triangle, nvertices: 3, theta0: 0,  obb_theta: 45,color: [ red ], height: [ 120 ], aspect_ratio: [ 4 ], active: True },
+    { cname: triangle, nvertices: 3, theta0: 0,  obb_theta: 45,color: [ blue ], height: [ 120 ], aspect_ratio: [ 4 ], active: True },
     { cname: circle, nvertices: 80, theta0: 0,  obb_theta: 0, color: [ green ], height: [ 40, 60 ], aspect_ratio: [ 4 ], active: False }   ,
     { cname: pentagon, nvertices: 5, theta0: 0,  obb_theta: 0, color: [ red ], height: [ 60 ], aspect_ratio: [ 1 ], active: False },
     { cname: ellipse, nvertices: 80, theta0: 0,  obb_theta: 0, color: [ red ], height: [ 60 ], aspect_ratio: [ 0.5, 2 ], active: False },

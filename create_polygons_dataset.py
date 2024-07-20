@@ -35,7 +35,7 @@ if __name__ == '__main__':
     :rtype:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", type=str, default='config/dataset_config.yaml',
+    parser.add_argument("--config_file", type=str, default='dataset_config.yaml',
                         help='yaml config file')
     args = parser.parse_args()
     config_file = args.config_file
