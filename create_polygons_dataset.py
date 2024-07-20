@@ -17,6 +17,7 @@ import os
 import yaml
 import argparse
 from pathlib import Path
+import glob
 
 import random
 from src.create.utils import  draw_images, write_images_to_file, write_entries_to_files
@@ -88,6 +89,10 @@ if __name__ == '__main__':
         images_out_dir = f'{output_dir}/{image_dir}/{split}'
         images_out_path = Path(images_out_dir)
         images_out_path.mkdir(parents=True, exist_ok=True)
+        # before create files, delete old files if exsit:
+        for filename in glob.glob(f'{images_out_path}/*.jpg'):
+            os.remove(filename)
+
         labels_out_dir = Path(f"{output_dir}/{config[f'labels_dir']}/{split}")
         labels_out_dir.mkdir(parents=True, exist_ok=True)
         # arrange filenames:
