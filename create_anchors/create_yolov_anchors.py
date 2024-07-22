@@ -181,7 +181,7 @@ def main():
     wh = bboxes[:, 2:4]  # - labels[:,1:3]
 
     anchors = creat_yolo_anchors(wh, n_clusters)
-    im_size = 640  # todo check
+    im_size = config_file['yolo_image_size']
     anchors = np.array(anchors * im_size).reshape([n_layers, n_anchors, 2]).tolist()
 
     with open(anchors_out_file, 'w') as file:
