@@ -22,6 +22,7 @@ import glob
 
 import os
 import matplotlib.pyplot as plt
+import math
 
 
 def plot_scatter_graph(w_h, kmeans):
@@ -34,11 +35,11 @@ def plot_scatter_graph(w_h, kmeans):
     plt.title('K-means Clustering of Boxes Widths and Heights')
     plt.figure(figsize=(10, 10))
     plt.show()
+
+
 def sort_anchors(anchors):
     anchors_sorted = anchors[(anchors[:, 0] * anchors[:, 1]).argsort()]
     return anchors_sorted
-
-
 
 
 def creat_yolo_anchors(w_h, n_clusters):
@@ -51,15 +52,19 @@ def creat_yolo_anchors(w_h, n_clusters):
     :return:
     :rtype:
     """
-    kmeans = KMeans(n_clusters=n_clusters)  # Construct with num of clusters (in yolo - 9 (3*3))
+    kmeans = KMeans(n_clusters=n_clusters, n_init='auto')  # Construct with num of clusters (in yolo: nl*na)
 
-    # for testing small dataset . n < n_clusters, duplicate entries:
-    while w_h.shape[0] < n_clusters:
-        w_h = np.tile(w_h, [2,1]) # dup rows
+    # If data size is less than bcluster - duplicate entries and, add small increments to added entries to produce slitly different clusters:
+    if w_h.shape[0] < n_clusters:
+        nentries = w_h.shape[0]
+        w_h = np.tile(w_h, [math.ceil((n_clusters / w_h.shape[0])), 1])  # dup rows
+        random_inc = np.random.rand(w_h.shape[0] - nentries, 2) * np.min(w_h,
+                                                                         axis=0) / 10000  # inc neglected: frac of min_val/10000
+        w_h[nentries:, :] = w_h[nentries:, :] + random_inc
     kmeans.fit(w_h)
+
     anchors = kmeans.cluster_centers_  # coordinates of cluster' centers
     sorted_anchors = sort_anchors(anchors).astype(np.float32)
-    # plot_scatter_graph(w_h, kmeans)
     return sorted_anchors
 
 
@@ -108,6 +113,8 @@ def read_bboxes_from_label_file(fname, labels_file_format):
     :return:
     lb:  tensor of class,bbox. shape: [nt,5], tf.float32, where nt - num of objects rows in file
     """
+    import sys
+    from termcolor import cprint
     with open(fname) as f:
         lb = [x.split() for x in f.read().strip().splitlines() if len(x)]
         if 'segment' in labels_file_format:  # is segment
@@ -116,13 +123,13 @@ def read_bboxes_from_label_file(fname, labels_file_format):
             segments = [np.array(x[1:], dtype=np.float32).reshape(-1, 2) for x in lb]  # (cls, xy1...)
             # lb = np.concatenate((classes.reshape(-1, 1), segments2boxes(segments)),
             #                     1)  # (cls, xywh)
-            bboxes =  np.array(segments2boxes(segments))
-            xy_c = (bboxes[:, :2] + bboxes[:,2:4])/2
-            wh = (bboxes[:, 2:4] - bboxes[:,:2])
+            bboxes = np.array(segments2boxes(segments))
+            xy_c = (bboxes[:, :2] + bboxes[:, 2:4]) / 2
+            wh = (bboxes[:, 2:4] - bboxes[:, :2])
             bboxes = np.concatenate([xy_c, wh], axis=1)
 
         elif 'kpts' in labels_file_format or 'keypoint' in labels_file_format or 'detect' in labels_file_format:
-            bboxes = np.array(lb)[:,1:5]
+            bboxes = np.array(lb)[:, 1:5]
         else:
             print(f'{labels_file_format} labels file format not supported. Terminating')
             exit(1)
@@ -130,12 +137,14 @@ def read_bboxes_from_label_file(fname, labels_file_format):
         bboxes = np.array(bboxes, dtype=np.float32)
     return bboxes
 
+
 def save_to_file(anchors_out_file, anchors):
     base_dir, fname = os.path.split(anchors_out_file)
     pathlib.Path(base_dir).mkdir(parents=True, exist_ok=True)
     data = {'anchors': anchors.tolist()}
     with open(anchors_out_file, 'w') as outfile:
         yaml.dump(data, outfile, default_flow_style=False)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -158,19 +167,22 @@ def main():
     label_files = _list_label_files(path, ext_list)
 
     # bboxes=np.zeros([0,11])
-    bboxes=np.zeros([0,4])
+    bboxes = np.zeros([0, 4])
+    print(
+        f'Creating \033[1m{n_clusters} ({n_layers} layers * {n_anchors} anchors)\033[0m based on \033[1m{labels_file_format}\033[0m format labels')
 
     for idx, label_file in enumerate(label_files):
         # extract class, bbox and segment from label file:
-        bboxes_i = read_bboxes_from_label_file(label_file, labels_file_format) # list[ni] of image boxes, bboxes_i shape:[4]
-        bboxes=np.concatenate([bboxes, bboxes_i], axis=0) # labels shape: [b*nt,5] where b nof label files
+        bboxes_i = read_bboxes_from_label_file(label_file,
+                                               labels_file_format)  # list[ni] of image boxes, bboxes_i shape:[4]
+        bboxes = np.concatenate([bboxes, bboxes_i], axis=0)  # labels shape: [b*nt,5] where b nof label files
 
     # wh = bboxes[:,3:5]#- labels[:,1:3]
-    wh = bboxes[:,2:4]#- labels[:,1:3]
+    wh = bboxes[:, 2:4]  # - labels[:,1:3]
 
     anchors = creat_yolo_anchors(wh, n_clusters)
-    im_size = 640
-    anchors = np.array(anchors*im_size).reshape([n_layers, n_anchors, 2]).tolist()
+    im_size = 640  # todo check
+    anchors = np.array(anchors * im_size).reshape([n_layers, n_anchors, 2]).tolist()
 
     with open(anchors_out_file, 'w') as file:
         yaml.dump(anchors, file)
@@ -182,4 +194,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

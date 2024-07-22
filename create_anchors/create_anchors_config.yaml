@@ -2,12 +2,10 @@
 n_layers: 3
 n_anchors: 3
 
-labels_dir: /home/ronen/devel/PycharmProjects/shapes-dataset/dataset/labels/train
-labels_file_format: segmentation_yolov5 # [segmentation_yolov5, keypoints, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
+labels_dir: ../dataset/segment/labels/train
+labels_file_format: segment # [segment, kpts, detection, detection_coco_json_format, detection_unified_textfile]
 anchors_out_file: ./output/anchors.yaml
 
-#
-#n_layers: 4
 
 #labels_dir: /home/ronen/devel/PycharmProjects/datasets/bic_markers_resized/labels
 #labels_file_format: keypoints # segmentation_yolov5 # [segmentation_yolov5, keypoints, detection_yolov5, detection_coco_json_format, detection_unified_textfile]
