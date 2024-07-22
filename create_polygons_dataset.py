@@ -50,13 +50,13 @@ if __name__ == '__main__':
     output_dir = f'{config["output_dir"]}'.replace("{labels_mode}", labels_mode)
     bg_color = config['bg_color']
 
-    if labels_mode == 'detection':
+    if labels_mode == 'detect':
         create_dataset = CreateDetectionEntries(config, config['iou_thresh'], config['bbox_margin'])
     elif labels_mode == 'obb':
         create_dataset = CreateObbEntries(config, config['iou_thresh'], config['bbox_margin'])
     elif labels_mode == 'kpts':
         create_dataset = CreatesKptsEntries(config,config['iou_thresh'], config['bbox_margin'])
-    elif labels_mode == 'segmentation':
+    elif labels_mode == 'segment':
         create_dataset = CreateSegmentationEntries(config)
     # categories_names = create_polygons.categories_names
     categories_names=create_dataset.categories_names

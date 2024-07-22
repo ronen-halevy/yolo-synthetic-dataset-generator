@@ -80,11 +80,11 @@ def render(nexamples, labels_mode, image_dir, labels_dir, output_dir, category_n
         if labels_mode == 'detection_coco_json_format':
             annotations_path = labels_dir
             image = draw_coco_detection_dataset_example(annotations_path, category_names_table)
-        elif labels_mode == 'detection':
+        elif labels_mode == 'detect':
             image = draw_detection_dataset_example(image_path, label_path, category_names_table)
         elif labels_mode == 'detection_unified_textfile':
             image = draw_detection_single_file_dataset_example(image_path, label_path, category_names_table)
-        elif labels_mode == 'segmentation':
+        elif labels_mode == 'segment':
             output_path = f'{dest_dir}/{fname.stem}_annotated{fname.suffix}'
             image = draw_segmentation_dataset_example(image_path, label_path, category_names_table)
         elif labels_mode == 'obb':
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     labels_mode = config['labels_mode']
     output_dir = f'{config["output_dir"]}'.replace('{labels_mode}', config["labels_mode"])
 
-    if labels_mode in ['segmentation', 'detection', 'kpts', 'obb']:
+    if labels_mode in ['segment', 'detect', 'kpts', 'obb']:
         labels_dir = f'{output_dir}/{config["labels_dir"]}/{split}'
         images_dir = f'{output_dir}/{config["image_dir"]}/{split}'
     elif labels_mode == 'detection_coco_json_format':

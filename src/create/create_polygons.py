@@ -168,17 +168,17 @@ class CreatePolygons:
             # randomize num of objects in an image:
             num_of_objects = np.random.randint(self.min_objects_in_image, self.max_objects_in_image + 1)
             # take only active polygons for dataset creation:
-            # randomly select num_of_objects polygons:
-            sel_polygon_entris = [np.random.choice(self.active_polygons) for idx in range(num_of_objects)]
+            # randomly select num_of_objects polygons config_params:
+            sel_polygon_config_entries = [np.random.choice(self.active_polygons) for idx in range(num_of_objects)]
 
-            sel_index = random.randint(0, len(self.image_size) - 1)  # randomly select img size index from config
-            image_size = self.image_size[sel_index]
+            sel_img_size_tbl_index = random.randint(0, len(self.image_size) - 1)  # randomly select img size index from config
+            image_size = self.image_size[sel_img_size_tbl_index]
             # arrange target objects attributes from selected polygons:
             objects_attributes = [
                 [self.categories_names.index(polygon_entry['cname']), polygon_entry['nvertices'], polygon_entry['theta0'],
                  polygon_entry['cname'], polygon_entry['aspect_ratio'],
                  polygon_entry['height'],
-                 polygon_entry['color'], polygon_entry['obb_theta']] for polygon_entry in sel_polygon_entris]
+                 polygon_entry['color'], polygon_entry['obb_theta']] for polygon_entry in sel_polygon_config_entries]
 
             objects_categories_indices, objects_categories_names, polygons, objects_colors, obb_thetas = self.__create_one_image_polygons(
                 objects_attributes,
