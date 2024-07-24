@@ -12,7 +12,7 @@ def xywh2xyxy(obboxes):
         rboxes (array/tensor): (num_gts, [cx cy l s θ]) θ∈[-pi/2, pi/2)
 
     Returns:
-        polys (array/tensor): (num_gts, [x1 y1 x2 y2 x3 y3 x4 y4])
+        polys (array/tensor): (num_gts, [xmin ymin xmax ymin xmax ymax xmin ymax])
     """
 
     center, w, h = np.split(obboxes, (2, 3), axis=-1)
@@ -46,15 +46,14 @@ def rotate(hbboxes, theta0):
 def create_obb_entries(bbox_entries):
     """
 
-    :param bbox_entries:
-    :type bbox_entries:
-    :return:
+    :param bbox_entries: xywh bboxes, list[batch] of array[nti, 4], range values: [0, imw], [0,imh]
+    :return: xyxy [xmin ymin xmax ymin xmax ymax xmin ymax] bboxes], list[batch] of array[nti, 4]
     :rtype:
     """
     bboxes = []
     for idx, bbox_entry in enumerate(bbox_entries):  # loop on images
-        bbox_entries = xywh2xyxy(bbox_entry)
-        bboxes.append(bbox_entries)
+        bbox = xywh2xyxy(bbox_entry)
+        bboxes.append(bbox)
     return bboxes
 
 
@@ -205,15 +204,38 @@ class CreateObbEntries(CreatePolygons, CreateBboxes):
         return batch_polygons, batch_labels, batch_objects_colors, batch_image_size
 
     def create_obb_labels(self, batch_polygons, bbox_entries, images_size, obb_thetas, batch_objects_categories_names):
+        """
+        Create obb labels
+        :param batch_polygons:
+        :type batch_polygons:
+        :param bbox_entries:
+        :type bbox_entries:
+        :param images_size:
+        :type images_size:
+        :param obb_thetas:
+        :type obb_thetas:
+        :param batch_objects_categories_names:
+        :type batch_objects_categories_names:
+        :return:
+        :rtype:
+        """
         batch_polygons, batch_obb_thetas, dropped_ids = rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
         bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
         bbox_entries = create_obb_entries(bbox_entries)
+        # Produces rotated box. batch_rbboxes: rotated in image boundAries. batch_in_bounderies: bool list of in bounderies boxesL
         batch_rbboxes, batch_in_bounderies = rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
+        batch_rbboxes = np.array(batch_rbboxes).round(2)
+        # drop polygons which relate to False entries in batch_in_bounderies"
         batch_polygons = filter_polygons(batch_polygons, batch_in_bounderies)
 
         batch_rbboxes = append_category_field(batch_rbboxes, batch_objects_categories_names)
 
         def entries_list_to_string(batch_rbboxes):
+            """
+            Convert rotated bbox list to string entries.
+            :param batch_rbboxes: list[bi][nti][9] ,where each entry is 8 coords and a string category name.
+            :return:  list[bi][nti[1] ,where each entry is a string which joins the 9 entries elements.
+            """
             batch_rbboxes_strings = []
             for img_rbboxes in batch_rbboxes:
                 img_rbboxes = [' '.join(str(x) for x in img_rbboxes[idx]) for idx in range(len(img_rbboxes))]

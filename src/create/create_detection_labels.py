@@ -19,5 +19,6 @@ class CreateDetectionEntries(CreatePolygons, CreateBboxes):
         batch_image_size, batch_categories_ids, batch_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas = self.create_batch_polygons(
             nentries)
         batch_bboxes = self.create_batch_bboxes(batch_polygons, batch_image_size)
+        batch_bboxes = self.normalize_bboxes(batch_bboxes, batch_image_size)
         batch_labels = self.create_detection_labels(batch_bboxes, batch_categories_ids)
         return batch_polygons, batch_labels, batch_objects_colors, batch_image_size

@@ -112,7 +112,7 @@ class CreateBboxes:
         :param images_sizes:
         :param images_class_ids:  list of per image class_ids arrays
         :param output_dir: output dir of labels text files
-        :return:
+        :return: list[batch][im_bboxes][4] , float normalized to 1
         """
 
         all_bboxes = []
@@ -144,7 +144,7 @@ class CreateBboxes:
         :return:
         batch_filenames: type: list of str size:  nentries. created images filenames, w/o dir prefix
         batch_sizes: type:  list of 2 tuples ints.  size:  nentries. (image.height, image.width)
-        batch_bboxes: type:  list of float [nobjects, 4] arrays . size:  nentries. Bounding boxes of image's nobjects  [xc, yc, w, h]
+        batch_bboxes: type:  list of float [nobjects, 4] arrays, non normalized to 1, . size:  nentries. Bounding boxes of image's nobjects  [xc, yc, w, h]
         batch_objects_categories_indices: type: list of nobjects tuples size: nentries. Category id of image's nobjects
         self.category_names: type: list of str. size: ncategories. Created dataset's num of categories.
         self.category_ids:  type: list of int. size: ncategories. Created dataset's entries ids.
@@ -170,5 +170,4 @@ class CreateBboxes:
                 continue
 
             batch_bboxes.append(bboxes)
-            batch_bboxes_normed = self. normalize_bboxes(batch_bboxes, batch_image_size)
-        return batch_bboxes_normed
+        return batch_bboxes
