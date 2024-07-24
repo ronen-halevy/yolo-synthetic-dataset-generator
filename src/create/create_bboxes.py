@@ -135,7 +135,7 @@ class CreateBboxes:
         return all_bboxes
 
 
-    def create_batch_bboxes(self,  batch_polygons, batch_image_size):
+    def create_batch_bboxes(self,  batch_polygons):
         """
         Description: Create dataset entries. svae created images in output_dir, and return dataset metadata.
 

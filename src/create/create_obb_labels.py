@@ -198,7 +198,7 @@ class CreateObbEntries(CreatePolygons, CreateBboxes):
     def run(self, nentries):
         batch_image_size, batch_categories_ids, batch_categories_names, batch_polygons, batch_objects_colors, batch_obb_thetas = self.create_batch_polygons(
             nentries)
-        batch_bboxes = self.create_batch_bboxes(batch_polygons, batch_image_size)
+        batch_bboxes = self.create_batch_bboxes(batch_polygons)
         batch_labels, batch_polygons = self.create_obb_labels(batch_polygons, batch_bboxes, batch_image_size,
                                                               batch_obb_thetas, batch_categories_names)
         return batch_polygons, batch_labels, batch_objects_colors, batch_image_size
