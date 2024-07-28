@@ -130,20 +130,36 @@ def read_bboxes_from_label_file(fname, labels_file_format):
 
         elif 'kpts' in labels_file_format or 'keypoint' in labels_file_format or 'detect' in labels_file_format:
             bboxes = np.array(lb)[:, 1:5]
+        elif 'obb' in labels_file_format:
+            rbboxes = np.array(lb)[:, 0:8] # rotated bboxes
+            rbboxes = np.array(rbboxes, dtype=np.float32).reshape([-1,4,2]) # arrange rbbox as 4*(x,y):[nboxes, -4,2]
+            import cv2
+            xy_center,wh,angles = zip(*[cv2.minAreaRect(rbbox) for rbbox in rbboxes]) # θ ∈ [0， 90]
+            bboxes = np.concatenate([xy_center, wh], axis=-1)
+            if np.max(bboxes) > 1: # if labels arte not normalized -(DOTA obb dataset format is normally unormallized):
+                def _label2image_paths(labels_paths):
+                    # Define label paths as a function of image paths
+                    labels_fname = os.path.split(labels_paths)[1]
+                    fname, _ = os.path.splitext(labels_fname)
+                    labels_dir=os.path.dirname(labels_paths)
+
+                    images_dir = os.path.split(labels_dir)[0]+f'{os.sep}images{os.sep}'
+                    _, img_ext = os.path.splitext(os.listdir(images_dir)[0])
+                    return f'{images_dir}{os.sep}{fname}{img_ext}'
+
+
+                img_filename = _label2image_paths(fname)
+                from PIL import Image
+                img_size = Image.open(img_filename).size
+                bboxes=bboxes/(img_size*2)*(640, 640,640,640)
+
+
         else:
             print(f'{labels_file_format} labels file format not supported. Terminating')
             exit(1)
 
         bboxes = np.array(bboxes, dtype=np.float32)
     return bboxes
-
-
-def save_to_file(anchors_out_file, anchors):
-    base_dir, fname = os.path.split(anchors_out_file)
-    pathlib.Path(base_dir).mkdir(parents=True, exist_ok=True)
-    data = {'anchors': anchors.tolist()}
-    with open(anchors_out_file, 'w') as outfile:
-        yaml.dump(data, outfile, default_flow_style=False)
 
 
 def main():
