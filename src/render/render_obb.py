@@ -50,6 +50,8 @@ def read_obb_dataset_entry(image_path, label_path):
         lables = [x.split() for x in f.read().strip().splitlines() if len(x)]
     image = Image.open(image_path)
     category_names = np.array(lables)[:, 8]  #
-    polygons = np.array(lables)[:, 0:8].astype(np.float32) * [image.width, image.height, image.width, image.height,
-                                                              image.width, image.height, image.width, image.height]
+    polygons = np.array(lables)[:, 0:8].astype(np.float32)#
+    # Dota Obb labels format are normally not normalized - if so, don't scale up
+    if np.all(polygons<1):
+        polygons = polygons.reshape([-1,4,2]) * np.array(image.size)
     return image, polygons, category_names
