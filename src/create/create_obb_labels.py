@@ -190,6 +190,18 @@ def append_category_field(batch_rbboxes, batch_objects_categories_names):
     return batch_rbboxes_update
 
 
+def entries_list_to_string(batch_labels):
+    """
+    Convert list entries to string entries.
+    :param batch_labels: list[bi][nti][9] ,where each entry is 8 coords, category name & difficulty.
+    :return:  list[bi][nti[1] ,where each entry is a string which joins the 10 entries elements.
+    """
+    batch_labels_strings = []
+    for img_labels in batch_labels:
+        img_labels = [' '.join(str(x) for x in img_labels[idx]) for idx in range(len(img_labels))]
+        batch_labels_strings.append(img_labels)
+    return batch_labels_strings
+
 class CreateObbEntries(CreatePolygons, CreateBboxes):
     def __init__(self, config, iou_thresh, bbox_margin):
         CreatePolygons.__init__(self, config)
@@ -228,19 +240,13 @@ class CreateObbEntries(CreatePolygons, CreateBboxes):
         # drop polygons which relate to False entries in batch_in_bounderies"
         batch_polygons = filter_polygons(batch_polygons, batch_in_bounderies)
 
-        batch_rbboxes = append_category_field(batch_rbboxes, batch_objects_categories_names)
+        batch_labels = [[bbox + [category_name] for bbox, category_name in zip(im_bboxes,im_category_names)]
+                        for im_bboxes, im_category_names in
+                        zip(batch_rbboxes, batch_objects_categories_names)]
 
-        def entries_list_to_string(batch_rbboxes):
-            """
-            Convert rotated bbox list to string entries.
-            :param batch_rbboxes: list[bi][nti][9] ,where each entry is 8 coords and a string category name.
-            :return:  list[bi][nti[1] ,where each entry is a string which joins the 9 entries elements.
-            """
-            batch_rbboxes_strings = []
-            for img_rbboxes in batch_rbboxes:
-                img_rbboxes = [' '.join(str(x) for x in img_rbboxes[idx]) for idx in range(len(img_rbboxes))]
-                batch_rbboxes_strings.append(img_rbboxes)
-            return batch_rbboxes_strings
+        # append difficulty filed: can be 0-2, where 2 will drop object.  !!! hardcoded to 0 (=easy) !!!
+        batch_labels = [[label + z_pad for label, z_pad in zip(im_labels, [[0]] * len(im_labels))] for im_labels in
+                                  batch_labels]
 
-        batch_labels = entries_list_to_string(batch_rbboxes)
+        batch_labels = entries_list_to_string(batch_labels)
         return batch_labels, batch_polygons
