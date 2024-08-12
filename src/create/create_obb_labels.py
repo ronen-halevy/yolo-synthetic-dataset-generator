@@ -240,7 +240,7 @@ class CreateObbEntries(CreatePolygons, CreateBboxes):
         # drop polygons which relate to False entries in batch_in_bounderies"
         batch_polygons = filter_polygons(batch_polygons, batch_in_bounderies)
 
-        batch_labels = [[bbox + [category_name] for bbox, category_name in zip(im_bboxes,im_category_names)]
+        batch_labels = [[bbox.tolist() + [category_name] for bbox, category_name in zip(im_bboxes,im_category_names)]
                         for im_bboxes, im_category_names in
                         zip(batch_rbboxes, batch_objects_categories_names)]
 
