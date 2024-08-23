@@ -34,8 +34,7 @@ def read_detection_dataset_entry(image_path, label_path):
     category_ids = np.array(lables)[:, 0].astype(int)
     bboxes = np.array(lables, dtype=float)[:, 1:5] * [image.width, image.height, image.width, image.height]
     # convert from x_center, y_center to xmin, ymin
-    bboxes[:, 0] = bboxes[:, 0] - bboxes[:, 2] / 2
-    bboxes[:, 1] = bboxes[:, 1] - bboxes[:, 3] / 2
+    bboxes[:,:2]-=bboxes[:,2:4]/2
     return image, bboxes, category_ids
 
 
