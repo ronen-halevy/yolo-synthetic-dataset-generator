@@ -40,7 +40,7 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
     return path
 
 
-def render(nexamples, labels_mode, image_dir, labels_dir, output_dir, category_names_table, split):
+def render(nexamples, labels_mode, image_dir, labels_dir, output_dir, category_names_table):
     """
 
     :param nexamples:
@@ -55,8 +55,6 @@ def render(nexamples, labels_mode, image_dir, labels_dir, output_dir, category_n
     :type output_dir:
     :param category_names_table:
     :type category_names_table:
-    :param split:
-    :type split:
     :return:
     :rtype:
     """
@@ -128,4 +126,23 @@ if __name__ == "__main__":
     render_output_dir = increment_path(render_output_dir)
 
     category_names = [c.strip() for c in open(class_names_file).readlines()]
-    render(nexamples, labels_mode, images_dir, labels_dir, f'{render_output_dir}/{split}', category_names, split)
+    render(nexamples, labels_mode, images_dir, labels_dir, f'{render_output_dir}/{split}', category_names)
+
+    # nexamples=44
+    # labels_mode='detect'
+    # images_dir='/home/ronen/devel/PycharmProjects/datasets/coco8/images/train'
+    # images_dir='/home/ronen/devel/PycharmProjects/datasets/coco128/images/train2017'
+    #
+    # labels_dir='/home/ronen/devel/PycharmProjects/datasets/coco8/labels/train'
+    # labels_dir='/home/ronen/devel/PycharmProjects/datasets/coco128/labels/train2017'
+    #
+    #
+    # output_dir = '/tmp'
+    #
+    #
+    # class_names_file='/home/ronen/devel/PycharmProjects/yolo-v3-tf2/datasets/coco2012/coco.names'
+    # category_names = [c.strip() for c in open(class_names_file).readlines()]
+    #
+    # render(nexamples, labels_mode, images_dir, labels_dir, f'{render_output_dir}/{split}', category_names)
+
+

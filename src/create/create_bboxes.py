@@ -118,17 +118,13 @@ class CreateBboxes:
         all_bboxes = []
         for bboxes, images_size,  in zip(images_bboxes, images_sizes
                                                    ):  # images loop
-            im_height = images_size[0]
-            im_width = images_size[1]
+            im_height = images_size[1]
+            im_width = images_size[0]
 
-            # head, filename = os.path.split(image_path)
-            bboxes = np.array(bboxes, dtype=float)
             img_bboxes = []
-
             for bbox in bboxes:  # labels in image loop
                 # normalize scale:
-                xywh_bbox = [bbox[0] / im_width, bbox[1] / im_height,
-                             bbox[2] / im_width, bbox[3] / im_height]
+                xywh_bbox = bbox / [im_width, im_height, im_width, im_height]
 
                 img_bboxes.append(xywh_bbox)
             all_bboxes.append(img_bboxes)
