@@ -120,7 +120,7 @@ def read_kpts_dataset_entry(image_path, label_path):
 def draw_kpts_dataset_example(image_path, label_path):
     [im, bboxes, kpts] = read_kpts_dataset_entry(image_path, label_path)
     image=np.array(im)
-    bboxes = bboxes * np.tile([im.height, im.width],[2])
+    bboxes = bboxes * np.tile([im.width, im.height],[2])
     bboxes = np.concatenate([bboxes[:, 0:2] - bboxes[:, 2:4] / 2, bboxes[:, 0:2] + bboxes[:, 2:4] / 2], axis=-1)
 
     for bbox in bboxes:
