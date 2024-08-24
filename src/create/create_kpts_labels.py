@@ -34,8 +34,8 @@ class CreatesKptsEntries(CreatePolygons, CreateBboxes):
                                                                   batch_categories_ids, batch_bboxes):
 
             image_bboxes=np.array(image_bboxes)
-            im_height = image_size[0]
-            im_width = image_size[1]
+            im_width  = image_size[0]
+            im_height = image_size[1]
 
             # image_bboxes = (image_bboxes/np.array([im_width, im_height, im_width, im_height]))
             img_kpts = []
