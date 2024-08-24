@@ -244,7 +244,7 @@ class CreateObbEntries(CreatePolygons, CreateBboxes):
                         for im_bboxes, im_category_names in
                         zip(batch_rbboxes, batch_objects_categories_names)]
 
-        # append difficulty filed: can be 0-2, where 2 will drop object.  !!! hardcoded to 0 (=easy) !!!
+        # append difficulty field: can be 0-2,img_rbboxes where 2 will drop object.  !!! hardcoded to 0 (=easy) !!!
         batch_labels = [[label + z_pad for label, z_pad in zip(im_labels, [[0]] * len(im_labels))] for im_labels in
                                   batch_labels]
 
