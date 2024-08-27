@@ -50,7 +50,7 @@ if __name__ == '__main__':
     output_dir = f'{config["output_dir"]}'.replace("{labels_mode}", labels_mode)
     bg_color = config['bg_color']
 
-    if labels_mode == 'detect':
+    if labels_mode == 'hbb':
         create_dataset = CreateDetectionEntries(config, config['iou_thresh'], config['bbox_margin'])
     elif labels_mode == 'obb':
         create_dataset = CreateObbEntries(config, config['iou_thresh'], config['bbox_margin'])

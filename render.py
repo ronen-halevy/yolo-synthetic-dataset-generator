@@ -78,7 +78,7 @@ def render(nexamples, labels_mode, image_dir, labels_dir, output_dir, category_n
         if labels_mode == 'detection_coco_json_format':
             annotations_path = labels_dir
             image = draw_coco_detection_dataset_example(annotations_path, category_names_table)
-        elif labels_mode == 'detect':
+        elif labels_mode == 'hbb':
             image = draw_detection_dataset_example(image_path, label_path, category_names_table)
         elif labels_mode == 'detection_unified_textfile':
             image = draw_detection_single_file_dataset_example(image_path, label_path, category_names_table)
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     labels_mode = config['labels_mode']
     output_dir = f'{config["output_dir"]}'.replace('{labels_mode}', config["labels_mode"])
 
-    if labels_mode in ['segment', 'detect', 'kpts', 'obb']:
+    if labels_mode in ['segment', 'hbb', 'kpts', 'obb']:
         labels_dir = f'{output_dir}/{config["labels_dir"]}/{split}'
         images_dir = f'{output_dir}/{config["image_dir"]}/{split}'
     elif labels_mode == 'detection_coco_json_format':
@@ -128,21 +128,20 @@ if __name__ == "__main__":
     category_names = [c.strip() for c in open(class_names_file).readlines()]
     render(nexamples, labels_mode, images_dir, labels_dir, f'{render_output_dir}/{split}', category_names)
 
-    # nexamples=44
-    # labels_mode='detect'
+    # nexamples=4
+    # labels_mode='hbb'
     # images_dir='/home/ronen/devel/PycharmProjects/datasets/coco8/images/train'
     # images_dir='/home/ronen/devel/PycharmProjects/datasets/coco128/images/train2017'
     #
     # labels_dir='/home/ronen/devel/PycharmProjects/datasets/coco8/labels/train'
     # labels_dir='/home/ronen/devel/PycharmProjects/datasets/coco128/labels/train2017'
     #
-    #
-    # output_dir = '/tmp'
-    #
+    # labels_mode='kpts'
+    # images_dir='/home/ronen/devel/PycharmProjects/datasets/bic_markers_orig/images'
+    # labels_dir='/home/ronen/devel/PycharmProjects/datasets/bic_markers_orig/labels'
     #
     # class_names_file='/home/ronen/devel/PycharmProjects/yolo-v3-tf2/datasets/coco2012/coco.names'
     # category_names = [c.strip() for c in open(class_names_file).readlines()]
-    #
     # render(nexamples, labels_mode, images_dir, labels_dir, f'{render_output_dir}/{split}', category_names)
 
 
