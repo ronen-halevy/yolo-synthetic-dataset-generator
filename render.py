@@ -87,7 +87,7 @@ def render(nexamples, labels_mode, image_dir, labels_dir, output_dir, category_n
             image = draw_segmentation_dataset_example(image_path, label_path, category_names_table)
         elif labels_mode == 'obb':
             image = draw_obb_dataset_example(image_path, label_path)
-        elif labels_mode == 'kpts':
+        elif labels_mode == 'pose':
             image = draw_kpts_dataset_example(image_path, label_path)
         else:
             print(f'Unknow labels_mode. Terminating!!! {labels_mode}')
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     labels_mode = config['labels_mode']
     output_dir = f'{config["output_dir"]}'.replace('{labels_mode}', config["labels_mode"])
 
-    if labels_mode in ['segment', 'hbb', 'kpts', 'obb']:
+    if labels_mode in ['segment', 'hbb', 'pose', 'obb']:
         labels_dir = f'{output_dir}/{config["labels_dir"]}/{split}'
         images_dir = f'{output_dir}/{config["image_dir"]}/{split}'
     elif labels_mode == 'detection_coco_json_format':

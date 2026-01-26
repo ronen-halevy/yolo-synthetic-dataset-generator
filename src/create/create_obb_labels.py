@@ -46,7 +46,9 @@ def rotate(hbboxes, theta0):
 def create_obb_entries(bbox_entries):
     """
 
-    :param bbox_entries: xywh bboxes, list[batch] of array[nti, 4], range values: [0, imw], [0,imh]
+    :param
+    bbox_entries: xywh bboxes, list[batch] of array[nti, 4], range values: [0, imw], [0,imh]
+    images_size:
     :return: xyxy [xmin ymin xmax ymin xmax ymax xmin ymax] bboxes], list[batch] of array[nti, 4]
     :rtype:
     """
@@ -212,10 +214,10 @@ class CreateObbEntries(CreatePolygons, CreateBboxes):
             nentries)
         batch_bboxes = self.create_batch_bboxes(batch_polygons)
         batch_labels, batch_polygons = self.create_obb_labels(batch_polygons, batch_bboxes, batch_image_size,
-                                                              batch_obb_thetas, batch_categories_names)
+                                                              batch_obb_thetas, batch_categories_ids)
         return batch_polygons, batch_labels, batch_objects_colors, batch_image_size
 
-    def create_obb_labels(self, batch_polygons, bbox_entries, images_size, obb_thetas, batch_objects_categories_names):
+    def create_obb_labels(self, batch_polygons, bbox_entries, images_size, obb_thetas, batch_categories_ids):
         """
         Create obb labels
         :param batch_polygons:
@@ -226,26 +228,28 @@ class CreateObbEntries(CreatePolygons, CreateBboxes):
         :type images_size:
         :param obb_thetas:
         :type obb_thetas:
-        :param batch_objects_categories_names:
-        :type batch_objects_categories_names:
+        :param batch_categories_ids:
+        :type batch_categories_ids:
         :return:
         :rtype:
         """
         batch_polygons, batch_obb_thetas, dropped_ids = rotate_polygon_entries(batch_polygons, images_size, obb_thetas)
         bbox_entries = remove_dropped_bboxes(bbox_entries, dropped_ids)
-        bbox_entries = create_obb_entries(bbox_entries)
+        bbox_entries = create_obb_entries(bbox_entries) # patch images_size
         # Produces rotated box. batch_rbboxes: rotated in image boundAries. batch_in_bounderies: bool list of in bounderies boxesL
         batch_rbboxes, batch_in_bounderies = rotate_obb_bbox_entries(bbox_entries, images_size, batch_obb_thetas)
-        batch_rbboxes = np.array(batch_rbboxes).round(2)
+        # batch_rbboxes = np.array(batch_rbboxes).round(2) # todo ronen normalized
+        batch_rbboxes = [rbboxes.astype(np.int32) for rbboxes in batch_rbboxes]
+
         # drop polygons which relate to False entries in batch_in_bounderies"
         batch_polygons = filter_polygons(batch_polygons, batch_in_bounderies)
 
-        batch_labels = [[bbox.tolist() + [category_name] for bbox, category_name in zip(im_bboxes,im_category_names)]
-                        for im_bboxes, im_category_names in
-                        zip(batch_rbboxes, batch_objects_categories_names)]
+        batch_labels = [[[category_id] + (bbox/np.array([imgsz[0], imgsz[1], imgsz[0], imgsz[1],imgsz[0], imgsz[1], imgsz[0], imgsz[1]])).tolist() for bbox, category_id in zip(im_bboxes,im_category_ids)]
+                        for im_bboxes, im_category_ids, imgsz in
+                        zip(batch_rbboxes, batch_categories_ids, images_size)]
 
         # append difficulty field: can be 0-2,img_rbboxes where 2 will drop object.  !!! hardcoded to 0 (=easy) !!!
-        batch_labels = [[label + z_pad for label, z_pad in zip(im_labels, [[0]] * len(im_labels))] for im_labels in
+        batch_labels = [[label for label in im_labels] for im_labels in
                                   batch_labels]
 
         batch_labels = entries_list_to_string(batch_labels)

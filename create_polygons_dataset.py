@@ -19,7 +19,6 @@ import argparse
 from pathlib import Path
 import glob
 
-import random
 from src.create.utils import  draw_images, write_images_to_file, write_entries_to_files
 from src.create.create_detection_labels import CreateDetectionEntries
 from src.create.create_segmentation_labels import CreateSegmentationEntries
@@ -54,7 +53,7 @@ if __name__ == '__main__':
         create_dataset = CreateDetectionEntries(config, config['iou_thresh'], config['bbox_margin'])
     elif labels_mode == 'obb':
         create_dataset = CreateObbEntries(config, config['iou_thresh'], config['bbox_margin'])
-    elif labels_mode == 'kpts':
+    elif labels_mode == 'pose':
         create_dataset = CreatesKptsEntries(config,config['iou_thresh'], config['bbox_margin'])
     elif labels_mode == 'segment':
         create_dataset = CreateSegmentationEntries(config)

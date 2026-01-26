@@ -85,7 +85,7 @@ class CreatePolygons:
                                             margin_from_edge,
                                             image_size)
             if np.any(calc_iou(polygon, polygons) > self.iou_thresh):
-                    print(f'IOU with rotated images exceeds treshs: Droppng  category_id: {category_id} nvertices: {nvertices} height {height} aspect_ratio {aspect_ratio}')
+                    print(f'IOU with rotated images exceeds treshs: sipping! NO ROOM FOR POLYGON.  category_id: {category_id} nvertices: {nvertices} height {height} aspect_ratio {aspect_ratio}')
                     continue
 
             polygons.append(polygon)
@@ -96,7 +96,7 @@ class CreatePolygons:
 
         return tuple(objects_categories_indices), objects_categories_names, polygons, objects_colors, obb_thetas
 
-    def __create_polygon(self, nvertices, theta0, height, aspect_ratio, size_fluctuation, margin_from_edge, image_size):
+    def __create_polygon(self, nvertices, theta0, height, aspect_ratio, size_fluctuation, margin_from_edge, image_size, xycenter=None):
 
         """
         Description: Creates a polygon given nvertices, and data on polygon's dims
@@ -134,8 +134,11 @@ class CreatePolygons:
             polygon = self.__rotate(polygon, theta0)
 
         # translate to center:
-        center = np.random.randint(
-            low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
+        if xycenter:
+            center = np.array(image_size[0]/2.) # assigned center location
+        else:
+            center = np.random.randint(
+                low=radius + margin_from_edge, high=np.floor(image_size - radius - margin_from_edge), size=2)
         polygon += center
         return polygon
 
