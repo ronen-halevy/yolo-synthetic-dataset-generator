@@ -66,7 +66,7 @@ if __name__ == '__main__':
         'train': 'images/train',
         'val': 'images/valid',
         'nc': len(categories_names),
-        'names': categories_names,
+        'class_names': categories_names,
     }
     if labels_mode == 'kpts':
         nkpts = max(create_dataset.polygons_nvertices)
